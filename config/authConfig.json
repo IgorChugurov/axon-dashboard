@@ -1,0 +1,28 @@
+{
+  "loginAndGetTokenUrl": "/api/authentication/sign-in",
+  "fields": [
+    {
+      "name": "email",
+      "label": "Email",
+      "placeholder": "Enter email",
+      "type": "email",
+      "forEditPage": "yes",
+      "forCreatePage": "yes",
+      "required": true,
+      "requiredText": "Email is required"
+    },
+    {
+      "name": "password",
+      "label": "Password",
+      "placeholder": "Enter Password",
+      "type": "password",
+      "forEditPage": "yes",
+      "forCreatePage": "yes",
+      "required": true,
+      "requiredText": "Password is required"
+    }
+  ],
+
+  "getCurrentAuthUserUrl": "https://dummyjson.com/auth/me",
+  "refreshAuthSessionUrl": "/api/authentication/refresh-tokens"
+}

@@ -44,6 +44,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./ui/collapsible";
+import { Icon_logo } from "./Logo";
 
 // Menu items.
 const items = [
@@ -81,8 +82,8 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link href="/">
-                <Image src="/logo.png" alt="Logo" width={32} height={32} />
+              <Link href="/" className="text-black">
+                <Icon_logo />
 
                 <span className="text-lg font-bold">Admin</span>
               </Link>

@@ -4,6 +4,11 @@ import React, { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 import "@/app/globals.css";
+import AppSidebar from "@/components/AppSidebar";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import Navbar from "@/components/Navbar";
+import { cookies } from "next/headers";
 
 const GeistSans = Geist({
   subsets: ["latin"],
@@ -20,11 +25,14 @@ const MontserratSerif = Montserrat({
   variable: "--font-serif",
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+
   return (
     <html
       lang="en"
@@ -32,13 +40,25 @@ export default function RootLayout({
         GeistSans.variable,
         GeistMono.variable,
         MontserratSerif.variable,
-        "bg-background text-foreground",
+        "bg-background text-foreground"
       )}
+      suppressHydrationWarning
     >
-      <body>
-        <main className="mt-16 flex w-full justify-center">
-          <div className="container">{children}</div>
-        </main>
+      <body className="flex">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SidebarProvider defaultOpen={defaultOpen}>
+            <AppSidebar />
+            <main className="w-full ">
+              <Navbar />
+              <div className="px-4">{children}</div>
+            </main>
+          </SidebarProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
