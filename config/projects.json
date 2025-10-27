@@ -1,0 +1,73 @@
+{
+  "title": "Projects",
+  "collectionName": "projects",
+  "forServicePackage": {
+    "url": "/api/projects",
+    "reloadEvents": {
+      "update": "reloadProjects",
+      "create": "reloadProjects",
+      "delete": "reloadProjects"
+    }
+  },
+  "reloadEventTitle": "reloadProjects",
+  "forList": {
+    "searchBlock": "Search for projects",
+    "buttonBlock": { "title": "New project" },
+    "columnsForGrid": [
+      {
+        "field": "name",
+        "headerName": "Name",
+        "flex": 1,
+        "type": "naigateToDetails",
+        "additioonalUrl": "/entities"
+      },
+
+      {
+        "field": "createdAt",
+        "headerName": "Created",
+        "width": 250,
+        "type": "date"
+      },
+      {
+        "field": "actions",
+        "headerName": "",
+        "type": "actions",
+        "width": 50,
+        "options": {
+          "actions": [
+            {
+              "action": "edit",
+              "icon": "setting"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "forEdit": {
+    "title": ["Create new project", "Edit project"],
+    "buttonText": {
+      "update": "Save",
+      "create": "Create project"
+    },
+    "pageHeader": "",
+    "sections": [
+      {
+        "title": "General",
+        "fields": [
+          {
+            "name": "name",
+            "label": "Project name",
+            "placeholder": "Enter project name",
+            "type": "text",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": true,
+            "requiredText": "Name is required",
+            "forEditPageDisabled": false
+          }
+        ]
+      }
+    ]
+  }
+}

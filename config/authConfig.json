@@ -23,6 +23,6 @@
     }
   ],
 
-  "getCurrentAuthUserUrl": "https://dummyjson.com/auth/me",
+  "getCurrentAuthUserUrl": "/api/users/profile",
   "refreshAuthSessionUrl": "/api/authentication/refresh-tokens"
 }

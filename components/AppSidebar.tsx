@@ -9,7 +9,6 @@ import {
   Projector,
   Search,
   Settings,
-  User,
   User2,
 } from "lucide-react";
 
@@ -32,7 +31,6 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
