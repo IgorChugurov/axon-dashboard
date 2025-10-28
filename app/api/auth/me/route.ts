@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { ServerAuth } from "@/lib/auth/server-auth";
+import { getAuthUser } from "@/lib/auth/utils";
 
 export async function GET() {
   try {
-    // Получаем данные пользователя через ServerAuth
-    const user = await ServerAuth.getUser();
+    // Получаем данные пользователя через utils
+    const user = await getAuthUser();
 
     if (!user) {
       return NextResponse.json(
@@ -19,21 +19,12 @@ export async function GET() {
 
     const errorMessage =
       error instanceof Error ? error.message : "Failed to get user";
-    const errorStatus =
-      error && typeof error === "object" && "status" in error
-        ? (error.status as number)
-        : 500;
-    const errorCode =
-      error && typeof error === "object" && "code" in error
-        ? (error.code as string)
-        : undefined;
 
     return NextResponse.json(
       {
         message: errorMessage,
-        code: errorCode,
       },
-      { status: errorStatus }
+      { status: 500 }
     );
   }
 }

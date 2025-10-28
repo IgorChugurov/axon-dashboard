@@ -1,54 +1,78 @@
-import { NextRequest, NextResponse } from "next/server";
-import { ServerAuth } from "@/lib/auth/server-auth";
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { setAuthCookies } from "@/lib/auth/actions";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
-    const body = await request.json();
-    const { refreshToken } = body;
+    console.log("[RefreshAPI] Refresh request received");
+
+    // Читаем refresh token из cookies
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get("refreshToken")?.value;
 
     if (!refreshToken) {
+      console.log("[RefreshAPI] No refresh token found");
       return NextResponse.json(
         { message: "Refresh token is required" },
         { status: 400 }
       );
     }
 
-    // Выполняем обновление токена через ServerAuth
-    const newTokens = await ServerAuth.refreshTokens();
+    console.log("[RefreshAPI] Calling backend API...");
 
-    if (!newTokens) {
-      return NextResponse.json(
-        {
-          message: "Token refresh failed",
+    // Запрос к бэкенду для получения новых токенов
+    const response = await fetch(
+      `${
+        process.env.NEXT_PUBLIC_API_URL || "https://dummyjson.com"
+      }/api/authentication/refresh-tokens`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        { status: 401 }
+        body: JSON.stringify({ refreshToken }),
+        cache: "no-store",
+      }
+    );
+
+    if (!response.ok) {
+      console.error("[RefreshAPI] Backend refresh failed:", response.status);
+      return NextResponse.json(
+        { message: "Token refresh failed" },
+        { status: response.status }
       );
     }
 
+    const data = await response.json();
+    console.log("[RefreshAPI] Backend response received");
+
+    const newTokens = {
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      expiresAt: data.exp,
+    };
+
+    const user = {
+      email: data.email,
+    };
+
+    // Сохраняем новые токены через Server Action (здесь это разрешено - Route Handler)
+    await setAuthCookies(newTokens, user);
+
+    console.log("[RefreshAPI] Tokens refreshed and saved to cookies");
+
+    // Возвращаем токены клиенту
     return NextResponse.json({
       accessToken: newTokens.accessToken,
       refreshToken: newTokens.refreshToken,
+      expiresAt: newTokens.expiresAt,
     });
   } catch (error: unknown) {
-    console.error("Refresh token error:", error);
+    console.error("[RefreshAPI] Error:", error);
 
     const errorMessage =
       error instanceof Error ? error.message : "Token refresh failed";
-    const errorStatus =
-      error && typeof error === "object" && "status" in error
-        ? (error.status as number)
-        : 500;
-    const errorCode =
-      error && typeof error === "object" && "code" in error
-        ? (error.code as string)
-        : undefined;
 
-    return NextResponse.json(
-      {
-        message: errorMessage,
-        code: errorCode,
-      },
-      { status: errorStatus }
-    );
+    return NextResponse.json({ message: errorMessage }, { status: 500 });
   }
 }

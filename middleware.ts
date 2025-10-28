@@ -22,9 +22,17 @@ export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken");
   const refreshToken = request.cookies.get("refreshToken");
 
-  // Если нет ни одного токена, редиректим на логин
+  // Если нет ни одного токена, очищаем все auth cookies и редиректим на логин
   if (!accessToken && !refreshToken) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const response = NextResponse.redirect(new URL("/login", request.url));
+
+    // Очищаем все auth cookies при редиректе
+    response.cookies.delete("accessToken");
+    response.cookies.delete("refreshToken");
+    response.cookies.delete("userData");
+    response.cookies.delete("expiresAt");
+
+    return response;
   }
 
   // Передаем информацию о пути в заголовках для layout.tsx

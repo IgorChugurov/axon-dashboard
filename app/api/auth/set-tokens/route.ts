@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ServerAuth } from "@/lib/auth/server-auth";
+import { setAuthCookies } from "@/lib/auth/actions";
 import { AuthTokens, User } from "@/lib/auth/types";
 
 export async function POST(request: NextRequest) {
@@ -14,26 +14,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Сохраняем токены и данные пользователя в cookies через ServerAuth
-    await ServerAuth.setTokens(tokens);
-    await ServerAuth.setUser(user);
+    console.log("[Set Tokens API] Setting tokens and user data");
+
+    // Сохраняем токены и данные пользователя в cookies через Server Action
+    await setAuthCookies(tokens, user);
+
+    console.log("[Set Tokens API] Tokens and user data set successfully");
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    console.error("Set tokens error:", error);
+    console.error("[Set Tokens API] Error:", error);
 
     const errorMessage =
       error instanceof Error ? error.message : "Failed to set tokens";
-    const errorStatus =
-      error && typeof error === "object" && "status" in error
-        ? (error.status as number)
-        : 500;
 
-    return NextResponse.json(
-      {
-        message: errorMessage,
-      },
-      { status: errorStatus }
-    );
+    return NextResponse.json({ message: errorMessage }, { status: 500 });
   }
 }

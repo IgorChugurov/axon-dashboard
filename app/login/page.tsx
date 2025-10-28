@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,21 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  // Очищаем auth cookies при загрузке страницы логина
+  useEffect(() => {
+    const clearAuth = async () => {
+      try {
+        await fetch("/api/auth/clear-auth", {
+          method: "POST",
+        });
+      } catch (error) {
+        console.error("Failed to clear auth:", error);
+      }
+    };
+
+    clearAuth();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
