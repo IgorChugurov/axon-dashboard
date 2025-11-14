@@ -1,6 +1,6 @@
 /**
- * Утилиты для чтения и проверки токенов
- * НЕ модифицируют cookies - только чтение!
+ * Утилиты для работы с токенами и cookies
+ * Включает как чтение, так и запись cookies (только в Route Handler контексте)
  */
 
 import { cookies } from "next/headers";
@@ -10,35 +10,33 @@ const COOKIE_NAMES = {
   ACCESS_TOKEN: "accessToken",
   REFRESH_TOKEN: "refreshToken",
   USER_DATA: "userData",
-  EXPIRES_AT: "expiresAt",
 } as const;
 
 /**
  * Получение токенов из cookies (только чтение)
  */
-export async function getAuthTokens(): Promise<AuthTokens | null> {
+export async function getAuthTokens(): Promise<{
+  accessToken: string;
+  refreshToken: string;
+} | null> {
   try {
     const cookieStore = await cookies();
-    //console.log("cookieStore:", cookieStore);
     const accessToken = cookieStore.get(COOKIE_NAMES.ACCESS_TOKEN)?.value;
     const refreshToken = cookieStore.get(COOKIE_NAMES.REFRESH_TOKEN)?.value;
-    const expiresAtStr = cookieStore.get(COOKIE_NAMES.EXPIRES_AT)?.value;
 
     console.log("[Utils] Reading cookies:", {
       hasAccessToken: !!accessToken,
       hasRefreshToken: !!refreshToken,
-      hasExpiresAt: !!expiresAtStr,
     });
 
-    if (!accessToken || !refreshToken || !expiresAtStr) {
+    if (!accessToken && !refreshToken) {
       console.log("[Utils] Incomplete token set, returning null");
       return null;
     }
 
     return {
-      accessToken,
-      refreshToken,
-      expiresAt: parseInt(expiresAtStr, 10),
+      accessToken: accessToken || "",
+      refreshToken: refreshToken || "",
     };
   } catch (error) {
     console.error("[Utils] Error reading tokens:", error);
@@ -66,12 +64,58 @@ export async function getAuthUser(): Promise<User | null> {
 }
 
 /**
- * Проверка истечения токена
+ * Установка access token в httpOnly cookie (только в Route Handler контексте)
  */
-export function isTokenExpired(expiresAt: number): boolean {
-  const now = Date.now() / 1000;
-  // Добавляем буфер 10 секунд
-  return expiresAt <= now + 800;
+export async function setAccessTokenCookie(accessToken: string): Promise<void> {
+  const cookieStore = await cookies();
+
+  cookieStore.set(COOKIE_NAMES.ACCESS_TOKEN, accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 15 * 60, // 15 минут
+    path: "/",
+  });
+
+  console.log("[Utils] Access token cookie set");
+}
+
+/**
+ * Установка refresh token в httpOnly cookie (только в Route Handler контексте)
+ */
+export async function setRefreshTokenCookie(
+  refreshToken: string
+): Promise<void> {
+  const cookieStore = await cookies();
+
+  cookieStore.set(COOKIE_NAMES.REFRESH_TOKEN, refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60, // 7 дней
+    path: "/",
+  });
+
+  console.log("[Utils] Refresh token cookie set");
+}
+
+/**
+ * Очистка всех auth cookies (только в Route Handler контексте)
+ */
+export async function clearAuthCookies(): Promise<void> {
+  const cookieStore = await cookies();
+
+  Object.values(COOKIE_NAMES).forEach((cookieName) => {
+    cookieStore.set(cookieName, "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 0,
+      path: "/",
+    });
+  });
+
+  console.log("[Utils] Auth cookies cleared");
 }
 
 /**
@@ -82,20 +126,6 @@ export async function hasRefreshToken(): Promise<boolean> {
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get(COOKIE_NAMES.REFRESH_TOKEN)?.value;
     return !!refreshToken;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Простая проверка наличия токенов без валидации
- */
-export async function hasAnyToken(): Promise<boolean> {
-  try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get(COOKIE_NAMES.ACCESS_TOKEN)?.value;
-    const refreshToken = cookieStore.get(COOKIE_NAMES.REFRESH_TOKEN)?.value;
-    return !!(accessToken || refreshToken);
   } catch {
     return false;
   }

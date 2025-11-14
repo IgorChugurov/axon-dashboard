@@ -1,28 +1,44 @@
-import { NextResponse } from "next/server";
-import { clearAuthCookies } from "@/lib/auth/actions";
-import { getAuthTokens } from "@/lib/auth/utils";
+import { NextRequest, NextResponse } from "next/server";
+import { clearAuthCookies } from "@/lib/auth/utils";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     console.log("[Logout API] Logout request received");
 
-    // Получаем токены для отправки на бэкенд
-    const tokens = await getAuthTokens();
+    // Читаем refresh token из cookies
+    const refreshToken = request.cookies.get("refreshToken")?.value;
 
-    if (tokens?.refreshToken) {
+    if (refreshToken) {
       try {
         // Отправляем запрос на бэкенд для инвалидации refresh token
-        await fetch(
+        const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/authentication/logout`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              cookie: request.headers.get("cookie") || "",
             },
-            body: JSON.stringify({ refreshToken: tokens.refreshToken }),
+            credentials: "include",
           }
         );
-        console.log("[Logout API] Backend logout successful");
+
+        console.log("[Logout API] Backend logout response:", response.status);
+
+        // Создаем ответ
+        const nextResponse = NextResponse.json({ success: true });
+
+        // Пересылаем Set-Cookie заголовки от backend для очистки cookies
+        const setCookie = response.headers.get("set-cookie");
+        if (setCookie) {
+          nextResponse.headers.set("set-cookie", setCookie);
+        }
+
+        // Очищаем access token cookie на стороне Next.js
+        await clearAuthCookies();
+
+        console.log("[Logout API] Logout successful");
+        return nextResponse;
       } catch (error) {
         console.error("[Logout API] Backend logout failed:", error);
         // Продолжаем выполнение даже если бэкенд недоступен
@@ -33,7 +49,7 @@ export async function POST() {
     await clearAuthCookies();
     console.log("[Logout API] Cookies cleared");
 
-    return NextResponse.json({ message: "Logged out successfully" });
+    return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error("[Logout API] Error:", error);
 

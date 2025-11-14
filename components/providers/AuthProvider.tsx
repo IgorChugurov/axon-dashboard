@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { AuthState, LoginCredentials, User } from "@/lib/auth/types";
+import { api } from "@/lib/api";
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -50,23 +51,13 @@ export function AuthProvider({
 
     try {
       // Авторизация через Next.js API Route
-      const response = await fetch("/api/auth/login", {
+      const data = await api("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(credentials),
       });
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || "Login failed");
-      }
-
-      const data = await response.json();
-
       setAuthState({
-        user: { email: data.email },
+        user: data.user,
         tokens: null,
         isAuthenticated: true,
         isLoading: false,
@@ -85,7 +76,7 @@ export function AuthProvider({
 
     try {
       // Выход через Next.js API Route
-      await fetch("/api/auth/logout", {
+      await api("/api/auth/logout", {
         method: "POST",
       });
     } catch (error) {
@@ -106,13 +97,7 @@ export function AuthProvider({
   const refreshUser = async () => {
     try {
       // Получаем актуальные данные пользователя через Next.js API Route
-      const response = await fetch("/api/auth/me");
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch user data");
-      }
-
-      const user = await response.json();
+      const user = await api("/api/auth/me");
 
       setAuthState((prev) => ({
         ...prev,

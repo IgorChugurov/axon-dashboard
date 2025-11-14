@@ -11,7 +11,7 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from "@/components/Navbar";
 import { cookies } from "next/headers";
-import { getUserFromCookies } from "@/lib/auth/simple-auth";
+import { getAuthUser } from "@/lib/auth/utils";
 
 const GeistSans = Geist({
   subsets: ["latin"],
@@ -48,7 +48,7 @@ export default async function RootLayout({
   // Проверяем авторизацию только для защищенных маршрутов
   if (!isPublicRoute) {
     // ТОЛЬКО чтение из cookies, БЕЗ установки cookies
-    user = await getUserFromCookies();
+    user = await getAuthUser();
     console.log("user from cookies:", user);
   }
 

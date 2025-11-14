@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { tokenManager } from "@/lib/auth/token-manager";
+import {
+  getEntityDataFromBackend,
+  formatEntityResponse,
+  buildBackendUrl,
+  fetchFromBackend,
+} from "@/lib/api/handlers";
+import { getAuthTokens } from "@/lib/auth/utils";
 
 export async function GET(
   request: NextRequest,
@@ -10,80 +16,44 @@ export async function GET(
   try {
     console.log(`[${entity} API] Request received`);
 
-    // 1. Получаем валидные токены
-    const tokens = await tokenManager.getValidTokens();
+    // 1. Получаем токены из cookies
+    const tokens = await getAuthTokens();
     if (!tokens) {
-      console.log(`[${entity} API] No valid tokens found`);
+      console.log(`[${entity} API] No tokens found`);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Строим URL к бэкенду
+    // 2. Строим URL к бэкенду из searchParams запроса
     const { searchParams } = new URL(request.url);
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const backendUrl = buildBackendUrl(entity, searchParams);
 
-    if (!apiBaseUrl) {
-      console.error(`[${entity} API] NEXT_PUBLIC_API_URL is not set`);
-      return NextResponse.json(
-        { error: "API configuration error" },
-        { status: 500 }
-      );
-    }
+    console.log(`[${entity} API] Backend URL:`, backendUrl);
 
-    const backendUrl = new URL(`${apiBaseUrl}/api/${entity}`);
-    searchParams.forEach((value, key) => {
-      backendUrl.searchParams.append(key, value);
-    });
+    // 3. Делаем запрос к бэкенду с обработкой refresh
+    let refreshSetCookie: string | null = null;
+    const cookieHeader = request.headers.get("cookie") || "";
+    const response = await fetchFromBackend(backendUrl, {
+      accessToken: tokens.accessToken,
+      cookieHeader, // Передаем cookies для refresh
+      onTokenRefresh: async (newToken) => {
+        // Получаем set-cookie заголовок от refresh
+        const baseUrl = process.env.NEXT_PUBLIC_HOST || "http://localhost:3000";
+        const refreshResponse = await fetch(
+          `${baseUrl}/api/auth/refresh-token`,
+          {
+            method: "POST",
+            headers: {
+              cookie: cookieHeader,
+            },
+            cache: "no-store",
+          }
+        );
 
-    console.log(`[${entity} API] Backend URL:`, backendUrl.toString());
-
-    // 3. Делаем запрос к бэкенду
-    const response = await fetch(backendUrl.toString(), {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${tokens.accessToken}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
+        if (refreshResponse.ok) {
+          refreshSetCookie = refreshResponse.headers.get("set-cookie");
+        }
       },
-      cache: "no-store",
     });
-
-    console.log(`[${entity} API] Backend response status:`, response.status);
-
-    // 4. Если 401 - обновляем токен и повторяем
-    if (response.status === 401) {
-      console.log(`[${entity} API] Got 401, refreshing tokens and retrying...`);
-
-      const newTokens = await tokenManager.refreshTokens();
-      if (!newTokens) {
-        console.log(`[${entity} API] Token refresh failed`);
-        return NextResponse.json(
-          { error: "Token refresh failed" },
-          { status: 401 }
-        );
-      }
-
-      const retryResponse = await fetch(backendUrl.toString(), {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${newTokens.accessToken}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        cache: "no-store",
-      });
-
-      if (!retryResponse.ok) {
-        console.log(`[${entity} API] Retry failed:`, retryResponse.status);
-        return NextResponse.json(
-          { error: "Request failed after retry" },
-          { status: 401 }
-        );
-      }
-
-      const data = await retryResponse.json();
-      console.log(`[${entity} API] Retry successful`);
-      return NextResponse.json(formatResponse(data, entity));
-    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -94,12 +64,23 @@ export async function GET(
       );
     }
 
-    // 5. Возвращаем данные
+    // 4. Возвращаем данные
     const data = await response.json();
     console.log(`[${entity} API] Success, returning data`);
-    return NextResponse.json(formatResponse(data, entity));
+    const formatted = formatEntityResponse(data, entity);
+    const next = NextResponse.json(formatted);
+
+    // Устанавливаем cookies от refresh, если были
+    if (refreshSetCookie) {
+      next.headers.set("set-cookie", refreshSetCookie);
+    }
+
+    return next;
   } catch (error) {
     console.error(`[${entity} API] Error:`, error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
       { error: `Failed to fetch ${entity}` },
       { status: 500 }
@@ -116,8 +97,8 @@ export async function POST(
   try {
     console.log(`[${entity} API] POST request received`);
 
-    // 1. Получаем валидные токены
-    const tokens = await tokenManager.getValidTokens();
+    // 1. Получаем токены из cookies
+    const tokens = await getAuthTokens();
     if (!tokens) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -146,20 +127,34 @@ export async function POST(
       body: JSON.stringify(body),
     });
 
-    // 4. Если 401 - обновляем токен и повторяем
+    // 5. Если 401 - обновляем токен и повторяем
     if (response.status === 401) {
-      const newTokens = await tokenManager.refreshTokens();
-      if (!newTokens) {
+      console.log(`[${entity} API] Got 401, refreshing tokens and retrying...`);
+
+      // Вызываем внутренний refresh endpoint
+      const baseUrl = process.env.NEXT_PUBLIC_HOST || "http://localhost:3000";
+      const refreshResponse = await fetch(`${baseUrl}/api/auth/refresh-token`, {
+        method: "POST",
+        headers: {
+          cookie: request.headers.get("cookie") || "",
+        },
+        cache: "no-store",
+      });
+
+      if (!refreshResponse.ok) {
         return NextResponse.json(
           { error: "Token refresh failed" },
           { status: 401 }
         );
       }
 
+      const refreshData = await refreshResponse.json();
+      const refreshSetCookie = refreshResponse.headers.get("set-cookie");
+
       const retryResponse = await fetch(`${apiBaseUrl}/api/${entity}`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${newTokens.accessToken}`,
+          Authorization: `Bearer ${refreshData.accessToken}`,
           "Content-Type": "application/json",
           Accept: "application/json",
         },
@@ -174,7 +169,11 @@ export async function POST(
       }
 
       const data = await retryResponse.json();
-      return NextResponse.json(data, { status: 201 });
+      const next = NextResponse.json(data, { status: 201 });
+      if (refreshSetCookie) {
+        next.headers.set("set-cookie", refreshSetCookie);
+      }
+      return next;
     }
 
     if (!response.ok) {
@@ -193,45 +192,5 @@ export async function POST(
       { error: `Failed to create ${entity}` },
       { status: 500 }
     );
-  }
-}
-
-// Универсальная функция форматирования ответа
-function formatResponse(data: unknown, entity: string) {
-  const responseData = data as {
-    items?: unknown[];
-    meta?: {
-      currentPage: number;
-      perPage: number;
-      totalItems: number;
-      totalPages: number;
-      hasPreviousPage: boolean;
-      hasNextPage: boolean;
-    };
-  };
-
-  return {
-    data: responseData.items || data,
-    pagination: responseData.meta
-      ? {
-          page: responseData.meta.currentPage,
-          limit: responseData.meta.perPage,
-          total: responseData.meta.totalItems,
-          totalPages: responseData.meta.totalPages,
-          hasPreviousPage: responseData.meta.hasPreviousPage,
-          hasNextPage: responseData.meta.hasNextPage,
-        }
-      : undefined,
-    config: getConfigForEntity(entity),
-  };
-}
-
-// Получение конфига для сущности
-function getConfigForEntity(entity: string) {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    return require(`@/config/${entity}.json`);
-  } catch {
-    return null;
   }
 }

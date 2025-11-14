@@ -36,12 +36,32 @@ export default function ProjectsList({ initialData }: ProjectsListProps) {
       params.append("currentPage", page.toString());
       params.append("perPage", "16");
 
-      const response = await fetch(`/api/projects?${params.toString()}`);
+      const url = `/api/projects?${params.toString()}`;
+      console.log("[ProjectsList] Fetching projects from:", url);
+      console.log("[ProjectsList] Client cookies (visible):", document.cookie);
+
+      const response = await fetch(url, {
+        credentials: "include", // Важно для отправки httpOnly cookies
+      });
+
+      console.log("[ProjectsList] Response status:", response.status);
+      console.log("[ProjectsList] Response ok:", response.ok);
 
       // Обработка ошибки авторизации
       if (response.status === 401) {
-        console.log("Unauthorized, redirecting to login...");
-        window.location.href = "/login";
+        const errorData = await response.json().catch(() => ({}));
+        console.error("[ProjectsList] 401 Unauthorized error:");
+        console.error("[ProjectsList] Response status:", response.status);
+        console.error("[ProjectsList] Error data:", errorData);
+        console.error(
+          "[ProjectsList] Response headers:",
+          Object.fromEntries(response.headers.entries())
+        );
+        // ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ ОТЛАДКИ
+        // window.location.href = "/login";
+        setError(
+          `401 Unauthorized: ${errorData.error || "Authentication failed"}`
+        );
         return;
       }
 
@@ -100,8 +120,15 @@ export default function ProjectsList({ initialData }: ProjectsListProps) {
 
       // Обработка ошибки авторизации
       if (response.status === 401) {
-        console.log("Unauthorized, redirecting to login...");
-        window.location.href = "/login";
+        const errorData = await response.json().catch(() => ({}));
+        console.error("[ProjectsList] 401 Unauthorized error (POST):");
+        console.error("[ProjectsList] Response status:", response.status);
+        console.error("[ProjectsList] Error data:", errorData);
+        // ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ ОТЛАДКИ
+        // window.location.href = "/login";
+        setError(
+          `401 Unauthorized: ${errorData.error || "Authentication failed"}`
+        );
         return;
       }
 

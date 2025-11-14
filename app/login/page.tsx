@@ -19,7 +19,8 @@ export default function LoginPage() {
   useEffect(() => {
     const clearAuth = async () => {
       try {
-        await fetch("/api/auth/clear-auth", {
+        // Используем существующий logout endpoint вместо удаленного clear-auth
+        await fetch("/api/auth/logout", {
           method: "POST",
         });
       } catch (error) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setAuthCookies } from "@/lib/auth/actions";
-import { LoginCredentials, AuthTokens, User } from "@/lib/auth/types";
+import { setAccessTokenCookie, setRefreshTokenCookie } from "@/lib/auth/utils";
+import { LoginCredentials, User } from "@/lib/auth/types";
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,24 +39,37 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
     console.log("[Login API] Login successful");
+    console.log("[Login API] Response data keys:", Object.keys(data));
+    console.log("[Login API] Has accessToken:", !!data.accessToken);
+    console.log("[Login API] Has refreshToken:", !!data.refreshToken);
 
-    // Сохраняем токены и данные пользователя
-    const tokens: AuthTokens = {
+    // Создаем ответ с теми же данными
+    const nextResponse = NextResponse.json({
       accessToken: data.accessToken,
-      refreshToken: data.refreshToken,
-      expiresAt: data.expiresAt ?? Date.now() / 1000 + 15 * 60, // 15 минут
-    };
-
-    const user: User = { email: data.email };
-
-    await setAuthCookies(tokens, user);
-
-    return NextResponse.json({
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresAt: tokens.expiresAt,
-      email: user.email,
+      user: { email: data.email },
     });
+
+    // Пересылаем cookies от backend к клиенту
+    const backendCookie = response.headers.get("set-cookie");
+    if (backendCookie) {
+      console.log("[Login API] Backend sent Set-Cookie header");
+      nextResponse.headers.set("set-cookie", backendCookie);
+    }
+
+    // Сохраняем access token в httpOnly cookie на стороне Next.js
+    await setAccessTokenCookie(data.accessToken);
+
+    // Если бэкенд вернул refreshToken в JSON - сохраняем его
+    if (data.refreshToken) {
+      console.log("[Login API] Saving refresh token from JSON response");
+      await setRefreshTokenCookie(data.refreshToken);
+    } else {
+      console.log(
+        "[Login API] No refreshToken in JSON - relying on Set-Cookie header"
+      );
+    }
+
+    return nextResponse;
   } catch (error: unknown) {
     console.error("[Login API] Error:", error);
 

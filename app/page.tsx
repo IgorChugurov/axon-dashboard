@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import ProjectsList from "@/components/ProjectsList";
 import { projectsServerProvider } from "@/lib/projects/server";
 import { parseSearchParams } from "@/lib/server-data/types";
-import AuthErrorHandler from "@/components/AuthErrorHandler";
 
 interface HomePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -25,15 +24,15 @@ async function ProjectsPageContent({ searchParams }: HomePageProps) {
   } catch (error) {
     console.error("[Page] Error:", error);
 
-    // Если ошибка авторизации - показываем обработчик ошибок
+    // Если ошибка авторизации - редиректим на страницу входа
     if (
       error instanceof Error &&
       (error.message.includes("Unauthorized") ||
         error.message.includes("Token refresh failed") ||
         error.message.includes("No valid tokens"))
     ) {
-      console.log("[Page] Auth error, showing error handler");
-      return <AuthErrorHandler error={error} />;
+      console.log("[Page] Auth error, redirecting to login");
+      redirect("/login");
     }
 
     // Другие ошибки перебрасываем

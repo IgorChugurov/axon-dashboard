@@ -18,20 +18,28 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // Проверяем наличие accessToken ИЛИ refreshToken
-  const accessToken = request.cookies.get("accessToken");
+  // Проверяем наличие refreshToken cookie
   const refreshToken = request.cookies.get("refreshToken");
 
-  // Если нет ни одного токена, очищаем все auth cookies и редиректим на логин
-  if (!accessToken && !refreshToken) {
-    const response = NextResponse.redirect(new URL("/login", request.url));
+  // ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ ОТЛАДКИ
+  // Если нет refreshToken, редиректим на логин
+  if (!refreshToken) {
+    console.log("[Middleware] No refreshToken found, pathname:", pathname);
+    console.log(
+      "[Middleware] Request cookies:",
+      request.cookies.getAll().map((c) => c.name)
+    );
+    // ВРЕМЕННО ОТКЛЮЧЕНО - разрешаем проход без редиректа для отладки
+    // const response = NextResponse.redirect(new URL("/login", request.url));
+    // response.cookies.delete("accessToken");
+    // response.cookies.delete("refreshToken");
+    // response.cookies.delete("userData");
+    // return response;
 
-    // Очищаем все auth cookies при редиректе
-    response.cookies.delete("accessToken");
-    response.cookies.delete("refreshToken");
-    response.cookies.delete("userData");
-    response.cookies.delete("expiresAt");
-
+    // Пропускаем запрос дальше для отладки
+    const response = NextResponse.next();
+    response.headers.set("x-pathname", pathname);
+    response.headers.set("x-debug-no-refresh-token", "true");
     return response;
   }
 

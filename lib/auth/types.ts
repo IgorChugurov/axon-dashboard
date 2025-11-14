@@ -41,6 +41,17 @@ export interface RefreshTokenResponse {
   refreshToken: string;
 }
 
+export interface AuthResponse {
+  accessToken: string;
+  user: User;
+  requires2FA?: boolean;
+  tempToken?: string;
+}
+
+export interface RefreshResponse {
+  accessToken: string;
+}
+
 export interface AuthConfig {
   loginAndGetTokenUrl: string;
   getCurrentAuthUserUrl: string;
