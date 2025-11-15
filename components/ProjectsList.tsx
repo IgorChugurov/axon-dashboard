@@ -151,7 +151,7 @@ export function ProjectsList({
 
       if (result.success && result.data) {
         // Оптимистичное обновление: добавляем проект локально
-        setProjects((prev) => [result.data, ...prev]);
+        setProjects((prev) => [result.data!, ...prev]);
 
         // ИЛИ перезагружаем список
         // loadProjects(1, searchTerm);

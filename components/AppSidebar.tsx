@@ -1,16 +1,16 @@
 "use client";
 import {
-  Calendar,
   ChevronDown,
   ChevronUp,
   Home,
-  Inbox,
   Plus,
   Projector,
-  Search,
-  Settings,
   User2,
   LogOut,
+  FileText,
+  Users,
+  Tag,
+  Settings,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 
@@ -54,24 +54,24 @@ const items = [
     icon: Home,
   },
   {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
+    title: "Projects",
+    url: "/projects",
+    icon: Projector,
   },
   {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
+    title: "Posts",
+    url: "/posts",
+    icon: FileText,
   },
   {
-    title: "Search",
-    url: "#",
-    icon: Search,
+    title: "Authors",
+    url: "/authors",
+    icon: Users,
   },
   {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
+    title: "Tags",
+    url: "/tags",
+    icon: Tag,
   },
 ];
 

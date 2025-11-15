@@ -1,4 +1,4 @@
-import { getProjectsFromSupabase } from "@/lib/projects/supabase";
+import { projectsService } from "@/lib/entities/projects/service";
 import { ProjectsList } from "@/components/ProjectsList";
 import { Suspense } from "react";
 
@@ -9,6 +9,7 @@ import { Suspense } from "react";
  * 1. Рендерится на сервере (SSR) при первом заходе
  * 2. Поддерживает URL параметры: ?page=2&search=test
  * 3. После hydration работает как SPA (без перезагрузки)
+ * 4. Использует универсальную систему entity-service
  */
 
 interface ProjectsPageProps {
@@ -26,8 +27,8 @@ export default async function ProjectsPage({
   const page = parseInt(params.page || "1", 10);
   const search = params.search || "";
 
-  // SSR: Получаем проекты на сервере
-  const { data: projects, pagination } = await getProjectsFromSupabase({
+  // SSR: Получаем проекты на сервере через универсальный сервис
+  const { data: projects, pagination } = await projectsService.getAll({
     page,
     search,
     limit: 10,
