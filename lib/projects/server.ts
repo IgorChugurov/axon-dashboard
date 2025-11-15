@@ -1,26 +1,60 @@
 // Серверный провайдер для проектов
+// Работает напрямую с Supabase
 
-import { ServerDataProvider } from "@/lib/server-data/base";
 import { ServerDataParams } from "@/lib/server-data/types";
 import { Project, CreateProjectData } from "./types";
+import {
+  getProjectsFromSupabase,
+  createProjectInSupabase,
+  updateProjectInSupabase,
+  deleteProjectFromSupabase,
+} from "./supabase";
 
-export class ProjectsServerProvider extends ServerDataProvider<Project> {
-  constructor() {
-    super("/api/projects", "@/config/projects.json");
-  }
-
+export class ProjectsServerProvider {
   /**
-   * Получение проектов с сервера
+   * Получение проектов из Supabase с пагинацией и поиском
    */
   async getProjects(params: ServerDataParams = {}) {
-    return this.getData(params);
+    try {
+      console.log(
+        "[ProjectsServerProvider] Getting projects with params:",
+        params
+      );
+      const result = await getProjectsFromSupabase(params);
+      console.log("[ProjectsServerProvider] Successfully got projects");
+      return {
+        data: result.data,
+        pagination: result.pagination,
+        config: null, // Можно добавить конфиг позже если нужно
+      };
+    } catch (error) {
+      console.error("[ProjectsServerProvider] Error:", error);
+      throw error;
+    }
   }
 
   /**
    * Создание нового проекта
    */
   async createProject(data: CreateProjectData): Promise<Project> {
-    return this.createData(data);
+    return createProjectInSupabase(data);
+  }
+
+  /**
+   * Обновление проекта
+   */
+  async updateProject(
+    id: string,
+    data: Partial<Pick<Project, "name" | "description" | "status">>
+  ): Promise<Project> {
+    return updateProjectInSupabase(id, data);
+  }
+
+  /**
+   * Удаление проекта
+   */
+  async deleteProject(id: string): Promise<void> {
+    return deleteProjectFromSupabase(id);
   }
 }
 

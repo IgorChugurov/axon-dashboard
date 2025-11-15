@@ -10,7 +10,9 @@ import {
   Search,
   Settings,
   User2,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 import {
   Sidebar,
@@ -48,7 +50,7 @@ import { Icon_logo } from "./Logo";
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "/",
     icon: Home,
   },
   {
@@ -74,6 +76,16 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const { user, logout, isLoading } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
   return (
     <Sidebar collapsible="icon" side="left">
       <SidebarHeader className="py-4">
@@ -219,13 +231,24 @@ export function AppSidebar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem>
-                    <span>Account</span>
+                    <User2 className="h-4 w-4 mr-2" />
+                    <span>
+                      {user?.firstName && user?.lastName
+                        ? `${user.firstName} ${user.lastName}`
+                        : user?.email || "Account"}
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
+                    <Settings className="h-4 w-4 mr-2" />
                     <span>Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <span>Sign out</span>
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    disabled={isLoading}
+                    className="text-red-600 dark:text-red-400"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span>{isLoading ? "Logging out..." : "Sign out"}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

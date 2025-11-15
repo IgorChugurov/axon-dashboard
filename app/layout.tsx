@@ -11,7 +11,7 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from "@/components/Navbar";
 import { cookies } from "next/headers";
-import { getAuthUser } from "@/lib/auth/utils";
+import { getServerUser } from "@/lib/supabase/auth";
 
 const GeistSans = Geist({
   subsets: ["latin"],
@@ -47,9 +47,13 @@ export default async function RootLayout({
 
   // Проверяем авторизацию только для защищенных маршрутов
   if (!isPublicRoute) {
-    // ТОЛЬКО чтение из cookies, БЕЗ установки cookies
-    user = await getAuthUser();
-    console.log("user from cookies:", user);
+    // Получаем пользователя из Supabase
+    user = await getServerUser();
+    console.log(
+      "[Layout] User from Supabase:",
+      user?.email || "not authenticated"
+    );
+    console.log("[Layout] User role:", user);
   }
 
   const cookieStore = await cookies();

@@ -1,58 +1,35 @@
-import { Suspense } from "react";
-import { redirect } from "next/navigation";
-import ProjectsList from "@/components/ProjectsList";
-import { projectsServerProvider } from "@/lib/projects/server";
-import { parseSearchParams } from "@/lib/server-data/types";
+/**
+ * Home Page - Welcome страница
+ * 
+ * Простая приветственная страница.
+ * Список проектов перенесен на /projects
+ */
 
-interface HomePageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-async function ProjectsPageContent({ searchParams }: HomePageProps) {
-  try {
-    console.log("[Page] Loading projects page");
-
-    // 1. Парсим параметры из URL (await для Next.js 15)
-    const params = parseSearchParams(await searchParams);
-    console.log("[Page] Search params:", params);
-
-    // 2. Получаем данные - вся логика токенов в API
-    const initialData = await projectsServerProvider.getProjects(params);
-    console.log("[Page] Data loaded successfully");
-
-    return <ProjectsList initialData={initialData} />;
-  } catch (error) {
-    console.error("[Page] Error:", error);
-
-    // Если ошибка авторизации - редиректим на страницу входа
-    if (
-      error instanceof Error &&
-      (error.message.includes("Unauthorized") ||
-        error.message.includes("Token refresh failed") ||
-        error.message.includes("No valid tokens"))
-    ) {
-      console.log("[Page] Auth error, redirecting to login");
-      redirect("/login");
-    }
-
-    // Другие ошибки перебрасываем
-    throw error;
-  }
-}
-
-export default function HomePage({ searchParams }: HomePageProps) {
+export default function HomePage() {
   return (
-    <Suspense
-      fallback={
-        <div className="space-y-6">
-          <div className="bg-primary-foreground rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Управление проектами</h2>
-            <p>Загрузка проектов...</p>
-          </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Welcome</h1>
+        <p className="text-muted-foreground">
+          Welcome to your admin dashboard
+        </p>
+      </div>
+
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="text-xl font-semibold mb-4">Getting Started</h2>
+        <p className="text-muted-foreground mb-4">
+          Navigate to Projects from the sidebar to manage your projects.
+        </p>
+        
+        <div className="mt-6">
+          <a
+            href="/projects"
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+          >
+            Go to Projects
+          </a>
         </div>
-      }
-    >
-      <ProjectsPageContent searchParams={searchParams} />
-    </Suspense>
+      </div>
+    </div>
   );
 }

@@ -1,275 +1,274 @@
+/**
+ * Projects List Component
+ *
+ * Гибридный подход:
+ * - Получает начальные данные через SSR (initialData)
+ * - Использует Browser Client (Supabase) для динамических обновлений
+ * - Обновляет URL при изменении параметров (page, search)
+ * - Работает без перезагрузки страницы (SPA)
+ */
+
 "use client";
 
-import { useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useState, useCallback, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Project, ProjectsResponse } from "@/lib/projects/types";
+import type { Project } from "@/lib/projects/types";
+import {
+  createProjectAction,
+  deleteProjectAction,
+} from "@/app/projects/actions";
 
 interface ProjectsListProps {
-  initialData: ProjectsResponse;
+  initialData: Project[];
+  initialPagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+  };
+  initialSearch?: string;
 }
 
-export default function ProjectsList({ initialData }: ProjectsListProps) {
-  const [projects, setProjects] = useState<Project[]>(initialData.data || []);
-  const [pagination, setPagination] = useState(initialData.pagination);
+export function ProjectsList({
+  initialData,
+  initialPagination,
+  initialSearch = "",
+}: ProjectsListProps) {
+  const router = useRouter();
+  const supabase = createClient(); // Browser Client для прямых запросов к Supabase
+
+  const [projects, setProjects] = useState<Project[]>(initialData);
+  const [pagination, setPagination] = useState(initialPagination);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedProject, setSelectedProject] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(
-    initialData.pagination?.page || 1
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [isPending, startTransition] = useTransition();
+
+  /**
+   * Загрузка проектов через Browser Client
+   *
+   * ВАЖНО: Это ПРЯМОЙ запрос к Supabase из браузера!
+   * - Browser → Supabase API
+   * - Без промежуточного слоя Next.js
+   * - Race conditions защищены в Supabase JS SDK
+   */
+  const loadProjects = useCallback(
+    async (page: number, search: string) => {
+      setLoading(true);
+
+      try {
+        const limit = 10;
+        const offset = (page - 1) * limit;
+
+        console.log("[ProjectsList] Loading projects:", {
+          page,
+          search,
+          limit,
+        });
+
+        // ПРЯМОЙ запрос к Supabase из браузера
+        let query = supabase
+          .from("projects")
+          .select("*", { count: "exact" })
+          .range(offset, offset + limit - 1)
+          .order("created_at", { ascending: false });
+
+        // Поиск по имени
+        if (search) {
+          query = query.ilike("name", `%${search}%`);
+        }
+
+        const { data, error, count } = await query;
+
+        if (error) {
+          console.error("[ProjectsList] Error loading projects:", error);
+          throw error;
+        }
+
+        console.log("[ProjectsList] Projects loaded:", {
+          count: data?.length,
+          total: count,
+        });
+
+        // Обновляем состояние
+        setProjects((data as Project[]) || []);
+
+        const total = count || 0;
+        const totalPages = Math.ceil(total / limit);
+
+        setPagination({
+          page,
+          limit,
+          total,
+          totalPages,
+          hasPreviousPage: page > 1,
+          hasNextPage: page < totalPages,
+        });
+
+        // Обновляем URL (без перезагрузки страницы)
+        const params = new URLSearchParams();
+        if (page > 1) params.set("page", page.toString());
+        if (search) params.set("search", search);
+
+        const newUrl = params.toString()
+          ? `/projects?${params.toString()}`
+          : "/projects";
+
+        router.push(newUrl, { scroll: false });
+      } catch (error) {
+        console.error("[ProjectsList] Failed to load projects:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [supabase, router]
   );
 
-  // Функция для получения проектов через API
-  const fetchProjects = async (search?: string, page: number = 1) => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      params.append("currentPage", page.toString());
-      params.append("perPage", "16");
-
-      const url = `/api/projects?${params.toString()}`;
-      console.log("[ProjectsList] Fetching projects from:", url);
-      console.log("[ProjectsList] Client cookies (visible):", document.cookie);
-
-      const response = await fetch(url, {
-        credentials: "include", // Важно для отправки httpOnly cookies
-      });
-
-      console.log("[ProjectsList] Response status:", response.status);
-      console.log("[ProjectsList] Response ok:", response.ok);
-
-      // Обработка ошибки авторизации
-      if (response.status === 401) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("[ProjectsList] 401 Unauthorized error:");
-        console.error("[ProjectsList] Response status:", response.status);
-        console.error("[ProjectsList] Error data:", errorData);
-        console.error(
-          "[ProjectsList] Response headers:",
-          Object.fromEntries(response.headers.entries())
-        );
-        // ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ ОТЛАДКИ
-        // window.location.href = "/login";
-        setError(
-          `401 Unauthorized: ${errorData.error || "Authentication failed"}`
-        );
-        return;
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to fetch projects");
-      }
-
-      const data: ProjectsResponse = await response.json();
-      console.log("[Client] Received data:", {
-        projectsCount: data.data?.length,
-        hasPagination: !!data.pagination,
-        currentPage: data.pagination?.page,
-        totalPages: data.pagination?.totalPages,
-      });
-
-      setProjects(data.data || []);
-      setPagination(data.pagination);
-      setCurrentPage(data.pagination?.page || page);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      setProjects([]);
-      setPagination(undefined);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Обработка пагинации
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      loadProjects(newPage, searchTerm);
+    },
+    [loadProjects, searchTerm]
+  );
 
   // Обработка поиска
-  const handleSearch = () => {
-    setCurrentPage(1);
-    fetchProjects(searchTerm, 1);
+  const handleSearch = useCallback(() => {
+    loadProjects(1, searchTerm);
+  }, [loadProjects, searchTerm]);
+
+  // Создание проекта через Server Action
+  const handleCreate = async () => {
+    const name = prompt("Enter project name:");
+    if (!name) return;
+
+    startTransition(async () => {
+      const result = await createProjectAction({ name });
+
+      if (result.success && result.data) {
+        // Оптимистичное обновление: добавляем проект локально
+        setProjects((prev) => [result.data, ...prev]);
+
+        // ИЛИ перезагружаем список
+        // loadProjects(1, searchTerm);
+      } else {
+        alert(`Error: ${result.error || "Unknown error"}`);
+      }
+    });
   };
 
-  // Обработка пагинации
-  const handlePageChange = (newPage: number) => {
-    fetchProjects(searchTerm, newPage);
-  };
+  // Удаление проекта через Server Action
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure?")) return;
 
-  // Обработка создания нового проекта
-  const handleCreateProject = async () => {
-    if (!selectedProject.trim()) return;
+    startTransition(async () => {
+      const result = await deleteProjectAction(id);
 
-    try {
-      const response = await fetch("/api/projects", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: selectedProject,
-          description: `Описание для проекта ${selectedProject}`,
-        }),
-      });
-
-      // Обработка ошибки авторизации
-      if (response.status === 401) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("[ProjectsList] 401 Unauthorized error (POST):");
-        console.error("[ProjectsList] Response status:", response.status);
-        console.error("[ProjectsList] Error data:", errorData);
-        // ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ ОТЛАДКИ
-        // window.location.href = "/login";
-        setError(
-          `401 Unauthorized: ${errorData.error || "Authentication failed"}`
-        );
-        return;
+      if (result.success) {
+        // Оптимистичное обновление: убираем из списка
+        setProjects((prev) => prev.filter((p) => p.id !== id));
+      } else {
+        alert(`Error: ${result.error}`);
       }
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to create project");
-      }
-
-      // Обновляем список проектов
-      fetchProjects(searchTerm, currentPage);
-      setSelectedProject("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create project");
-    }
+    });
   };
 
   return (
     <div className="space-y-6">
-      <div className="bg-primary-foreground rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Управление проектами</h2>
-
-        {/* Поиск проектов */}
-        <div className="space-y-4 mb-6">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Поиск проектов..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1"
-            />
-            <Button onClick={handleSearch} variant="outline">
-              Поиск
-            </Button>
-            <Button onClick={() => fetchProjects()} variant="outline">
-              Обновить список
-            </Button>
-          </div>
+      {/* Поиск и создание */}
+      <div className="flex gap-4">
+        <div className="flex-1 flex gap-2">
+          <Input
+            placeholder="Search projects..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            disabled={loading}
+          />
+          <Button onClick={handleSearch} disabled={loading}>
+            Search
+          </Button>
         </div>
-
-        {/* Создание нового проекта */}
-        <div className="space-y-4 mb-6">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Название проекта..."
-              value={selectedProject}
-              onChange={(e) => setSelectedProject(e.target.value)}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleCreateProject}
-              disabled={!selectedProject.trim()}
-            >
-              Создать проект
-            </Button>
-          </div>
-        </div>
-
-        {/* Select из проектов */}
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">
-              Выберите проект:
-            </label>
-            <Select>
-              <SelectTrigger className="w-[300px]">
-                <SelectValue placeholder="Выберите проект" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <Button onClick={handleCreate} disabled={isPending}>
+          {isPending ? "Creating..." : "Create Project"}
+        </Button>
       </div>
 
       {/* Список проектов */}
-      <div className="bg-primary-foreground rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Список проектов</h3>
-
-        {loading && <p>Загрузка проектов...</p>}
-
-        {error && <div className="text-red-500 mb-4">Ошибка: {error}</div>}
-
-        {!loading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                className="bg-background rounded-lg p-4 border"
-              >
-                <h4 className="font-semibold text-lg mb-2">{project.name}</h4>
-                {project.description && (
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {project.description}
+      {loading ? (
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />
+          ))}
+        </div>
+      ) : projects.length === 0 ? (
+        <div className="rounded-lg border bg-card p-12 text-center">
+          <p className="text-muted-foreground">
+            {searchTerm ? "No projects found" : "No projects yet"}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              className="rounded-lg border bg-card p-6 hover:bg-accent/50 transition-colors"
+            >
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <h3 className="font-semibold">{project.name}</h3>
+                  {project.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {project.description}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Status: {project.status}
                   </p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Создан:{" "}
-                  {new Date(project.createdAt).toLocaleDateString("ru-RU")}
-                </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDelete(project.id)}
+                  disabled={isPending}
+                >
+                  Delete
+                </Button>
               </div>
-            ))}
-          </div>
-        )}
-
-        {!loading && !error && projects.length === 0 && (
-          <p className="text-muted-foreground">Проекты не найдены</p>
-        )}
-
-        {/* Пагинация */}
-        {pagination && pagination.totalPages > 1 && (
-          <div className="mt-6 flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Страница {pagination.page} из {pagination.totalPages} (всего:{" "}
-              {pagination.total})
             </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={!pagination.hasPreviousPage || loading}
-                variant="outline"
-                size="sm"
-              >
-                Назад
-              </Button>
-              <Button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={!pagination.hasNextPage || loading}
-                variant="outline"
-                size="sm"
-              >
-                Вперёд
-              </Button>
-            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Пагинация */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Page {pagination.page} of {pagination.totalPages} (
+            {pagination.total} total)
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(pagination.page - 1)}
+              disabled={!pagination.hasPreviousPage || loading}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handlePageChange(pagination.page + 1)}
+              disabled={!pagination.hasNextPage || loading}
+            >
+              Next
+            </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,13 +1,14 @@
 // Типы для проектов
+// Соответствуют структуре таблицы projects в Supabase
 
 export interface Project {
   id: string;
   name: string;
-  createdAt: string;
-  description?: string;
-  updatedAt?: string;
-  status?: string;
-  ownerId?: string;
+  description: string | null;
+  status: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateProjectData {

@@ -1,53 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
-import { clearAuthCookies } from "@/lib/auth/utils";
+/**
+ * Logout API Route
+ * Выход из Supabase сессии
+ */
 
-export async function POST(request: NextRequest) {
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+export async function POST() {
   try {
     console.log("[Logout API] Logout request received");
 
-    // Читаем refresh token из cookies
-    const refreshToken = request.cookies.get("refreshToken")?.value;
+    const supabase = await createClient();
 
-    if (refreshToken) {
-      try {
-        // Отправляем запрос на бэкенд для инвалидации refresh token
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/authentication/logout`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              cookie: request.headers.get("cookie") || "",
-            },
-            credentials: "include",
-          }
-        );
+    // Выход из Supabase (автоматически очистит все cookies)
+    const { error } = await supabase.auth.signOut();
 
-        console.log("[Logout API] Backend logout response:", response.status);
-
-        // Создаем ответ
-        const nextResponse = NextResponse.json({ success: true });
-
-        // Пересылаем Set-Cookie заголовки от backend для очистки cookies
-        const setCookie = response.headers.get("set-cookie");
-        if (setCookie) {
-          nextResponse.headers.set("set-cookie", setCookie);
-        }
-
-        // Очищаем access token cookie на стороне Next.js
-        await clearAuthCookies();
-
-        console.log("[Logout API] Logout successful");
-        return nextResponse;
-      } catch (error) {
-        console.error("[Logout API] Backend logout failed:", error);
-        // Продолжаем выполнение даже если бэкенд недоступен
-      }
+    if (error) {
+      console.error("[Logout API] Supabase logout error:", error);
+      // Продолжаем выполнение даже при ошибке
     }
 
-    // Очищаем cookies в любом случае
-    await clearAuthCookies();
-    console.log("[Logout API] Cookies cleared");
+    console.log("[Logout API] Logout successful");
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {

@@ -1,12 +1,14 @@
 // Типы для системы авторизации
 
+export type UserRole = "user" | "admin" | "superAdmin";
+
 export interface User {
   id?: string;
   email: string;
   firstName?: string;
   lastName?: string;
   avatar?: string;
-  role?: string;
+  role?: UserRole;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getEntityDataFromBackend,
   formatEntityResponse,
   buildBackendUrl,
   fetchFromBackend,
 } from "@/lib/api/handlers";
-import { getAuthTokens } from "@/lib/auth/utils";
+import { getAccessToken } from "@/lib/supabase/auth";
 
 export async function GET(
   request: NextRequest,
@@ -16,10 +15,10 @@ export async function GET(
   try {
     console.log(`[${entity} API] Request received`);
 
-    // 1. Получаем токены из cookies
-    const tokens = await getAuthTokens();
-    if (!tokens) {
-      console.log(`[${entity} API] No tokens found`);
+    // 1. Получаем access token из Supabase
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      console.log(`[${entity} API] No access token found`);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -29,30 +28,11 @@ export async function GET(
 
     console.log(`[${entity} API] Backend URL:`, backendUrl);
 
-    // 3. Делаем запрос к бэкенду с обработкой refresh
-    let refreshSetCookie: string | null = null;
-    const cookieHeader = request.headers.get("cookie") || "";
+    // 3. Делаем запрос к бэкенду
+    // Supabase автоматически обновляет токены через middleware
     const response = await fetchFromBackend(backendUrl, {
-      accessToken: tokens.accessToken,
-      cookieHeader, // Передаем cookies для refresh
-      onTokenRefresh: async (newToken) => {
-        // Получаем set-cookie заголовок от refresh
-        const baseUrl = process.env.NEXT_PUBLIC_HOST || "http://localhost:3000";
-        const refreshResponse = await fetch(
-          `${baseUrl}/api/auth/refresh-token`,
-          {
-            method: "POST",
-            headers: {
-              cookie: cookieHeader,
-            },
-            cache: "no-store",
-          }
-        );
-
-        if (refreshResponse.ok) {
-          refreshSetCookie = refreshResponse.headers.get("set-cookie");
-        }
-      },
+      accessToken,
+      cookieHeader: request.headers.get("cookie") || "",
     });
 
     if (!response.ok) {
@@ -68,14 +48,7 @@ export async function GET(
     const data = await response.json();
     console.log(`[${entity} API] Success, returning data`);
     const formatted = formatEntityResponse(data, entity);
-    const next = NextResponse.json(formatted);
-
-    // Устанавливаем cookies от refresh, если были
-    if (refreshSetCookie) {
-      next.headers.set("set-cookie", refreshSetCookie);
-    }
-
-    return next;
+    return NextResponse.json(formatted);
   } catch (error) {
     console.error(`[${entity} API] Error:`, error);
     if (error instanceof Error && error.message === "Unauthorized") {
@@ -97,9 +70,9 @@ export async function POST(
   try {
     console.log(`[${entity} API] POST request received`);
 
-    // 1. Получаем токены из cookies
-    const tokens = await getAuthTokens();
-    if (!tokens) {
+    // 1. Получаем access token из Supabase
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -117,64 +90,16 @@ export async function POST(
     }
 
     // 4. Делаем запрос к бэкенду
+    // Supabase автоматически обновляет токены через middleware
     const response = await fetch(`${apiBaseUrl}/api/${entity}`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${tokens.accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
         Accept: "application/json",
       },
       body: JSON.stringify(body),
     });
-
-    // 5. Если 401 - обновляем токен и повторяем
-    if (response.status === 401) {
-      console.log(`[${entity} API] Got 401, refreshing tokens and retrying...`);
-
-      // Вызываем внутренний refresh endpoint
-      const baseUrl = process.env.NEXT_PUBLIC_HOST || "http://localhost:3000";
-      const refreshResponse = await fetch(`${baseUrl}/api/auth/refresh-token`, {
-        method: "POST",
-        headers: {
-          cookie: request.headers.get("cookie") || "",
-        },
-        cache: "no-store",
-      });
-
-      if (!refreshResponse.ok) {
-        return NextResponse.json(
-          { error: "Token refresh failed" },
-          { status: 401 }
-        );
-      }
-
-      const refreshData = await refreshResponse.json();
-      const refreshSetCookie = refreshResponse.headers.get("set-cookie");
-
-      const retryResponse = await fetch(`${apiBaseUrl}/api/${entity}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${refreshData.accessToken}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!retryResponse.ok) {
-        return NextResponse.json(
-          { error: "Request failed after retry" },
-          { status: 401 }
-        );
-      }
-
-      const data = await retryResponse.json();
-      const next = NextResponse.json(data, { status: 201 });
-      if (refreshSetCookie) {
-        next.headers.set("set-cookie", refreshSetCookie);
-      }
-      return next;
-    }
 
     if (!response.ok) {
       const errorText = await response.text();

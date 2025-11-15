@@ -1,6 +1,13 @@
+/**
+ * Login API Route
+ * Обрабатывает вход через Email/Password
+ * OAuth обрабатывается напрямую через Supabase на клиенте
+ */
+
 import { NextRequest, NextResponse } from "next/server";
-import { setAccessTokenCookie, setRefreshTokenCookie } from "@/lib/auth/utils";
-import { LoginCredentials, User } from "@/lib/auth/types";
+import { createClient } from "@/lib/supabase/server";
+import { LoginCredentials } from "@/lib/auth/types";
+import { getServerUser } from "@/lib/supabase/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,60 +23,31 @@ export async function POST(request: NextRequest) {
 
     console.log("[Login API] Attempting login for:", body.email);
 
-    // Запрос к бэкенду для авторизации
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/authentication/sign-in`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      }
-    );
+    const supabase = await createClient();
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error("[Login API] Backend login failed:", response.status);
-      return NextResponse.json(
-        { message: errorData.message || "Login failed" },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    console.log("[Login API] Login successful");
-    console.log("[Login API] Response data keys:", Object.keys(data));
-    console.log("[Login API] Has accessToken:", !!data.accessToken);
-    console.log("[Login API] Has refreshToken:", !!data.refreshToken);
-
-    // Создаем ответ с теми же данными
-    const nextResponse = NextResponse.json({
-      accessToken: data.accessToken,
-      user: { email: data.email },
+    // Авторизация через Supabase
+    const { error } = await supabase.auth.signInWithPassword({
+      email: body.email,
+      password: body.password,
     });
 
-    // Пересылаем cookies от backend к клиенту
-    const backendCookie = response.headers.get("set-cookie");
-    if (backendCookie) {
-      console.log("[Login API] Backend sent Set-Cookie header");
-      nextResponse.headers.set("set-cookie", backendCookie);
-    }
-
-    // Сохраняем access token в httpOnly cookie на стороне Next.js
-    await setAccessTokenCookie(data.accessToken);
-
-    // Если бэкенд вернул refreshToken в JSON - сохраняем его
-    if (data.refreshToken) {
-      console.log("[Login API] Saving refresh token from JSON response");
-      await setRefreshTokenCookie(data.refreshToken);
-    } else {
-      console.log(
-        "[Login API] No refreshToken in JSON - relying on Set-Cookie header"
+    if (error) {
+      console.error("[Login API] Supabase login failed:", error.message);
+      return NextResponse.json(
+        { message: error.message || "Login failed" },
+        { status: 401 }
       );
     }
 
-    return nextResponse;
+    // Получаем пользователя с профилем
+    const user = await getServerUser();
+
+    console.log("[Login API] Login successful");
+
+    return NextResponse.json({
+      user,
+      success: true,
+    });
   } catch (error: unknown) {
     console.error("[Login API] Error:", error);
 

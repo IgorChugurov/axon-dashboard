@@ -1,50 +1,93 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
-export function middleware(request: NextRequest) {
-  // Получаем путь
+/**
+ * Next.js Middleware
+ *
+ * Выполняется на каждом запросе перед рендерингом страницы.
+ *
+ * Основные задачи:
+ * 1. Обновление сессии Supabase (автоматическое обновление токенов)
+ * 2. Проверка авторизации пользователя
+ * 3. Проверка ролей и прав доступа
+ * 4. Редиректы для неавторизованных или ограниченных пользователей
+ */
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // Публичные маршруты - пропускаем проверку
-  if (
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/logout") ||
-    pathname.startsWith("/api/auth/") ||
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/favicon.ico")
-  ) {
-    const response = NextResponse.next();
+  // Публичные маршруты - не требуют авторизации
+  const publicRoutes = [
+    "/login",
+    "/signup",
+    "/auth/callback",
+    "/welcome",
+    "/api/auth/",
+    "/_next/",
+    "/favicon.ico",
+  ];
+
+  const isPublicRoute = publicRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  // ============================================================================
+  // ШАГ 1: Обновление сессии Supabase
+  // ============================================================================
+  // Вызываем updateSession() для:
+  // - Автоматического обновления токенов если они истекли
+  // - Получения объекта user для проверки авторизации
+  // - Защиты от race conditions при параллельных запросах
+  //
+  // updateSession() возвращает:
+  // - response: NextResponse с обновленными cookies
+  // - user: объект пользователя или null если не авторизован
+  const { response, user } = await updateSession(request);
+
+  // ============================================================================
+  // ШАГ 2: Публичные маршруты
+  // ============================================================================
+  // Для публичных маршрутов просто пропускаем запрос дальше
+  // без проверки авторизации
+  if (isPublicRoute) {
     response.headers.set("x-pathname", pathname);
     return response;
   }
 
-  // Проверяем наличие refreshToken cookie
-  const refreshToken = request.cookies.get("refreshToken");
-
-  // ВРЕМЕННО ОТКЛЮЧЕНО ДЛЯ ОТЛАДКИ
-  // Если нет refreshToken, редиректим на логин
-  if (!refreshToken) {
-    console.log("[Middleware] No refreshToken found, pathname:", pathname);
-    console.log(
-      "[Middleware] Request cookies:",
-      request.cookies.getAll().map((c) => c.name)
-    );
-    // ВРЕМЕННО ОТКЛЮЧЕНО - разрешаем проход без редиректа для отладки
-    // const response = NextResponse.redirect(new URL("/login", request.url));
-    // response.cookies.delete("accessToken");
-    // response.cookies.delete("refreshToken");
-    // response.cookies.delete("userData");
-    // return response;
-
-    // Пропускаем запрос дальше для отладки
-    const response = NextResponse.next();
-    response.headers.set("x-pathname", pathname);
-    response.headers.set("x-debug-no-refresh-token", "true");
-    return response;
+  // ============================================================================
+  // ШАГ 3: Проверка авторизации
+  // ============================================================================
+  // Если пользователь не авторизован (user === null),
+  // редиректим на страницу логина с сохранением URL для возврата
+  if (!user) {
+    const redirectUrl = new URL("/login", request.url);
+    redirectUrl.searchParams.set("redirect", pathname);
+    const loginResponse = NextResponse.redirect(redirectUrl);
+    loginResponse.headers.set("x-pathname", pathname);
+    return loginResponse;
   }
 
-  // Передаем информацию о пути в заголовках для layout.tsx
-  const response = NextResponse.next();
+  // ============================================================================
+  // ШАГ 4: Проверка ролей и прав доступа
+  // ============================================================================
+  // Получаем роль пользователя из базы данных
+  // Используем кешированную версию для производительности
+  const { getUserRoleCached } = await import("@/lib/auth/roles");
+  const userRole = await getUserRoleCached(user.id);
+
+  // Если обычный пользователь (role: "user") пытается попасть в админ-панель,
+  // редиректим его на страницу /welcome (для обычных пользователей)
+  if (userRole === "user" && !pathname.startsWith("/welcome")) {
+    const welcomeUrl = new URL("/welcome", request.url);
+    const welcomeResponse = NextResponse.redirect(welcomeUrl);
+    welcomeResponse.headers.set("x-pathname", pathname);
+    return welcomeResponse;
+  }
+
+  // ============================================================================
+  // ШАГ 5: Успешная авторизация
+  // ============================================================================
+  // Пользователь авторизован и имеет необходимые права
+  // Пропускаем запрос дальше
   response.headers.set("x-pathname", pathname);
   return response;
 }

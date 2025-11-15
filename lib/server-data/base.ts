@@ -56,7 +56,7 @@ export abstract class ServerDataProvider<T> {
    * TODO: Реализовать через createEntityData() аналогично getEntityData()
    * Пока оставляем заглушку - используется редко
    */
-  async createData(data: Partial<T>): Promise<T> {
+  async createData(_data: Partial<T>): Promise<T> {
     throw new Error(
       "createData() not implemented yet. Use route handler /api/[entity] for POST requests."
     );
