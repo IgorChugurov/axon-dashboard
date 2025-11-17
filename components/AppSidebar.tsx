@@ -45,6 +45,9 @@ import {
   CollapsibleTrigger,
 } from "./ui/collapsible";
 import { Icon_logo } from "./Logo";
+import type { EntityDefinition } from "@/lib/universal-entity/types";
+import type { Project } from "@/lib/projects/types";
+import { EntitiesSidebarSectionWrapper } from "./EntitiesSidebarSection";
 
 // Menu items.
 const items = [
@@ -75,7 +78,12 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  projects?: Project[];
+  entities?: EntityDefinition[];
+}
+
+export function AppSidebar({ projects = [], entities = [] }: AppSidebarProps) {
   const { user, logout, isLoading } = useAuth();
 
   const handleLogout = async () => {
@@ -125,11 +133,18 @@ export function AppSidebar() {
         </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupLabel>Projects</SidebarGroupLabel>
-          <SidebarGroupAction>
-            <Plus /> <span className="sr-only">Add Project</span>
-          </SidebarGroupAction>
           <SidebarGroupContent>
             <SidebarMenu>
+              {projects.map((project) => (
+                <SidebarMenuItem key={project.id}>
+                  <SidebarMenuButton asChild>
+                    <Link href={`/${project.id}`}>
+                      <Projector />
+                      <span>{project.name}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link href="/projects">
@@ -138,17 +153,11 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link href="/add-project">
-                    <Plus />
-                    <span>Add Project</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {/* Dynamic Entities from Database - используем Context если доступен, иначе props */}
+        <EntitiesSidebarSectionWrapper entities={entities} />
         <Collapsible defaultValue="open" className="group/collapsible">
           <SidebarGroup className="group/collapsible">
             <SidebarGroupLabel asChild>

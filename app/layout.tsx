@@ -12,6 +12,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from "@/components/Navbar";
 import { cookies } from "next/headers";
 import { getServerUser } from "@/lib/supabase/auth";
+import { getAllProjectsFromSupabase } from "@/lib/projects/supabase";
 
 const GeistSans = Geist({
   subsets: ["latin"],
@@ -44,16 +45,21 @@ export default async function RootLayout({
   );
 
   let user = null;
+  let projects: any[] = [];
 
   // Проверяем авторизацию только для защищенных маршрутов
   if (!isPublicRoute) {
     // Получаем пользователя из Supabase
     user = await getServerUser();
-    console.log(
-      "[Layout] User from Supabase:",
-      user?.email || "not authenticated"
-    );
-    console.log("[Layout] User role:", user);
+
+    // Загружаем все проекты для отображения в сайдбаре
+    try {
+      projects = await getAllProjectsFromSupabase();
+      console.log("[Layout] Loaded projects:", projects.length);
+    } catch (error) {
+      console.error("[Layout] Error loading projects:", error);
+      // Не блокируем рендер, если не удалось загрузить проекты
+    }
   }
 
   const cookieStore = await cookies();
@@ -84,7 +90,7 @@ export default async function RootLayout({
             ) : (
               // Для защищенных маршрутов показываем полный интерфейс
               <SidebarProvider defaultOpen={defaultOpen}>
-                <AppSidebar />
+                <AppSidebar projects={projects} />
                 <main className="w-full ">
                   <Navbar />
                   <div className="px-4">{children}</div>

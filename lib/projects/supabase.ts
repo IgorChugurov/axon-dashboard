@@ -175,3 +175,22 @@ export async function deleteProjectFromSupabase(id: string): Promise<void> {
     throw new Error(`Failed to delete project: ${error.message}`);
   }
 }
+
+/**
+ * Получение всех проектов без пагинации (для сайдбара)
+ */
+export async function getAllProjectsFromSupabase(): Promise<Project[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("projects")
+    .select("*")
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("[Supabase Projects] Error loading all projects:", error);
+    throw new Error(`Failed to fetch projects: ${error.message}`);
+  }
+
+  return (data as Project[]) || [];
+}

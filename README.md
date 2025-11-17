@@ -69,16 +69,19 @@ pnpm dev
 
 ### Начните отсюда
 
-| Документ | Описание |
-|----------|----------|
-| **[docs/INDEX.md](docs/INDEX.md)** | 📋 Полный индекс документации |
-| **[docs/implementation/ENTITY_SERVICE_FINAL.md](docs/implementation/ENTITY_SERVICE_FINAL.md)** | 📖 Entity Service система |
-| **[docs/implementation/QUICK_START_ENTITY.md](docs/implementation/QUICK_START_ENTITY.md)** | ⚡ Создание сущности за 15 минут |
-| **[docs/implementation/PROJECT_STATUS_2025_11_15.md](docs/implementation/PROJECT_STATUS_2025_11_15.md)** | 📊 Текущий статус проекта |
+| Документ                                                                                                 | Описание                         |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| **[docs/INDEX.md](docs/INDEX.md)**                                                                       | 📋 Полный индекс документации    |
+| **[docs/implementation/ENTITY_SERVICE_FINAL.md](docs/implementation/ENTITY_SERVICE_FINAL.md)**           | 📖 Entity Service система        |
+| **[docs/implementation/QUICK_START_ENTITY.md](docs/implementation/QUICK_START_ENTITY.md)**               | ⚡ Создание сущности за 15 минут |
+| **[docs/implementation/PROJECT_STATUS_2025_11_15.md](docs/implementation/PROJECT_STATUS_2025_11_15.md)** | 📊 Текущий статус проекта        |
+| **[docs/deployment/VERCEL_DEPLOYMENT.md](docs/deployment/VERCEL_DEPLOYMENT.md)**                         | 🚀 Деплой на Vercel              |
+| **[docs/deployment/VERCEL_VS_OWN_SERVER.md](docs/deployment/VERCEL_VS_OWN_SERVER.md)**                   | ⚖️ Vercel vs Собственный сервер  |
 
 ### Ключевые документы
 
 - **Архитектура:**
+
   - [CURRENT_AUTH_FLOW.md](docs/architecture/CURRENT_AUTH_FLOW.md) - Supabase SSR авторизация
   - [HYBRID_ARCHITECTURE_GUIDE.md](docs/implementation/HYBRID_ARCHITECTURE_GUIDE.md) - SSR + Browser Client
   - [DEVELOPMENT_GUIDE.md](docs/architecture/DEVELOPMENT_GUIDE.md) - Руководство разработчика
@@ -97,11 +100,11 @@ pnpm dev
 Browser (Client)
   ├─ Client Components → Supabase Browser Client (поиск, фильтры)
   └─ Server Actions → Next.js Server → Supabase (мутации)
-     
+
 Next.js Server (SSR)
   ├─ Server Components → Supabase Server Client (первая загрузка)
   └─ Middleware → Token Refresh (авторизация)
-     
+
 Supabase Cloud
   ├─ PostgreSQL + RLS (безопасность)
   └─ Auth (JWT токены)
@@ -218,12 +221,12 @@ export default async function ProductsPage() {
 
 ### Сравнение с legacy подходом
 
-| Метрика | Legacy | New System | Улучшение |
-|---------|--------|------------|-----------|
-| Строк на сущность | ~620 | ~120 | **-80%** |
-| Дублирование кода | Высокое | Минимальное | ✅ |
-| Поддержка фильтров | Ручная | Автоматическая | ✅ |
-| Типизация | Частичная | Полная | ✅ |
+| Метрика            | Legacy    | New System     | Улучшение |
+| ------------------ | --------- | -------------- | --------- |
+| Строк на сущность  | ~620      | ~120           | **-80%**  |
+| Дублирование кода  | Высокое   | Минимальное    | ✅        |
+| Поддержка фильтров | Ручная    | Автоматическая | ✅        |
+| Типизация          | Частичная | Полная         | ✅        |
 
 ### Текущий проект
 
@@ -371,4 +374,4 @@ MIT License - см. [LICENSE](LICENSE)
 
 **Made with ❤️ using Next.js 15 + Supabase**
 
-*Последнее обновление: 15 ноября 2025*
+_Последнее обновление: 15 ноября 2025_
