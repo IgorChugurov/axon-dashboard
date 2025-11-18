@@ -66,7 +66,7 @@ export default async function EntityDetailPage({
 
             <div className="rounded-md border p-6 space-y-4">
               {displayFields.map((field) => {
-                const value = instance.data[field.name];
+                const value = instance.data ? (instance.data as Record<string, any>)[field.name] : undefined;
                 return (
                   <div key={field.id} className="space-y-2">
                     <Label className="text-sm font-medium">{field.label}</Label>

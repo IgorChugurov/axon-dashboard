@@ -61,6 +61,10 @@ export function EntityDefinitionForm({
     readPermission: initialData?.readPermission || "ALL",
     updatePermission: initialData?.updatePermission || "Admin",
     deletePermission: initialData?.deletePermission || "Admin",
+    titleSection0: initialData?.titleSection0 || "",
+    titleSection1: initialData?.titleSection1 || "",
+    titleSection2: initialData?.titleSection2 || "",
+    titleSection3: initialData?.titleSection3 || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -183,6 +187,56 @@ export function EntityDefinitionForm({
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      {/* Section Titles */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Form Sections</h3>
+        <p className="text-sm text-muted-foreground">
+          Define custom titles for form sections (0-3). Leave empty to use default titles.
+        </p>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="titleSection0">Section 0 Title</Label>
+            <Input
+              id="titleSection0"
+              value={formData.titleSection0}
+              onChange={(e) => handleChange("titleSection0", e.target.value)}
+              placeholder="General Information"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="titleSection1">Section 1 Title</Label>
+            <Input
+              id="titleSection1"
+              value={formData.titleSection1}
+              onChange={(e) => handleChange("titleSection1", e.target.value)}
+              placeholder="Section 1"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="titleSection2">Section 2 Title</Label>
+            <Input
+              id="titleSection2"
+              value={formData.titleSection2}
+              onChange={(e) => handleChange("titleSection2", e.target.value)}
+              placeholder="Section 2"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="titleSection3">Section 3 Title</Label>
+            <Input
+              id="titleSection3"
+              value={formData.titleSection3}
+              onChange={(e) => handleChange("titleSection3", e.target.value)}
+              placeholder="Section 3"
+            />
+          </div>
         </div>
       </div>
 

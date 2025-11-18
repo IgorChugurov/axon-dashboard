@@ -84,6 +84,7 @@ export function FieldForm({
     forEditPageDisabled: initialData?.forEditPageDisabled ?? false,
     displayIndex: initialData?.displayIndex ?? 0,
     displayInTable: initialData?.displayInTable ?? true,
+    sectionIndex: initialData?.sectionIndex ?? 0,
     isOptionTitleField: initialData?.isOptionTitleField ?? false,
     searchable: initialData?.searchable ?? false,
     relatedEntityDefinitionId: initialData?.relatedEntityDefinitionId || "",
@@ -130,6 +131,7 @@ export function FieldForm({
           forEditPageDisabled: formData.forEditPageDisabled,
           displayIndex: formData.displayIndex,
           displayInTable: formData.displayInTable,
+          sectionIndex: formData.sectionIndex,
           isOptionTitleField: formData.isOptionTitleField,
           searchable: formData.searchable,
           autoPopulate: formData.autoPopulate,
@@ -419,6 +421,23 @@ export function FieldForm({
             />
             <p className="text-sm text-muted-foreground">
               Order of the field in forms and tables
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sectionIndex">Section Index</Label>
+            <Input
+              id="sectionIndex"
+              type="number"
+              min="0"
+              max="3"
+              value={formData.sectionIndex}
+              onChange={(e) =>
+                handleChange("sectionIndex", parseInt(e.target.value) || 0)
+              }
+            />
+            <p className="text-sm text-muted-foreground">
+              Section number (0-3) for grouping fields in forms
             </p>
           </div>
         </CollapsibleContent>

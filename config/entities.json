@@ -1,0 +1,243 @@
+{
+  "comment": "UI Configuration for Entity Definitions (hardcoded, not from DB)",
+  "entityName": "Entity",
+  "tableName": "entity_definition",
+  "collectionName": "entities",
+  "apiUrl": "/api/entity-definitions",
+  "apiUrlAll": "/api/entity-definitions/all",
+  "list": {
+    "pageTitle": "Entities",
+    "searchPlaceholder": "Search for entities...",
+    "emptyStateTitle": "You have no entities",
+    "emptyStateMessages": [
+      "Entities that you create will end up here.",
+      "Add an entity to get started."
+    ],
+    "showCreateButton": true,
+    "createButtonText": "New entity",
+    "showSearch": true,
+    "enablePagination": true,
+    "pageSize": 20,
+    "enableFilters": false,
+    "columnsForGrid": [
+      {
+        "field": "name",
+        "headerName": "Name",
+        "flex": 5,
+        "type": "naigateToDetails",
+        "additioonalUrl": "/fields"
+      },
+
+      { "field": "tableName", "headerName": "Table name", "flex": 2 },
+      { "field": "url", "headerName": "Url", "flex": 2 },
+      { "field": "type", "headerName": "Type", "flex": 2 },
+
+      {
+        "field": "actions",
+        "headerName": "",
+        "type": "actions",
+        "flex": 1,
+        "options": {
+          "actions": [
+            {
+              "action": "edit",
+              "link": true,
+              "icon": "setting",
+              "additioonalUrl": "/fields"
+            }
+          ]
+        }
+      }
+    ],
+    "forEmptyList": {
+      "title": "You have no entities",
+      "messages": [
+        "Entities that you create will end up here.",
+        "Add a entity to get started."
+      ]
+    },
+    "messages": {
+      "afterCreate": "Entity was created successfully!",
+      "afterDelete": "Entity was deleted successfully!",
+      "afterEdit": "Entity was updated successfully!",
+      "forDeleteModal": {
+        "modalText": "Are you sure you want to delete ${item.name}? This action cannot be undone.",
+        "modalTitle": "Confirm deleting entity",
+        "buttonTitle": "Delete"
+      }
+    }
+  },
+  "forEdit": {
+    "title": ["Create new entity", "Edit entity"],
+    "pageHeader": "Entityt details",
+    "buttonText": { "create": "Create", "edit": "Update" },
+    "sections": [
+      {
+        "title": "Info",
+        "fields": [
+          {
+            "name": "name",
+            "label": "Entity name",
+            "placeholder": "Enter name",
+            "type": "text",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": true,
+            "requiredText": "Name is required",
+            "forEditPageDisabled": false
+          },
+
+          {
+            "name": "tableName",
+            "label": "Table name",
+            "placeholder": "Enter table name",
+            "type": "text",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": true,
+            "requiredText": "Table name is required",
+            "forEditPageDisabled": false
+          },
+          {
+            "name": "url",
+            "label": "Url for API",
+            "placeholder": "Enter url for API call",
+            "type": "text",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": true,
+            "requiredText": "Url for API is required",
+            "forEditPageDisabled": false
+          },
+
+          {
+            "name": "type",
+            "label": "Type",
+            "placeholder": "Select type",
+            "type": "select",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": true,
+            "requiredText": "Type is required",
+            "forEditPageDisabled": true,
+            "options": [
+              { "id": "primary", "name": "Primary" },
+              { "id": "secondary", "name": "Secondary" },
+              { "id": "tertiary", "name": "Tertiary" }
+            ]
+          },
+
+          {
+            "name": "description",
+            "label": "Description",
+            "placeholder": "Enter description",
+            "type": "text",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": false,
+            "requiredText": "",
+            "forEditPageDisabled": false
+          },
+          {
+            "name": "emptyStateName",
+            "label": "Empty state label",
+            "placeholder": "Enter empty state label",
+            "type": "text",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": false,
+            "requiredText": "",
+            "forEditPageDisabled": false
+          },
+          {
+            "name": "editingPageName",
+            "label": "Editing page label",
+            "placeholder": "Enter editing page label",
+            "type": "text",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": false,
+            "requiredText": "",
+            "forEditPageDisabled": false
+          },
+          {
+            "name": "createButton",
+            "label": "Enable Create Button",
+            "placeholder": "Determines whether a create button is displayed on the list page in the Management panel",
+
+            "type": "switch",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": false,
+            "requiredText": "",
+            "forEditPageDisabled": false
+          },
+          {
+            "name": "showSearch",
+            "label": "Enable Search in List",
+            "placeholder": "Determines whether a search input is displayed on the list page in the Management panel",
+
+            "type": "switch",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": false,
+            "requiredText": "",
+            "forEditPageDisabled": false
+          },
+          {
+            "name": "skipListTransformSa",
+            "label": "Skip list transformation for Secondary API",
+            "placeholder": "Skip list transformation for Secondary API",
+
+            "type": "switch",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": false,
+            "requiredText": "",
+            "forEditPageDisabled": false,
+            "defaultValue": false
+          },
+          {
+            "name": "skipSingleTransformSa",
+            "label": "Skip single transformation for Secondary API",
+            "placeholder": "Skip single transformation for Secondary API",
+
+            "type": "switch",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": false,
+            "requiredText": "",
+            "forEditPageDisabled": false,
+            "defaultValue": false
+          },
+          {
+            "name": "skipListTransformMfa",
+            "label": "Skip list transformation for Microfrontend API",
+            "placeholder": "Skip list transformation for Microfrontend API",
+
+            "type": "switch",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": false,
+            "requiredText": "",
+            "forEditPageDisabled": false,
+            "defaultValue": false
+          },
+          {
+            "name": "skipSingleTransformMfa",
+            "label": "Skip single transformation for Microfrontend API",
+            "placeholder": "Skip single transformation for Microfrontend API",
+
+            "type": "switch",
+            "forEditPage": "yes",
+            "forCreatePage": "yes",
+            "required": false,
+            "requiredText": "",
+            "forEditPageDisabled": false,
+            "defaultValue": false
+          }
+        ]
+      }
+    ]
+  }
+}

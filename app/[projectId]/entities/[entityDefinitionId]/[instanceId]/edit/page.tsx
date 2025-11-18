@@ -4,7 +4,7 @@
 
 import { notFound } from "next/navigation";
 import { getInstanceById } from "@/lib/universal-entity/instance-service";
-import { EntityFormClient } from "../../EntityFormClient";
+import { EntityFormWithSections } from "../../EntityFormWithSections";
 import { EntityDefinitionServerWrapper } from "../../EntityDefinitionServerWrapper";
 
 interface EntityEditPageProps {
@@ -64,9 +64,6 @@ export default async function EntityEditPage({ params }: EntityEditPageProps) {
           }
         }
 
-        // Фильтруем поля для формы редактирования
-        const editFields = fields.filter((f) => f.forEditPage);
-
         return (
           <div className="space-y-6">
             <div>
@@ -80,9 +77,9 @@ export default async function EntityEditPage({ params }: EntityEditPageProps) {
               )}
             </div>
 
-            <EntityFormClient
+            <EntityFormWithSections
               entityDefinition={entityDefinition}
-              fields={editFields}
+              fields={fields}
               mode="edit"
               initialData={formData}
               instanceId={instanceId}

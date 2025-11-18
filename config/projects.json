@@ -1,27 +1,32 @@
 {
-  "title": "Projects",
+  "comment": "UI Configuration for Projects entity (hardcoded, not from DB)",
+  "entityName": "Project",
+  "tableName": "projects",
   "collectionName": "projects",
-  "forServicePackage": {
-    "url": "/api/projects",
-    "reloadEvents": {
-      "update": "reloadProjects",
-      "create": "reloadProjects",
-      "delete": "reloadProjects"
-    }
-  },
-  "reloadEventTitle": "reloadProjects",
-  "forList": {
-    "searchBlock": "Search for projects",
-    "buttonBlock": { "title": "New project" },
-    "columnsForGrid": [
+  "apiUrl": "/api/projects",
+  "apiUrlAll": "/api/projects/all",
+  "list": {
+    "pageTitle": "Projects",
+    "searchPlaceholder": "Search for projects...",
+    "emptyStateTitle": "You have no projects",
+    "emptyStateMessages": [
+      "Projects that you create will end up here.",
+      "Add a project to get started."
+    ],
+    "showCreateButton": true,
+    "createButtonText": "New project",
+    "showSearch": true,
+    "enablePagination": true,
+    "pageSize": 20,
+    "enableFilters": false,
+    "columns": [
       {
         "field": "name",
         "headerName": "Name",
         "flex": 1,
         "type": "naigateToDetails",
-        "additioonalUrl": "/entities"
+        "additionalUrl": "/entities"
       },
-
       {
         "field": "createdAt",
         "headerName": "Created",
@@ -32,42 +37,36 @@
         "field": "actions",
         "headerName": "",
         "type": "actions",
-        "width": 50,
-        "options": {
-          "actions": [
-            {
-              "action": "edit",
-              "icon": "setting"
-            }
-          ]
-        }
-      }
-    ]
-  },
-  "forEdit": {
-    "title": ["Create new project", "Edit project"],
-    "buttonText": {
-      "update": "Save",
-      "create": "Create project"
-    },
-    "pageHeader": "",
-    "sections": [
-      {
-        "title": "General",
-        "fields": [
+        "width": 100,
+        "actions": [
           {
-            "name": "name",
-            "label": "Project name",
-            "placeholder": "Enter project name",
-            "type": "text",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": true,
-            "requiredText": "Name is required",
-            "forEditPageDisabled": false
+            "action": "edit",
+            "icon": "setting",
+            "link": true
           }
         ]
       }
     ]
+  },
+  "form": {
+    "createPageTitle": "Create new project",
+    "editPageTitle": "Edit project",
+    "pageHeader": "Project details",
+    "createButtonLabel": "Create project",
+    "updateButtonLabel": "Save",
+    "cancelButtonLabel": "Cancel"
+  },
+  "messages": {
+    "afterCreate": "Project created successfully!",
+    "afterUpdate": "Project updated successfully!",
+    "afterDelete": "Project deleted successfully!",
+    "deleteModalTitle": "Confirm deleting project",
+    "deleteModalText": "Are you sure you want to delete this project? This action cannot be undone.",
+    "deleteModalButtonText": "Delete",
+    "reloadEvents": {
+      "create": "reloadProjects",
+      "update": "reloadProjects",
+      "delete": "reloadProjects"
+    }
   }
 }

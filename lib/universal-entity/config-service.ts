@@ -31,6 +31,16 @@ function transformEntityDefinition(row: any): EntityDefinition {
     readPermission: row.read_permission,
     updatePermission: row.update_permission,
     deletePermission: row.delete_permission,
+    titleSection0: row.title_section_0,
+    titleSection1: row.title_section_1,
+    titleSection2: row.title_section_2,
+    titleSection3: row.title_section_3,
+    // UI Configuration
+    uiConfig: row.ui_config,
+    enablePagination: row.enable_pagination,
+    pageSize: row.page_size,
+    enableFilters: row.enable_filters,
+    filterEntityDefinitionIds: row.filter_entity_definition_ids,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -53,6 +63,7 @@ function transformField(row: any): Field {
     forEditPageDisabled: row.for_edit_page_disabled,
     displayIndex: row.display_index,
     displayInTable: row.display_in_table,
+    sectionIndex: row.section_index ?? 0,
     isOptionTitleField: row.is_option_title_field,
     searchable: row.searchable,
     relatedEntityDefinitionId: row.related_entity_definition_id,
@@ -68,6 +79,8 @@ function transformField(row: any): Field {
     includeInListPma: row.include_in_list_pma,
     includeInSingleSa: row.include_in_single_sa,
     includeInListSa: row.include_in_list_sa,
+    foreignKey: row.foreign_key,
+    foreignKeyValue: row.foreign_key_value,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -357,4 +370,34 @@ export async function getFieldById(id: string): Promise<Field | null> {
  */
 export function clearCache(): void {
   cachedConfig = null;
+}
+
+/**
+ * Получить entity definition с полями и сгенерированным UI конфигом
+ * Это основная функция для использования на страницах списков
+ */
+export async function getEntityDefinitionWithUIConfig(
+  entityDefinitionId: string
+): Promise<{
+  entityDefinition: EntityDefinition;
+  fields: Field[];
+  uiConfig: import("./ui-config-types").EntityUIConfig;
+} | null> {
+  // Получаем entity definition и fields
+  const result = await getEntityDefinitionWithFields(entityDefinitionId);
+
+  if (!result) return null;
+
+  // Импортируем функцию генерации UI конфига
+  const { generateUIConfig } = await import(
+    "@/lib/form-generation/utils/generateUIConfig"
+  );
+
+  // Генерируем UI конфиг с defaults + merge с custom конфигом
+  const uiConfig = generateUIConfig(result.entityDefinition, result.fields);
+
+  return {
+    ...result,
+    uiConfig,
+  };
 }

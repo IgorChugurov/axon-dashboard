@@ -23,6 +23,7 @@ export interface Field {
   forEditPageDisabled: boolean;
   displayIndex?: number;
   displayInTable?: boolean;
+  sectionIndex: number; // Index of the section this field belongs to (0-3)
   entityDefinitionId: string;
   isOptionTitleField?: boolean;
   isRelationSource: boolean;
@@ -48,6 +49,9 @@ export interface Field {
    */
   autoPopulate?: boolean;
   searchable?: boolean;
+  // Conditional field visibility based on another field's value
+  foreignKey?: string | null; // Name of the field this field depends on
+  foreignKeyValue?: string | null; // Value(s) of foreignKey that make this field visible (pipe-separated: "value1|value2" or "any")
 }
 
 export enum DbType {

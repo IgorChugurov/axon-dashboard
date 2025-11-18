@@ -2,7 +2,6 @@
  * Универсальная страница списка экземпляров сущности
  */
 
-import { notFound } from "next/navigation";
 import { getInstances } from "@/lib/universal-entity/instance-service";
 import { EntityListClient } from "./EntityListClient";
 import { EntityDefinitionServerWrapper } from "./EntityDefinitionServerWrapper";

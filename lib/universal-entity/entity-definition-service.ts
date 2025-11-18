@@ -22,6 +22,10 @@ export interface CreateEntityDefinitionData {
   readPermission?: string;
   updatePermission?: string;
   deletePermission?: string;
+  titleSection0?: string | null;
+  titleSection1?: string | null;
+  titleSection2?: string | null;
+  titleSection3?: string | null;
 }
 
 export interface UpdateEntityDefinitionData {
@@ -33,6 +37,10 @@ export interface UpdateEntityDefinitionData {
   readPermission?: string;
   updatePermission?: string;
   deletePermission?: string;
+  titleSection0?: string | null;
+  titleSection1?: string | null;
+  titleSection2?: string | null;
+  titleSection3?: string | null;
   // tableName нельзя изменить после создания
 }
 
@@ -115,6 +123,10 @@ export async function createEntityDefinition(
       read_permission: data.readPermission || "ALL",
       update_permission: data.updatePermission || "Admin",
       delete_permission: data.deletePermission || "Admin",
+      title_section_0: data.titleSection0 || null,
+      title_section_1: data.titleSection1 || null,
+      title_section_2: data.titleSection2 || null,
+      title_section_3: data.titleSection3 || null,
     } as any)
     .select()
     .single();
@@ -210,6 +222,14 @@ export async function updateEntityDefinition(
     updatePayload.update_permission = data.updatePermission;
   if (data.deletePermission !== undefined)
     updatePayload.delete_permission = data.deletePermission;
+  if (data.titleSection0 !== undefined)
+    updatePayload.title_section_0 = data.titleSection0;
+  if (data.titleSection1 !== undefined)
+    updatePayload.title_section_1 = data.titleSection1;
+  if (data.titleSection2 !== undefined)
+    updatePayload.title_section_2 = data.titleSection2;
+  if (data.titleSection3 !== undefined)
+    updatePayload.title_section_3 = data.titleSection3;
 
   const { data: updated, error } = await supabase
     .from("entity_definition")
@@ -245,7 +265,10 @@ export async function deleteEntityDefinition(id: string): Promise<void> {
     .limit(1);
 
   if (instancesError) {
-    console.error("[EntityDefinitionService] Check instances error:", instancesError);
+    console.error(
+      "[EntityDefinitionService] Check instances error:",
+      instancesError
+    );
     throw new Error("Failed to check for existing instances");
   }
 
@@ -289,6 +312,7 @@ export interface CreateFieldData {
   forEditPageDisabled?: boolean;
   displayIndex?: number;
   displayInTable?: boolean;
+  sectionIndex?: number;
   isOptionTitleField?: boolean;
   searchable?: boolean;
   relatedEntityDefinitionId?: string | null;
@@ -304,11 +328,11 @@ export interface CreateFieldData {
   includeInListPma?: boolean;
   includeInSingleSa?: boolean;
   includeInListSa?: boolean;
+  foreignKey?: string | null;
+  foreignKeyValue?: string | null;
 }
 
-export interface UpdateFieldData extends Partial<CreateFieldData> {
-  // Все поля опциональны при обновлении
-}
+export type UpdateFieldData = Partial<CreateFieldData>;
 
 /**
  * Создать новое Field
@@ -355,6 +379,7 @@ export async function createField(data: CreateFieldData): Promise<Field> {
       for_edit_page_disabled: data.forEditPageDisabled ?? false,
       display_index: data.displayIndex ?? 0,
       display_in_table: data.displayInTable ?? true,
+      section_index: data.sectionIndex ?? 0,
       is_option_title_field: data.isOptionTitleField ?? false,
       searchable: data.searchable ?? false,
       related_entity_definition_id: data.relatedEntityDefinitionId || null,
@@ -370,6 +395,8 @@ export async function createField(data: CreateFieldData): Promise<Field> {
       include_in_list_pma: data.includeInListPma ?? true,
       include_in_single_sa: data.includeInSingleSa ?? true,
       include_in_list_sa: data.includeInListSa ?? true,
+      foreign_key: data.foreignKey || null,
+      foreign_key_value: data.foreignKeyValue || null,
     } as any)
     .select()
     .single();
@@ -454,6 +481,8 @@ export async function updateField(
     updatePayload.display_index = data.displayIndex;
   if (data.displayInTable !== undefined)
     updatePayload.display_in_table = data.displayInTable;
+  if (data.sectionIndex !== undefined)
+    updatePayload.section_index = data.sectionIndex;
   if (data.isOptionTitleField !== undefined)
     updatePayload.is_option_title_field = data.isOptionTitleField;
   if (data.searchable !== undefined) updatePayload.searchable = data.searchable;
@@ -483,6 +512,10 @@ export async function updateField(
     updatePayload.include_in_single_sa = data.includeInSingleSa;
   if (data.includeInListSa !== undefined)
     updatePayload.include_in_list_sa = data.includeInListSa;
+  if (data.foreignKey !== undefined)
+    updatePayload.foreign_key = data.foreignKey;
+  if (data.foreignKeyValue !== undefined)
+    updatePayload.foreign_key_value = data.foreignKeyValue;
 
   const { data: updated, error } = await supabase
     .from("field")
@@ -518,7 +551,10 @@ export async function deleteField(id: string): Promise<void> {
     .limit(1);
 
   if (checkError) {
-    console.error("[EntityDefinitionService] Check relations error:", checkError);
+    console.error(
+      "[EntityDefinitionService] Check relations error:",
+      checkError
+    );
     throw new Error("Failed to check for field relations");
   }
 
@@ -536,7 +572,10 @@ export async function deleteField(id: string): Promise<void> {
     .limit(1);
 
   if (relationsError) {
-    console.error("[EntityDefinitionService] Check entity relations error:", relationsError);
+    console.error(
+      "[EntityDefinitionService] Check entity relations error:",
+      relationsError
+    );
     throw new Error("Failed to check for entity relations");
   }
 
@@ -575,6 +614,10 @@ function transformEntityDefinition(row: any): EntityDefinition {
     readPermission: row.read_permission,
     updatePermission: row.update_permission,
     deletePermission: row.delete_permission,
+    titleSection0: row.title_section_0,
+    titleSection1: row.title_section_1,
+    titleSection2: row.title_section_2,
+    titleSection3: row.title_section_3,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -597,6 +640,7 @@ function transformField(row: any): Field {
     forEditPageDisabled: row.for_edit_page_disabled,
     displayIndex: row.display_index,
     displayInTable: row.display_in_table,
+    sectionIndex: row.section_index ?? 0,
     isOptionTitleField: row.is_option_title_field,
     searchable: row.searchable,
     relatedEntityDefinitionId: row.related_entity_definition_id,
@@ -612,8 +656,9 @@ function transformField(row: any): Field {
     includeInListPma: row.include_in_list_pma,
     includeInSingleSa: row.include_in_single_sa,
     includeInListSa: row.include_in_list_sa,
+    foreignKey: row.foreign_key,
+    foreignKeyValue: row.foreign_key_value,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
-

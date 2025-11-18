@@ -2,6 +2,8 @@
  * Типы для универсальной системы сущностей
  */
 
+import type { PartialUIConfig } from "./ui-config-types";
+
 // =====================================================
 // Конфигурация сущностей
 // =====================================================
@@ -20,6 +22,23 @@ export interface EntityDefinition {
   readPermission: "ALL" | "User" | "Admin" | "Admin|User";
   updatePermission: "ALL" | "User" | "Admin" | "Admin|User";
   deletePermission: "ALL" | "User" | "Admin" | "Admin|User";
+
+  // Section titles for form organization
+  titleSection0?: string | null;
+  titleSection1?: string | null;
+  titleSection2?: string | null;
+  titleSection3?: string | null;
+
+  // UI Configuration
+  uiConfig?: PartialUIConfig | null;    // Partial override для UI метаданных
+  
+  // Pagination settings
+  enablePagination?: boolean | null;    // default: true
+  pageSize?: number | null;             // default: 20
+  
+  // Filter settings
+  enableFilters?: boolean | null;       // default: false
+  filterEntityDefinitionIds?: string[] | null; // ID сущностей для фильтрации
 
   createdAt: string;
   updatedAt: string;
@@ -67,6 +86,7 @@ export interface Field {
   forEditPageDisabled: boolean;
   displayIndex: number;
   displayInTable: boolean;
+  sectionIndex: number; // Index of the section this field belongs to (0-3)
   isOptionTitleField: boolean;
   searchable: boolean;
 
@@ -89,21 +109,60 @@ export interface Field {
   includeInSingleSa: boolean;
   includeInListSa: boolean;
 
+  // Conditional field visibility based on another field's value
+  foreignKey?: string | null; // Name of the field this field depends on
+  foreignKeyValue?: string | null; // Value(s) of foreignKey that make this field visible (pipe-separated: "value1|value2" or "any")
+
   createdAt: string;
   updatedAt: string;
 }
 
 // =====================================================
+// Типы значений полей
+// =====================================================
+
+/**
+ * Возможные типы значений полей в зависимости от DbType
+ */
+export type FieldValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | string[] // для массивов связей
+  | null
+  | undefined;
+
+/**
+ * Маппинг DbType на TypeScript типы
+ */
+export type DbTypeToTSType = {
+  varchar: string;
+  float: number;
+  boolean: boolean;
+  timestamptz: string | Date;
+  manyToOne: string; // ID связанной сущности
+  oneToMany: string[]; // массив ID
+  manyToMany: string[]; // массив ID
+  oneToOne: string; // ID связанной сущности
+};
+
+/**
+ * Generic тип для данных сущности с типобезопасностью
+ */
+export type EntityData<T extends Record<string, FieldValue> = Record<string, FieldValue>> = T;
+
+// =====================================================
 // Экземпляры сущностей
 // =====================================================
 
-export interface EntityInstance {
+export interface EntityInstance<TData extends Record<string, FieldValue> = Record<string, FieldValue>> {
   id: string;
   entityDefinitionId: string;
   projectId: string;
 
   // Все поля хранятся в JSONB (внутреннее представление)
-  data: Record<string, any>;
+  data: EntityData<TData>;
 
   createdAt: string;
   updatedAt: string;
@@ -137,24 +196,28 @@ export interface EntityRelation {
  * Экземпляр сущности с полями и связями (плоская структура)
  * Все поля размещены на верхнем уровне, без data и relations
  */
-export interface EntityInstanceWithFields {
+export type EntityInstanceWithFields<
+  TFields extends Record<string, FieldValue> = Record<string, FieldValue>
+> = {
   id: string;
   entityDefinitionId: string;
   projectId: string;
   createdAt: string;
   updatedAt: string;
+} & TFields;
 
-  // Динамические поля (обычные поля + поля связей)
-  [key: string]: any;
-}
+/**
+ * Тип фильтра для поля
+ */
+export type FilterValue = FieldValue | FieldValue[];
 
 /**
  * Конфигурация для получения списка экземпляров
  */
-export interface GetInstancesOptions {
+export interface GetInstancesOptions<TFilters extends Record<string, FilterValue> = Record<string, FilterValue>> {
   includeRelations?: string[]; // имена полей для загрузки связей
   relationsAsIds?: boolean; // если true, связи как ID, иначе как объекты (default: false)
-  filters?: Record<string, any>; // фильтры по полям
+  filters?: TFilters; // фильтры по полям
   limit?: number;
   offset?: number;
   sortBy?: string;
@@ -164,9 +227,7 @@ export interface GetInstancesOptions {
 /**
  * Данные для создания/обновления экземпляра
  */
-export interface InstanceData {
-  [fieldName: string]: any;
-}
+export type InstanceData<TData extends Record<string, FieldValue> = Record<string, FieldValue>> = TData;
 
 /**
  * Связи для создания/обновления
@@ -174,3 +235,49 @@ export interface InstanceData {
 export interface RelationsData {
   [fieldName: string]: string[]; // массив ID связанных экземпляров
 }
+
+// =====================================================
+// Utility Types для безопасной работы
+// =====================================================
+
+/**
+ * Type guard для проверки, что значение является валидным FieldValue
+ */
+export function isFieldValue(value: unknown): value is FieldValue {
+  return (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    value instanceof Date ||
+    (Array.isArray(value) && value.every((v) => typeof v === "string")) ||
+    value === null ||
+    value === undefined
+  );
+}
+
+/**
+ * Type guard для проверки EntityData
+ */
+export function isEntityData(value: unknown): value is Record<string, FieldValue> {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  return Object.values(value).every(isFieldValue);
+}
+
+/**
+ * Безопасное извлечение значения поля с типом
+ */
+export function getFieldValue<T extends FieldValue>(
+  data: Record<string, FieldValue>,
+  fieldName: string,
+  defaultValue?: T
+): T | undefined {
+  const value = data[fieldName];
+  return value !== undefined ? (value as T) : defaultValue;
+}
+
+/**
+ * Partial тип для обновления данных сущности
+ */
+export type PartialInstanceData<T extends Record<string, FieldValue>> = Partial<T>;

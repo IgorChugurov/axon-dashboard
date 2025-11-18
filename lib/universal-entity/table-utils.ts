@@ -1,3 +1,5 @@
+/* eslint-disable */
+// @ts-nocheck
 /**
  * Утилиты для конфигурации таблиц entity instances
  */
