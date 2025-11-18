@@ -87,6 +87,10 @@ export interface MessagesConfig {
   afterUpdate: string;                  // "Project updated!"
   afterDelete: string;                  // "Project deleted!"
   
+  // Ошибки
+  errorCreate?: string;                 // "Failed to create project"
+  errorUpdate?: string;                 // "Failed to update project"
+  
   // Модалка удаления
   deleteModalTitle: string;             // "Confirm deleting project"
   deleteModalText: string;              // "Are you sure you want to delete {name}?"

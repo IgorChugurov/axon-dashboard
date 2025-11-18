@@ -9,12 +9,27 @@ import type { Field, EntityDefinition, FieldType, DbType } from "@/lib/universal
 // =====================================================
 
 /**
+ * Action button configuration for a section
+ */
+export interface SectionAction {
+  action: "delete";
+  title: string;
+  options: {
+    modalText: string;
+    modalTitle: string;
+    confirmWord?: string;
+    confirmText?: string;
+  };
+}
+
+/**
  * A section grouping fields together in a form
  */
 export interface FormSection {
   sectionIndex: number;
   title: string;
   fields: Field[];
+  action?: SectionAction; // Optional action button (e.g., delete)
 }
 
 /**

@@ -84,6 +84,8 @@ function generateDefaults(
     afterCreate: `${name} was created successfully!`,
     afterUpdate: `${name} was updated successfully!`,
     afterDelete: `${name} was deleted successfully!`,
+    errorCreate: `Failed to create ${nameLower}. Please try again.`,
+    errorUpdate: `Failed to update ${nameLower}. Please try again.`,
     deleteModalTitle: `Confirm deleting ${nameLower}`,
     deleteModalText: `Are you sure you want to delete this ${nameLower}? This action cannot be undone.`,
     deleteModalButtonText: "Delete",

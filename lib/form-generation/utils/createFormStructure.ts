@@ -5,15 +5,18 @@
 import type { Field, EntityDefinition } from "@/lib/universal-entity/types";
 import type { FormSection, FormStructure } from "../types";
 import { getSectionTitle } from "./fieldHelpers";
+import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 
 /**
  * Group fields into sections based on sectionIndex
  * Filters out sections with no visible fields
+ * Adds delete section for edit mode
  */
 export function createFormStructure(
   entityDefinition: EntityDefinition,
   fields: Field[],
-  mode: "create" | "edit"
+  mode: "create" | "edit",
+  uiConfig?: EntityUIConfig
 ): FormStructure {
   // Filter fields for current mode
   const relevantFields = fields.filter((field) => {
@@ -62,6 +65,26 @@ export function createFormStructure(
     });
   }
 
+  // Add delete section for edit mode
+  if (mode === "edit" && uiConfig) {
+    const messages = uiConfig.messages;
+    sections.push({
+      sectionIndex: 999, // Special index for delete section (always last)
+      title: "Deletion",
+      fields: [],
+      action: {
+        action: "delete",
+        title: messages.deleteModalButtonText || "Delete",
+        options: {
+          modalText: messages.deleteModalText || "Are you sure you want to delete this item?",
+          modalTitle: messages.deleteModalTitle || "Confirm deletion",
+          confirmWord: messages.deleteModalConfirmWord,
+          confirmText: messages.deleteModalConfirmText,
+        },
+      },
+    });
+  }
+
   return {
     entityDefinition,
     sections,
@@ -72,6 +95,7 @@ export function createFormStructure(
 /**
  * Filter form structure to only include visible fields
  * (based on foreignKey dependencies)
+ * Preserves sections with actions even if they have no fields
  */
 export function filterVisibleSections(
   formStructure: FormStructure,
@@ -88,7 +112,10 @@ export function filterVisibleSections(
         fields: visibleFields,
       };
     })
-    .filter((section) => section.fields.length > 0); // Remove empty sections
+    .filter((section) => 
+      // Keep sections with fields OR sections with actions (like delete section)
+      section.fields.length > 0 || section.action !== undefined
+    );
 }
 
 /**

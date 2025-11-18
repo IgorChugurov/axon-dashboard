@@ -10,11 +10,13 @@ import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
 import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
+import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { FormData } from "../types";
 import { createSchema, createInitialFormData } from "../utils/createSchema";
 import { createFormStructure, filterVisibleSections } from "../utils/createFormStructure";
 import { getItemForEdit } from "../utils/getItemForEdit";
 import { GetInputForField } from "./GetInputForField";
+import { DeleteSection } from "./DeleteSection";
 
 interface FormWithSectionsProps {
   entityDefinition: EntityDefinition;
@@ -23,8 +25,11 @@ interface FormWithSectionsProps {
   initialData?: FormData;
   onSubmit: (data: FormData) => Promise<void>;
   onCancel?: () => void;
+  onDelete?: () => Promise<void>;
   submitButtonText?: string;
   cancelButtonText?: string;
+  uiConfig?: EntityUIConfig;
+  itemName?: string; // For delete confirmation modal
 }
 
 export function FormWithSections({
@@ -34,8 +39,11 @@ export function FormWithSections({
   initialData = {},
   onSubmit,
   onCancel,
+  onDelete,
   submitButtonText,
   cancelButtonText,
+  uiConfig,
+  itemName,
 }: FormWithSectionsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -51,8 +59,8 @@ export function FormWithSections({
 
   // Create form structure with sections
   const formStructure = useMemo(() => {
-    return createFormStructure(entityDefinition, fields, mode);
-  }, [entityDefinition, fields, mode]);
+    return createFormStructure(entityDefinition, fields, mode, uiConfig);
+  }, [entityDefinition, fields, mode, uiConfig]);
 
   // Prepare initial form data
   const preparedInitialData = useMemo(() => {
@@ -124,41 +132,59 @@ export function FormWithSections({
             <p>No fields available for {mode === "create" ? "creation" : "editing"}.</p>
           </div>
         ) : (
-          visibleSections.map((section, sectionIdx) => (
-            <div
-              key={section.sectionIndex}
-              className={`space-y-6 ${
-                sectionIdx > 0 ? "pt-6 border-t border-border" : ""
-              }`}
-            >
-              {/* Section Title */}
-              <div className="space-y-1">
-                <h3 className="text-lg font-semibold tracking-tight">
-                  {section.title}
-                </h3>
-                <div className="h-1 w-12 bg-primary rounded-full" />
-              </div>
+          visibleSections.map((section, sectionIdx) => {
+            // Check if this is a delete section (has action and no fields)
+            if (section.action && section.fields.length === 0) {
+              if (!onDelete) {
+                return null;
+              }
+              return (
+                <DeleteSection
+                  key={section.sectionIndex}
+                  action={section.action}
+                  onDelete={onDelete}
+                  itemName={itemName}
+                />
+              );
+            }
 
-              {/* Section Fields */}
-              <div className="space-y-6">
-                {section.fields.map((field) => {
-                  const isDisabled =
-                    mode === "edit" && field.forEditPageDisabled;
+            // Regular section with fields
+            return (
+              <div
+                key={section.sectionIndex}
+                className={`space-y-6 ${
+                  sectionIdx > 0 ? "pt-6 border-t border-border" : ""
+                }`}
+              >
+                {/* Section Title */}
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold tracking-tight">
+                    {section.title}
+                  </h3>
+                  <div className="h-1 w-12 bg-primary rounded-full" />
+                </div>
 
-                  return (
-                    <div key={field.id}>
-                      <GetInputForField
-                        field={field}
-                        control={methods.control}
-                        disabled={isDisabled}
-                        options={[]} // Options will be loaded by InputSelect/InputRelation
-                      />
-                    </div>
-                  );
-                })}
+                {/* Section Fields */}
+                <div className="space-y-6">
+                  {section.fields.map((field) => {
+                    const isDisabled =
+                      mode === "edit" && field.forEditPageDisabled;
+
+                    return (
+                      <div key={field.id}>
+                        <GetInputForField
+                          field={field}
+                          control={methods.control}
+                          disabled={isDisabled}
+                          options={[]} // Options will be loaded by InputSelect/InputRelation
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
 
         {/* Form Actions */}

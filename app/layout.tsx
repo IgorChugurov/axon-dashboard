@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from "@/components/Navbar";
+import { Toaster } from "@/components/ui/toaster";
 import { cookies } from "next/headers";
 import { getServerUser } from "@/lib/supabase/auth";
 import { getAllProjectsFromSupabase } from "@/lib/projects/supabase";
@@ -97,6 +98,7 @@ export default async function RootLayout({
                 </main>
               </SidebarProvider>
             )}
+            <Toaster />
           </AuthProvider>
         </ThemeProvider>
       </body>
