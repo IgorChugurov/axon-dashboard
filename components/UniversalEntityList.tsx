@@ -70,7 +70,7 @@ export function UniversalEntityList({
     // Для fields - создание нового field
     // Для обычных сущностей - создание нового instance
     if (entityDefinition.tableName === "entity_definition") {
-      router.push(`/${projectId}/entity-definition/new`);
+      router.push(`/projects/${projectId}/entity-definition/new`);
     } else if (entityDefinition.tableName === "field") {
       // Для fields нужно получить entityDefinitionId из контекста
       // Пока используем projectId, но это нужно будет исправить
@@ -78,10 +78,10 @@ export function UniversalEntityList({
       const currentPath = window.location.pathname;
       const match = currentPath.match(/\/entity-definition\/([^/]+)\/fields/);
       if (match) {
-        router.push(`/${projectId}/entity-definition/${match[1]}/fields/new`);
+        router.push(`/projects/${projectId}/entity-definition/${match[1]}/fields/new`);
       }
     } else {
-      router.push(`/${projectId}/entities/${entityDefinition.id}/new`);
+      router.push(`/projects/${projectId}/entity-instances/${entityDefinition.id}/new`);
     }
   };
 
@@ -91,59 +91,68 @@ export function UniversalEntityList({
     // Для fields - редактирование field
     // Для обычных сущностей - редактирование instance
     if (entityDefinition.tableName === "entity_definition") {
-      router.push(`/${projectId}/entity-definition/${instanceId}/edit`);
+      router.push(`/projects/${projectId}/entity-definition/${instanceId}/edit`);
     } else if (entityDefinition.tableName === "field") {
       const currentPath = window.location.pathname;
       const match = currentPath.match(/\/entity-definition\/([^/]+)\/fields/);
       if (match) {
         router.push(
-          `/${projectId}/entity-definition/${match[1]}/fields/${instanceId}/edit`
+          `/projects/${projectId}/entity-definition/${match[1]}/fields/${instanceId}/edit`
         );
       }
     } else {
       router.push(
-        `/${projectId}/entities/${entityDefinition.id}/${instanceId}/edit`
+        `/projects/${projectId}/entity-instances/${entityDefinition.id}/${instanceId}/edit`
       );
     }
   };
 
-  // Обработчик навигации к деталям
+  // Обработчик навигации к деталям (переход на редактирование)
   const handleNavigateToDetails = (
     instanceId: string,
     additionalUrl?: string
   ) => {
     // Для entityDefinitions без additionalUrl - переход на список сущностей
     if (entityDefinition.tableName === "entity_definition" && !additionalUrl) {
-      router.push(`/${projectId}/entities/${instanceId}`);
+      router.push(`/projects/${projectId}/entity-instances/${instanceId}`);
     } else if (entityDefinition.tableName === "field") {
       // Для fields - переход на редактирование
       const currentPath = window.location.pathname;
       const match = currentPath.match(/\/entity-definition\/([^/]+)\/fields/);
       if (match) {
         router.push(
-          `/${projectId}/entity-definition/${match[1]}/fields/${instanceId}/edit`
+          `/projects/${projectId}/entity-definition/${match[1]}/fields/${instanceId}/edit`
         );
       }
     } else {
-      const url = additionalUrl
-        ? `/${projectId}/entities/${entityDefinition.id}/${instanceId}${additionalUrl}`
-        : `/${projectId}/entities/${entityDefinition.id}/${instanceId}`;
-      router.push(url);
+      // Для обычных сущностей - переход на редактирование
+      router.push(
+        `/projects/${projectId}/entity-instances/${entityDefinition.id}/${instanceId}/edit`
+      );
     }
   };
 
   // Обработчик link action (для перехода на связанные страницы)
   const handleLink = (instanceId: string, additionalUrl?: string) => {
     if (entityDefinition.tableName === "entity_definition") {
-      // Для entityDefinitions - переход на связанные страницы
-      router.push(`/${projectId}/entity-definition/${instanceId}${additionalUrl || ""}`);
+      // Для entityDefinitions - переход на список экземпляров
+      router.push(`/projects/${projectId}/entity-instances/${instanceId}`);
     } else {
-      // Для обычных сущностей
-      const url = additionalUrl
-        ? `/${projectId}/entities/${entityDefinition.id}/${instanceId}${additionalUrl}`
-        : `/${projectId}/entities/${entityDefinition.id}/${instanceId}`;
-      router.push(url);
+      // Для обычных сущностей - переход на редактирование
+      router.push(
+        `/projects/${projectId}/entity-instances/${entityDefinition.id}/${instanceId}/edit`
+      );
     }
+  };
+
+  // Обработчик удаления
+  const handleDelete = async (instanceId: string) => {
+    if (!confirm("Are you sure you want to delete this item?")) {
+      return;
+    }
+
+    // TODO: Реализовать удаление через Server Action
+    console.warn("Delete not implemented yet", instanceId);
   };
 
   // Получить иконку по имени

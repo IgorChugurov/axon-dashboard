@@ -61,21 +61,6 @@ const items = [
     url: "/projects",
     icon: Projector,
   },
-  {
-    title: "Posts",
-    url: "/posts",
-    icon: FileText,
-  },
-  {
-    title: "Authors",
-    url: "/authors",
-    icon: Users,
-  },
-  {
-    title: "Tags",
-    url: "/tags",
-    icon: Tag,
-  },
 ];
 
 interface AppSidebarProps {
@@ -138,7 +123,7 @@ export function AppSidebar({ projects = [], entities = [] }: AppSidebarProps) {
               {projects.map((project) => (
                 <SidebarMenuItem key={project.id}>
                   <SidebarMenuButton asChild>
-                    <Link href={`/${project.id}`}>
+                    <Link href={`/projects/${project.id}`}>
                       <Projector />
                       <span>{project.name}</span>
                     </Link>

@@ -5,6 +5,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { EntityDefinition, Field } from "./types";
+import { generateUIConfig } from "@/lib/form-generation/utils/generateUIConfig";
 
 // Кэш конфигурации
 let cachedConfig: {
@@ -389,11 +390,6 @@ export async function getEntityDefinitionWithUIConfig(
   const result = await getEntityDefinitionWithFields(entityDefinitionId);
 
   if (!result) return null;
-
-  // Импортируем функцию генерации UI конфига
-  const { generateUIConfig } = await import(
-    "@/lib/form-generation/utils/generateUIConfig"
-  );
 
   // Генерируем UI конфиг с defaults + merge с custom конфигом
   const uiConfig = generateUIConfig(result.entityDefinition, result.fields);

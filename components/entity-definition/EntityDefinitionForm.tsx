@@ -76,7 +76,7 @@ export function EntityDefinitionForm({
         const result = await onSubmit(formData);
 
         if (result.success) {
-          router.push(`/${projectId}`);
+          router.push(`/projects/${projectId}`);
           router.refresh();
         } else {
           setError(result.error || "An error occurred");

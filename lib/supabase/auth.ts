@@ -5,6 +5,7 @@
 import { createClient } from "./server";
 import { User } from "@/lib/auth/types";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { getUserRole } from "@/lib/auth/roles";
 
 /**
  * Преобразование Supabase User в наш User тип
@@ -50,7 +51,6 @@ export async function getServerUser(): Promise<User | null> {
 
     // Получаем роль из таблицы admins
     if (user) {
-      const { getUserRole } = await import("@/lib/auth/roles");
       const role = await getUserRole(user.id!);
       user.role = role;
     }
@@ -83,4 +83,3 @@ export async function getAccessToken(): Promise<string | null> {
     return null;
   }
 }
-

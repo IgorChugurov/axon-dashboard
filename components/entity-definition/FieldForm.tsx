@@ -172,7 +172,7 @@ export function FieldForm({
 
         if (result.success) {
           router.push(
-            `/${projectId}/entity-definition/${entityDefinitionId}/fields`
+            `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`
           );
           router.refresh();
         } else {

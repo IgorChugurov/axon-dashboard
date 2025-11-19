@@ -125,9 +125,8 @@ Supabase Cloud
 ### Сущности (CRUD)
 
 - ✅ **Projects** - управление проектами
-- ✅ **Authors** - авторы контента
-- ✅ **Tags** - теги (с автогенерацией slug)
-- ✅ **Posts** - посты/статьи (many-to-many с тегами)
+- ✅ **Entity Definitions** - динамические определения сущностей
+- ✅ **Universal Entity System** - универсальная система для работы с любыми сущностями
 
 ### Фильтрация
 
@@ -257,10 +256,10 @@ pnpm lint
 ### Проверенные страницы
 
 - ✅ `/` - Home
-- ✅ `/projects` - Проекты
-- ✅ `/authors` - Авторы (создание, редактирование, удаление)
-- ✅ `/tags` - Теги (автогенерация slug)
-- ✅ `/posts` - Посты (фильтры по автору и тегам)
+- ✅ `/projects` - Список проектов
+- ✅ `/projects/[projectId]` - Страница проекта
+- ✅ `/projects/[projectId]/entities/[entityDefinitionId]` - Список экземпляров сущности
+- ✅ `/projects/[projectId]/entity-definition` - Управление определениями сущностей
 
 ---
 
@@ -269,11 +268,12 @@ pnpm lint
 ```
 chadcn/
 ├── app/                          # Next.js App Router
-│   ├── [entity]/
-│   │   ├── page.tsx             # Список (SSR)
-│   │   ├── new/page.tsx         # Создание
-│   │   ├── [id]/edit/page.tsx   # Редактирование
-│   │   └── actions.ts           # Server Actions
+│   ├── projects/
+│   │   ├── page.tsx             # Список проектов
+│   │   └── [projectId]/
+│   │       ├── page.tsx         # Страница проекта
+│   │       ├── entities/        # Экземпляры сущностей
+│   │       └── entity-definition/ # Определения сущностей
 │   └── ...
 │
 ├── lib/

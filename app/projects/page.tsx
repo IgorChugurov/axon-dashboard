@@ -1,5 +1,6 @@
 import { projectsService } from "@/lib/entities/projects/service";
 import { ProjectsList } from "@/components/ProjectsList";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Suspense } from "react";
 
 /**
@@ -36,12 +37,11 @@ export default async function ProjectsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
-        <p className="text-muted-foreground">
-          Manage your projects and track their progress
-        </p>
-      </div>
+      <Breadcrumbs />
+
+      <p className="text-muted-foreground">
+        Manage your projects and track their progress
+      </p>
 
       <Suspense fallback={<ProjectsListSkeleton />}>
         <ProjectsList

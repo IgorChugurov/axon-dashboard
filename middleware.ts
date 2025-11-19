@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { getUserRoleCached } from "@/lib/auth/roles";
 
 /**
  * Next.js Middleware
@@ -71,7 +72,6 @@ export async function middleware(request: NextRequest) {
   // ============================================================================
   // Получаем роль пользователя из базы данных
   // Используем кешированную версию для производительности
-  const { getUserRoleCached } = await import("@/lib/auth/roles");
   const userRole = await getUserRoleCached(user.id);
 
   // Если обычный пользователь (role: "user") пытается попасть в админ-панель,

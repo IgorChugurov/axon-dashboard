@@ -16,7 +16,7 @@ import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import { FormWithSections } from "@/lib/form-generation";
 import { useToast } from "@/hooks/use-toast";
-import { createEntityInstance, updateEntityInstance, deleteEntityInstance } from "@/app/[projectId]/entities/[entityDefinitionId]/actions";
+import { createEntityInstance, updateEntityInstance, deleteEntityInstance } from "@/app/projects/[projectId]/entity-instances/[entityDefinitionId]/actions";
 
 interface UniversalEntityFormProps {
   entityDefinition: EntityDefinition;
@@ -126,7 +126,7 @@ export function UniversalEntityForm({
       });
 
       // Перенаправляем на список
-      router.push(`/${projectId}/entities/${entityDefinition.id}`);
+      router.push(`/projects/${projectId}/entity-instances/${entityDefinition.id}`);
       router.refresh();
     } catch (err) {
       const errorMessage =
@@ -186,7 +186,7 @@ export function UniversalEntityForm({
       });
 
       // Redirect to list
-      router.push(`/${projectId}/entities/${entityDefinition.id}`);
+      router.push(`/projects/${projectId}/entity-instances/${entityDefinition.id}`);
       router.refresh();
     } catch (err) {
       const errorMessage =
@@ -210,18 +210,15 @@ export function UniversalEntityForm({
 
   return (
     <div className="space-y-6">
-      {/* Заголовок страницы */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
-        {entityDefinition.description && (
-          <p className="text-muted-foreground mt-1">
-            {entityDefinition.description}
-          </p>
-        )}
-        {form.pageHeader && (
-          <p className="text-muted-foreground mt-1">{form.pageHeader}</p>
-        )}
-      </div>
+      {/* Описание (если есть) */}
+      {entityDefinition.description && (
+        <p className="text-muted-foreground">
+          {entityDefinition.description}
+        </p>
+      )}
+      {form.pageHeader && (
+        <p className="text-muted-foreground">{form.pageHeader}</p>
+      )}
 
       {/* Inline ошибка (дополнительно к toast) */}
       {error && (

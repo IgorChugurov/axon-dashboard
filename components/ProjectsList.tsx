@@ -12,14 +12,17 @@
 
 import { useState, useCallback, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Trash2, Settings } from "lucide-react";
 import type { Project } from "@/lib/projects/types";
 import {
   createProjectAction,
   deleteProjectAction,
 } from "@/app/projects/actions";
+import { sendMessage } from "@/lib/utils/messaging";
 
 interface ProjectsListProps {
   initialData: Project[];
@@ -153,6 +156,9 @@ export function ProjectsList({
         // Оптимистичное обновление: добавляем проект локально
         setProjects((prev) => [result.data!, ...prev]);
 
+        // Отправляем событие для обновления контекста проектов
+        sendMessage("reloadProjects");
+
         // ИЛИ перезагружаем список
         // loadProjects(1, searchTerm);
       } else {
@@ -171,6 +177,9 @@ export function ProjectsList({
       if (result.success) {
         // Оптимистичное обновление: убираем из списка
         setProjects((prev) => prev.filter((p) => p.id !== id));
+
+        // Отправляем событие для обновления контекста проектов
+        sendMessage("reloadProjects");
       } else {
         alert(`Error: ${result.error}`);
       }
@@ -219,8 +228,13 @@ export function ProjectsList({
               className="rounded-lg border bg-card p-6 hover:bg-accent/50 transition-colors"
             >
               <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <h3 className="font-semibold">{project.name}</h3>
+                <div className="space-y-1 flex-1">
+                  <Link
+                    href={`/projects/${project.id}`}
+                    className="font-semibold hover:underline cursor-pointer"
+                  >
+                    {project.name}
+                  </Link>
                   {project.description && (
                     <p className="text-sm text-muted-foreground">
                       {project.description}
@@ -230,14 +244,26 @@ export function ProjectsList({
                     Status: {project.status}
                   </p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDelete(project.id)}
-                  disabled={isPending}
-                >
-                  Delete
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                  >
+                    <Link href={`/projects/${project.id}/settings`}>
+                      <Settings className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(project.id)}
+                    disabled={isPending}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

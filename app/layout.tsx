@@ -8,6 +8,8 @@ import "@/app/globals.css";
 import AppSidebar from "@/components/AppSidebar";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { ProjectsProvider } from "@/components/providers/ProjectsProvider";
+import { ProjectsEventListener } from "@/components/providers/ProjectsEventListener";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/toaster";
@@ -90,13 +92,16 @@ export default async function RootLayout({
               children
             ) : (
               // Для защищенных маршрутов показываем полный интерфейс
-              <SidebarProvider defaultOpen={defaultOpen}>
-                <AppSidebar projects={projects} />
-                <main className="w-full ">
-                  <Navbar />
-                  <div className="px-4">{children}</div>
-                </main>
-              </SidebarProvider>
+              <ProjectsProvider initialProjects={projects}>
+                <ProjectsEventListener />
+                <SidebarProvider defaultOpen={defaultOpen}>
+                  <AppSidebar projects={projects} />
+                  <main className="w-full ">
+                    <Navbar />
+                    <div className="px-4">{children}</div>
+                  </main>
+                </SidebarProvider>
+              </ProjectsProvider>
             )}
             <Toaster />
           </AuthProvider>

@@ -8,7 +8,7 @@
 
 import { Controller, Control } from "react-hook-form";
 import { Label } from "@/components/ui/label";
-import { RelationSelect } from "@/app/[projectId]/entities/[entityDefinitionId]/RelationSelect";
+import { RelationSelect } from "@/app/projects/[projectId]/entity-instances/[entityDefinitionId]/RelationSelect";
 import type { Field } from "@/lib/universal-entity/types";
 import type { FormData } from "../../types";
 

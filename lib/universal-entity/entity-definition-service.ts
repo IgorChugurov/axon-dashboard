@@ -460,17 +460,17 @@ export async function createField(data: CreateFieldData): Promise<Field> {
       .select()
       .single();
 
-    if (reverseError) {
+    if (reverseError || !reverseField) {
       console.error(
         "[EntityDefinitionService] Create reverse field error:",
         reverseError
       );
       throw new Error(
-        `Failed to create reverse field: ${reverseError.message}`
+        `Failed to create reverse field: ${reverseError?.message || "Unknown error"}`
       );
     }
 
-    reverseFieldId = reverseField.id;
+    reverseFieldId = (reverseField as { id: string }).id;
   }
 
   // Создание
@@ -525,10 +525,11 @@ export async function createField(data: CreateFieldData): Promise<Field> {
   }
 
   // Обновляем обратное поле, устанавливая relation_field_id
-  if (reverseFieldId) {
+  if (reverseFieldId && created) {
+    const updateData = { relation_field_id: (created as { id: string }).id };
     const { error: updateReverseError } = await supabase
       .from("field")
-      .update({ relation_field_id: created.id })
+      .update(updateData as never)
       .eq("id", reverseFieldId);
 
     if (updateReverseError) {
@@ -537,7 +538,9 @@ export async function createField(data: CreateFieldData): Promise<Field> {
         updateReverseError
       );
       // Откатываем изменения
-      await supabase.from("field").delete().eq("id", created.id);
+      if (created) {
+        await supabase.from("field").delete().eq("id", (created as { id: string }).id);
+      }
       await supabase.from("field").delete().eq("id", reverseFieldId);
       throw new Error(
         `Failed to link reverse field: ${updateReverseError.message}`
@@ -703,7 +706,7 @@ async function removeFieldFromInstances(
   }
 
   // Обновляем каждый instance, удаляя поле из JSONB
-  for (const instance of instances) {
+  for (const instance of (instances || []) as Array<{ id: string; data: unknown }>) {
     const currentData = (instance.data as Record<string, any>) || {};
     const { [fieldName]: removed, ...updatedData } = currentData;
 

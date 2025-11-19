@@ -4,7 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getProjectsFromSupabase } from "@/lib/projects/supabase";
+import {
+  getProjectsFromSupabase,
+  createProjectInSupabase,
+} from "@/lib/projects/supabase";
 import { getServerUser } from "@/lib/supabase/auth";
 import { parseSearchParams } from "@/lib/server-data/types";
 
@@ -56,7 +59,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Создаем проект через Supabase
-    const { createProjectInSupabase } = await import("@/lib/projects/supabase");
     const project = await createProjectInSupabase({
       name,
       description: description || null,

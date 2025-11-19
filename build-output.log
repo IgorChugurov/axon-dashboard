@@ -6,202 +6,80 @@
    - Environments: .env.local, .env
 
    Creating an optimized production build ...
- ✓ Finished writing to disk in 69ms
- ✓ Compiled successfully in 3.6s
-   Linting and checking validity of types ...
+ ✓ Finished writing to disk in 65ms
 
-./app/[projectId]/entities/[entityDefinitionId]/EntityFormClient.tsx
-17:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-31:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-66:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-135:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+> Build error occurred
+Error: Turbopack build failed with 4 errors:
+./lib/form-generation/components/inputs/InputRelation.tsx:11:1
+Module not found: Can't resolve '@/app/[projectId]/entities/[entityDefinitionId]/RelationSelect'
+[0m [90m  9 |[39m [36mimport[39m { [33mController[39m[33m,[39m [33mControl[39m } [36mfrom[39m [32m"react-hook-form"[39m[33m;[39m
+ [90m 10 |[39m [36mimport[39m { [33mLabel[39m } [36mfrom[39m [32m"@/components/ui/label"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mRelationSelect[39m } [36mfrom[39m [32m"@/app/[projectId]/entities/[entityDefinitionId]/RelationSelect"[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 12 |[39m [36mimport[39m type { [33mField[39m } [36mfrom[39m [32m"@/lib/universal-entity/types"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m type { [33mFormData[39m } [36mfrom[39m [32m"../../types"[39m[33m;[39m
+ [90m 14 |[39m[0m
 
-./app/[projectId]/entities/[entityDefinitionId]/EntityFormWithSections.tsx
-20:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-35:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-41:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+Import map: aliased to relative './app/[projectId]/entities/[entityDefinitionId]/RelationSelect' inside of [project]/
 
-./app/[projectId]/entities/[entityDefinitionId]/EntityListClient.tsx
-35:10  Warning: 'page' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-36:10  Warning: 'search' is assigned a value but never used.  @typescript-eslint/no-unused-vars
 
-./app/[projectId]/entities/[entityDefinitionId]/RelationSelect.tsx
-24:3  Warning: 'fieldId' is defined but never used.  @typescript-eslint/no-unused-vars
-35:10  Warning: 'titleField' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-39:6  Warning: React Hook useEffect has a missing dependency: 'loadOptions'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+https://nextjs.org/docs/messages/module-not-found
 
-./app/[projectId]/entities/[entityDefinitionId]/[instanceId]/edit/page.tsx
-51:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./app/[projectId]/entities/[entityDefinitionId]/actions.ts
-27:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-74:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+./lib/form-generation/components/inputs/InputRelation.tsx:11:1
+Module not found: Can't resolve '@/app/[projectId]/entities/[entityDefinitionId]/RelationSelect'
+[0m [90m  9 |[39m [36mimport[39m { [33mController[39m[33m,[39m [33mControl[39m } [36mfrom[39m [32m"react-hook-form"[39m[33m;[39m
+ [90m 10 |[39m [36mimport[39m { [33mLabel[39m } [36mfrom[39m [32m"@/components/ui/label"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mRelationSelect[39m } [36mfrom[39m [32m"@/app/[projectId]/entities/[entityDefinitionId]/RelationSelect"[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 12 |[39m [36mimport[39m type { [33mField[39m } [36mfrom[39m [32m"@/lib/universal-entity/types"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m type { [33mFormData[39m } [36mfrom[39m [32m"../../types"[39m[33m;[39m
+ [90m 14 |[39m[0m
 
-./app/[projectId]/entities/[entityDefinitionId]/page.tsx
-5:10  Warning: 'notFound' is defined but never used.  @typescript-eslint/no-unused-vars
+Import map: aliased to relative './app/[projectId]/entities/[entityDefinitionId]/RelationSelect' inside of [project]/
 
-./app/[projectId]/entity-definition/actions.ts
-9:10  Warning: 'redirect' is defined but never used.  @typescript-eslint/no-unused-vars
 
-./app/[projectId]/entity-definition/new/page.tsx
-42:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+https://nextjs.org/docs/messages/module-not-found
 
-./app/[projectId]/page.tsx
-4:10  Warning: 'useEntityDefinitions' is defined but never used.  @typescript-eslint/no-unused-vars
 
-./app/layout.tsx
-48:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+./lib/form-generation/components/inputs/InputRelation.tsx:11:1
+Module not found: Can't resolve '@/app/[projectId]/entities/[entityDefinitionId]/RelationSelect'
+[0m [90m  9 |[39m [36mimport[39m { [33mController[39m[33m,[39m [33mControl[39m } [36mfrom[39m [32m"react-hook-form"[39m[33m;[39m
+ [90m 10 |[39m [36mimport[39m { [33mLabel[39m } [36mfrom[39m [32m"@/components/ui/label"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mRelationSelect[39m } [36mfrom[39m [32m"@/app/[projectId]/entities/[entityDefinitionId]/RelationSelect"[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 12 |[39m [36mimport[39m type { [33mField[39m } [36mfrom[39m [32m"@/lib/universal-entity/types"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m type { [33mFormData[39m } [36mfrom[39m [32m"../../types"[39m[33m;[39m
+ [90m 14 |[39m[0m
 
-./components/AppSidebar.tsx
-22:3  Warning: 'SidebarGroupAction' is defined but never used.  @typescript-eslint/no-unused-vars
+Import map: aliased to relative './app/[projectId]/entities/[entityDefinitionId]/RelationSelect' inside of [project]/
 
-./components/PostsList.tsx
-60:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-63:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./components/entity-definition/EntityDefinitionForm.tsx
-27:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-27:79  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-95:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+https://nextjs.org/docs/messages/module-not-found
 
-./components/entity-definition/FieldForm.tsx
-30:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-30:79  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-111:6  Warning: React Hook useEffect has a missing dependency: 'formData.type'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
-120:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-182:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./components/forms/AuthorForm.tsx
-10:23  Warning: 'CreateAuthorData' is defined but never used.  @typescript-eslint/no-unused-vars
-10:41  Warning: 'UpdateAuthorData' is defined but never used.  @typescript-eslint/no-unused-vars
+./lib/form-generation/components/inputs/InputRelation.tsx:11:1
+Module not found: Can't resolve '@/app/[projectId]/entities/[entityDefinitionId]/RelationSelect'
+[0m [90m  9 |[39m [36mimport[39m { [33mController[39m[33m,[39m [33mControl[39m } [36mfrom[39m [32m"react-hook-form"[39m[33m;[39m
+ [90m 10 |[39m [36mimport[39m { [33mLabel[39m } [36mfrom[39m [32m"@/components/ui/label"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { [33mRelationSelect[39m } [36mfrom[39m [32m"@/app/[projectId]/entities/[entityDefinitionId]/RelationSelect"[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 12 |[39m [36mimport[39m type { [33mField[39m } [36mfrom[39m [32m"@/lib/universal-entity/types"[39m[33m;[39m
+ [90m 13 |[39m [36mimport[39m type { [33mFormData[39m } [36mfrom[39m [32m"../../types"[39m[33m;[39m
+ [90m 14 |[39m[0m
 
-./components/forms/EntityForm.tsx
-14:77  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-21:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+Import map: aliased to relative './app/[projectId]/entities/[entityDefinitionId]/RelationSelect' inside of [project]/
 
-./components/forms/PostForm.tsx
-9:10  Warning: 'TagsSelect' is defined but never used.  @typescript-eslint/no-unused-vars
-12:21  Warning: 'CreatePostData' is defined but never used.  @typescript-eslint/no-unused-vars
-12:37  Warning: 'UpdatePostData' is defined but never used.  @typescript-eslint/no-unused-vars
 
-./components/forms/TagForm.tsx
-10:20  Warning: 'CreateTagData' is defined but never used.  @typescript-eslint/no-unused-vars
-10:35  Warning: 'UpdateTagData' is defined but never used.  @typescript-eslint/no-unused-vars
+https://nextjs.org/docs/messages/module-not-found
 
-./lib/entities/posts/service.ts
-102:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-110:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-110:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-129:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-131:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-225:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./lib/entities/projects/service.ts
-44:35  Warning: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
-
-./lib/entity-service/base.ts
-37:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-37:69  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-60:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-60:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-94:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-96:14  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-163:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-165:14  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/entity-service/types.ts
-13:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/form-generation/utils/createSchema.ts
-12:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-92:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-134:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-160:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-161:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-162:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/form-generation/utils/fieldHelpers.ts
-149:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/form-generation/utils/getItemForEdit.ts
-16:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-17:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-18:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-39:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-39:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-78:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-109:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-111:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-112:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/server-data/base.ts
-59:20  Warning: '_data' is defined but never used.  @typescript-eslint/no-unused-vars
-
-./lib/universal-entity/config-service.ts
-21:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-39:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-274:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/universal-entity/entity-definition-service.ts
-118:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-162:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-199:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-371:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-413:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-433:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-563:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-581:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/universal-entity/instance-service.ts
-14:3  Warning: 'DbType' is defined but never used.  @typescript-eslint/no-unused-vars
-22:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-22:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-77:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-81:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-111:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-117:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-119:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-140:68  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-141:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-142:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-171:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-411:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-463:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-487:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-494:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-590:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-593:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-598:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-622:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/universal-entity/relation-service.ts
-31:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-167:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-198:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-256:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/universal-entity/table-utils.ts
-78:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/universal-entity/types.ts
-113:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-155:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-164:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-175:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
-Failed to compile.
-
-./lib/form-generation/components/inputs/InputNumber.tsx:43:13
-Type error: Type 'string | number | boolean | string[] | Date' is not assignable to type 'string | number | readonly string[] | undefined'.
-  Type 'false' is not assignable to type 'string | number | readonly string[] | undefined'.
-
-[0m [90m 41 |[39m               formField[33m.[39monChange(value [33m===[39m [32m""[39m [33m?[39m [35m0[39m [33m:[39m parseFloat(value))[33m;[39m
- [90m 42 |[39m             }}
-[31m[1m>[22m[39m[90m 43 |[39m             value[33m=[39m{formField[33m.[39mvalue [33m?[39m[33m?[39m [32m""[39m}
- [90m    |[39m             [31m[1m^[22m[39m
- [90m 44 |[39m           [33m/[39m[33m>[39m
- [90m 45 |[39m
- [90m 46 |[39m           {field[33m.[39mdescription [33m&&[39m ([0m
-Next.js build worker exited with code: 1 and signal: null
+    at <unknown> (./lib/form-generation/components/inputs/InputRelation.tsx:11:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./lib/form-generation/components/inputs/InputRelation.tsx:11:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./lib/form-generation/components/inputs/InputRelation.tsx:11:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./lib/form-generation/components/inputs/InputRelation.tsx:11:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
  ELIFECYCLE  Command failed with exit code 1.

@@ -49,17 +49,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav
-      className="p-4 py-4 flex items-center justify-between"
-      style={{
-        backgroundColor: "var(--background)",
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-
-        borderBottom: "1px solid var(--border)",
-      }}
-    >
+    <nav className="p-2 py-4 flex items-center justify-between ">
       <SidebarTrigger />
       <div className="flex items-center gap-4">
         <Link href="/">Dashboard</Link>
