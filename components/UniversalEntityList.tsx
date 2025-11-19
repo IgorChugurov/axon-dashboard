@@ -17,7 +17,7 @@ import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Trash2, Edit } from "lucide-react";
+import { Plus, Search, Trash2, Edit, Settings, List } from "lucide-react";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
 
@@ -66,14 +66,45 @@ export function UniversalEntityList({
 
   // Обработчик создания
   const handleCreate = () => {
-    router.push(`/${projectId}/entities/${entityDefinition.id}/new`);
+    // Для entityDefinitions - создание новой entityDefinition
+    // Для fields - создание нового field
+    // Для обычных сущностей - создание нового instance
+    if (entityDefinition.tableName === "entity_definition") {
+      router.push(`/${projectId}/entity-definition/new`);
+    } else if (entityDefinition.tableName === "field") {
+      // Для fields нужно получить entityDefinitionId из контекста
+      // Пока используем projectId, но это нужно будет исправить
+      // TODO: Передавать entityDefinitionId как проп
+      const currentPath = window.location.pathname;
+      const match = currentPath.match(/\/entity-definition\/([^/]+)\/fields/);
+      if (match) {
+        router.push(`/${projectId}/entity-definition/${match[1]}/fields/new`);
+      }
+    } else {
+      router.push(`/${projectId}/entities/${entityDefinition.id}/new`);
+    }
   };
 
   // Обработчик редактирования
   const handleEdit = (instanceId: string) => {
-    router.push(
-      `/${projectId}/entities/${entityDefinition.id}/${instanceId}/edit`
-    );
+    // Для entityDefinitions - редактирование самой entityDefinition
+    // Для fields - редактирование field
+    // Для обычных сущностей - редактирование instance
+    if (entityDefinition.tableName === "entity_definition") {
+      router.push(`/${projectId}/entity-definition/${instanceId}/edit`);
+    } else if (entityDefinition.tableName === "field") {
+      const currentPath = window.location.pathname;
+      const match = currentPath.match(/\/entity-definition\/([^/]+)\/fields/);
+      if (match) {
+        router.push(
+          `/${projectId}/entity-definition/${match[1]}/fields/${instanceId}/edit`
+        );
+      }
+    } else {
+      router.push(
+        `/${projectId}/entities/${entityDefinition.id}/${instanceId}/edit`
+      );
+    }
   };
 
   // Обработчик навигации к деталям
@@ -81,10 +112,54 @@ export function UniversalEntityList({
     instanceId: string,
     additionalUrl?: string
   ) => {
-    const url = additionalUrl
-      ? `/${projectId}/entities/${entityDefinition.id}/${instanceId}${additionalUrl}`
-      : `/${projectId}/entities/${entityDefinition.id}/${instanceId}`;
-    router.push(url);
+    // Для entityDefinitions без additionalUrl - переход на список сущностей
+    if (entityDefinition.tableName === "entity_definition" && !additionalUrl) {
+      router.push(`/${projectId}/entities/${instanceId}`);
+    } else if (entityDefinition.tableName === "field") {
+      // Для fields - переход на редактирование
+      const currentPath = window.location.pathname;
+      const match = currentPath.match(/\/entity-definition\/([^/]+)\/fields/);
+      if (match) {
+        router.push(
+          `/${projectId}/entity-definition/${match[1]}/fields/${instanceId}/edit`
+        );
+      }
+    } else {
+      const url = additionalUrl
+        ? `/${projectId}/entities/${entityDefinition.id}/${instanceId}${additionalUrl}`
+        : `/${projectId}/entities/${entityDefinition.id}/${instanceId}`;
+      router.push(url);
+    }
+  };
+
+  // Обработчик link action (для перехода на связанные страницы)
+  const handleLink = (instanceId: string, additionalUrl?: string) => {
+    if (entityDefinition.tableName === "entity_definition") {
+      // Для entityDefinitions - переход на связанные страницы
+      router.push(`/${projectId}/entity-definition/${instanceId}${additionalUrl || ""}`);
+    } else {
+      // Для обычных сущностей
+      const url = additionalUrl
+        ? `/${projectId}/entities/${entityDefinition.id}/${instanceId}${additionalUrl}`
+        : `/${projectId}/entities/${entityDefinition.id}/${instanceId}`;
+      router.push(url);
+    }
+  };
+
+  // Получить иконку по имени
+  const getIcon = (iconName?: string) => {
+    switch (iconName) {
+      case "settings":
+        return Settings;
+      case "list":
+        return List;
+      case "edit":
+        return Edit;
+      case "trash":
+        return Trash2;
+      default:
+        return Edit;
+    }
   };
 
   // Рендер значения ячейки
@@ -201,64 +276,112 @@ export function UniversalEntityList({
       {/* Таблица */}
       {instances.length > 0 && (
         <div className="border rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  {list.columns.map((col) => (
-                    <th
-                      key={col.field}
-                      className="p-4 text-left font-medium text-sm"
-                      style={{
-                        width: col.width,
-                        flex: col.flex,
-                      }}
-                    >
-                      {col.headerName}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {instances.map((instance) => (
-                  <tr
-                    key={instance.id}
-                    className="border-b hover:bg-muted/20 transition-colors"
+          <table className="w-full">
+            <thead className="bg-muted/50">
+              <tr>
+                {list.columns.map((col) => (
+                  <th
+                    key={col.field}
+                    className="px-4 py-3 text-left text-sm font-medium"
+                    style={{
+                      width: col.width,
+                      flex: col.flex,
+                    }}
                   >
-                    {list.columns.map((col) => (
-                      <td key={col.field} className="p-4 text-sm">
-                        {col.type === "actions" ? (
-                          <div className="flex gap-2">
-                            {col.actions?.map((action) => {
+                    {col.headerName}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {instances.map((instance) => (
+                <tr
+                  key={instance.id}
+                  className="hover:bg-muted/30 transition-colors"
+                >
+                  {list.columns.map((col) => {
+                    const isActionsColumn = col.type === "actions";
+                    const isNavigateColumn =
+                      col.type === "naigateToDetails" ||
+                      col.type === "openEditPage";
+
+                    return (
+                      <td
+                        key={col.field}
+                        className={`px-4 py-3 text-sm ${
+                          isActionsColumn ? "text-right" : ""
+                        }`}
+                      >
+                        {isActionsColumn ? (
+                          <div className="flex items-center justify-end gap-2">
+                            {col.actions?.map((action, idx) => {
+                              // Для fields: скрываем delete для не-source relation полей
+                              if (
+                                action.action === "delete" &&
+                                entityDefinition.tableName === "field"
+                              ) {
+                                const field = instance as any;
+                                // Если поле relation и НЕ является источником - скрываем delete
+                                if (
+                                  field.isRelationSource === false &&
+                                  field.relatedEntityDefinitionId &&
+                                  ["manyToOne", "oneToMany", "manyToMany", "oneToOne"].includes(
+                                    field.dbType
+                                  )
+                                ) {
+                                  return null;
+                                }
+                              }
+
+                              const IconComponent = getIcon(action.icon);
+                              const actionKey = `${action.action}-${idx}`;
+
                               if (action.action === "edit") {
                                 return (
                                   <Button
-                                    key={action.action}
+                                    key={actionKey}
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleEdit(instance.id)}
                                   >
-                                    <Edit className="h-4 w-4" />
+                                    <IconComponent className="h-4 w-4" />
                                   </Button>
                                 );
                               }
+
+                              if (action.action === "link") {
+                                return (
+                                  <Button
+                                    key={actionKey}
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleLink(instance.id, action.additionalUrl)
+                                    }
+                                  >
+                                    <IconComponent className="h-4 w-4" />
+                                  </Button>
+                                );
+                              }
+
                               if (action.action === "delete") {
                                 return (
                                   <Button
-                                    key={action.action}
+                                    key={actionKey}
                                     variant="ghost"
                                     size="sm"
                                     className="text-destructive hover:text-destructive"
+                                    onClick={() => handleDelete(instance.id)}
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <IconComponent className="h-4 w-4" />
                                   </Button>
                                 );
                               }
+
                               return null;
                             })}
                           </div>
-                        ) : col.type === "naigateToDetails" ||
-                          col.type === "openEditPage" ? (
+                        ) : isNavigateColumn ? (
                           <button
                             onClick={() =>
                               handleNavigateToDetails(
@@ -274,12 +397,12 @@ export function UniversalEntityList({
                           renderCellValue(instance, col.field, col.type)
                         )}
                       </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

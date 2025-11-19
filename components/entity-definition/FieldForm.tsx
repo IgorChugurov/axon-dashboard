@@ -18,7 +18,12 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
-import type { Field, EntityDefinition, DbType, FieldType } from "@/lib/universal-entity/types";
+import type {
+  Field,
+  EntityDefinition,
+  DbType,
+  FieldType,
+} from "@/lib/universal-entity/types";
 
 interface FieldFormProps {
   projectId: string;
@@ -27,7 +32,9 @@ interface FieldFormProps {
   initialData?: Field;
   availableEntities: EntityDefinition[];
   availableFields: Field[]; // Для relationFieldId
-  onSubmit: (data: any) => Promise<{ success: boolean; error?: string; data?: any }>;
+  onSubmit: (
+    data: any
+  ) => Promise<{ success: boolean; error?: string; data?: any }>;
 }
 
 const DB_TYPE_OPTIONS: { value: DbType; label: string }[] = [
@@ -143,7 +150,8 @@ export function FieldForm({
 
         // Relations
         if (isRelationType(formData.dbType)) {
-          submitData.relatedEntityDefinitionId = formData.relatedEntityDefinitionId || null;
+          submitData.relatedEntityDefinitionId =
+            formData.relatedEntityDefinitionId || null;
           submitData.relationFieldId = formData.relationFieldId || null;
           submitData.isRelationSource = formData.isRelationSource;
           submitData.selectorRelationId = formData.selectorRelationId || null;
@@ -173,7 +181,9 @@ export function FieldForm({
       } catch (err) {
         console.error("Error saving field:", err);
         setError(
-          err instanceof Error ? err.message : "Failed to save. Please try again."
+          err instanceof Error
+            ? err.message
+            : "Failed to save. Please try again."
         );
       }
     });
@@ -460,7 +470,7 @@ export function FieldForm({
                 Related Entity <span className="text-red-500">*</span>
               </Label>
               <Select
-                value={formData.relatedEntityDefinitionId}
+                value={formData.relatedEntityDefinitionId || undefined}
                 onValueChange={(value) =>
                   handleChange("relatedEntityDefinitionId", value)
                 }
@@ -480,18 +490,23 @@ export function FieldForm({
 
             {formData.relatedEntityDefinitionId && (
               <div className="space-y-2">
-                <Label htmlFor="relationFieldId">Reverse Field (Optional)</Label>
+                <Label htmlFor="relationFieldId">
+                  Reverse Field (Optional)
+                </Label>
                 <Select
-                  value={formData.relationFieldId}
+                  value={formData.relationFieldId || "__none__"}
                   onValueChange={(value) =>
-                    handleChange("relationFieldId", value)
+                    handleChange(
+                      "relationFieldId",
+                      value === "__none__" ? "" : value
+                    )
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select field..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="__none__">None</SelectItem>
                     {relatedFields.map((field) => (
                       <SelectItem key={field.id} value={field.id}>
                         {field.label} ({field.name})
@@ -695,4 +710,3 @@ export function FieldForm({
     </form>
   );
 }
-

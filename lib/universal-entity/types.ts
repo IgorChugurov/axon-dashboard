@@ -95,6 +95,10 @@ export interface Field {
   relationFieldId?: string | null;
   isRelationSource: boolean;
   selectorRelationId?: string | null;
+  
+  // Информация о связанном поле (для отображения при редактировании)
+  relationFieldName?: string | null; // Имя связанного поля
+  relationFieldLabel?: string | null; // Лейбл связанного поля
 
   // Значения по умолчанию
   defaultStringValue?: string | null;

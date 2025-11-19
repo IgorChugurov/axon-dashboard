@@ -330,9 +330,34 @@ export interface CreateFieldData {
   includeInListSa?: boolean;
   foreignKey?: string | null;
   foreignKeyValue?: string | null;
+  // Параметры для автоматического создания обратного поля (только при создании)
+  relationFieldName?: string | null; // Имя обратного поля
+  relationFieldLabel?: string | null; // Лейбл обратного поля
+  relationFieldRequired?: boolean; // Обязательность обратного поля
+  relationFieldRequiredText?: string | null; // Текст ошибки для обязательного поля
 }
 
 export type UpdateFieldData = Partial<CreateFieldData>;
+
+/**
+ * Определяет тип обратного поля на основе типа связи
+ */
+function getReverseRelationType(
+  dbType: string
+): { dbType: string; type: string } | null {
+  switch (dbType) {
+    case "manyToOne":
+      return { dbType: "oneToMany", type: "multipleSelect" };
+    case "oneToMany":
+      return { dbType: "manyToOne", type: "select" };
+    case "manyToMany":
+      return { dbType: "manyToMany", type: "multipleSelect" };
+    case "oneToOne":
+      return { dbType: "oneToOne", type: "select" };
+    default:
+      return null;
+  }
+}
 
 /**
  * Создать новое Field
@@ -361,6 +386,93 @@ export async function createField(data: CreateFieldData): Promise<Field> {
     );
   }
 
+  // Проверка и создание обратного поля для relation типов
+  let reverseFieldId: string | null = null;
+  const isRelationType = ["manyToOne", "oneToMany", "manyToMany", "oneToOne"].includes(
+    data.dbType
+  );
+
+  if (
+    isRelationType &&
+    data.relatedEntityDefinitionId &&
+    data.relationFieldName &&
+    data.relationFieldLabel
+  ) {
+    // Валидация уникальности relationFieldName в связанной entityDefinition
+    const { data: existingReverseField } = await supabase
+      .from("field")
+      .select("id")
+      .eq("entity_definition_id", data.relatedEntityDefinitionId)
+      .eq("name", data.relationFieldName)
+      .single();
+
+    if (existingReverseField) {
+      throw new Error(
+        `Field with name "${data.relationFieldName}" already exists in the related entity`
+      );
+    }
+
+    // Определяем тип обратного поля
+    const reverseType = getReverseRelationType(data.dbType);
+    if (!reverseType) {
+      throw new Error(`Invalid relation type: ${data.dbType}`);
+    }
+
+    // Создаем обратное поле
+    const { data: reverseField, error: reverseError } = await supabase
+      .from("field")
+      .insert({
+        entity_definition_id: data.relatedEntityDefinitionId,
+        name: data.relationFieldName,
+        db_type: reverseType.dbType,
+        type: reverseType.type,
+        label: data.relationFieldLabel,
+        placeholder: null,
+        description: null,
+        for_edit_page: true,
+        for_create_page: true,
+        required: data.relationFieldRequired ?? false,
+        required_text: data.relationFieldRequiredText || null,
+        for_edit_page_disabled: false,
+        display_index: 0,
+        display_in_table: true,
+        section_index: 0,
+        is_option_title_field: false,
+        searchable: false,
+        related_entity_definition_id: data.entityDefinitionId,
+        relation_field_id: null, // Будет установлено после создания исходного поля
+        is_relation_source: false, // Обратное поле не является источником
+        selector_relation_id: null,
+        default_string_value: null,
+        default_number_value: null,
+        default_boolean_value: null,
+        default_date_value: null,
+        auto_populate: false,
+        include_in_single_pma: true,
+        include_in_list_pma: true,
+        include_in_single_sa: true,
+        include_in_list_sa: true,
+        foreign_key: null,
+        foreign_key_value: null,
+        relation_field_name: data.name, // Сохраняем имя исходного поля
+        relation_field_label: data.label, // Сохраняем лейбл исходного поля
+      } as any)
+      .select()
+      .single();
+
+    if (reverseError) {
+      console.error(
+        "[EntityDefinitionService] Create reverse field error:",
+        reverseError
+      );
+      throw new Error(
+        `Failed to create reverse field: ${reverseError.message}`
+      );
+    }
+
+    reverseFieldId = reverseField.id;
+  }
+
   // Создание
   const { data: created, error } = await supabase
     .from("field")
@@ -383,9 +495,11 @@ export async function createField(data: CreateFieldData): Promise<Field> {
       is_option_title_field: data.isOptionTitleField ?? false,
       searchable: data.searchable ?? false,
       related_entity_definition_id: data.relatedEntityDefinitionId || null,
-      relation_field_id: data.relationFieldId || null,
-      is_relation_source: data.isRelationSource ?? false,
+      relation_field_id: reverseFieldId || data.relationFieldId || null,
+      is_relation_source: isRelationType && reverseFieldId ? true : (data.isRelationSource ?? false),
       selector_relation_id: data.selectorRelationId || null,
+      relation_field_name: reverseFieldId ? data.relationFieldName || null : null,
+      relation_field_label: reverseFieldId ? data.relationFieldLabel || null : null,
       default_string_value: data.defaultStringValue || null,
       default_number_value: data.defaultNumberValue || null,
       default_boolean_value: data.defaultBooleanValue || null,
@@ -403,7 +517,32 @@ export async function createField(data: CreateFieldData): Promise<Field> {
 
   if (error) {
     console.error("[EntityDefinitionService] Create field error:", error);
+    // Если обратное поле было создано, нужно его удалить
+    if (reverseFieldId) {
+      await supabase.from("field").delete().eq("id", reverseFieldId);
+    }
     throw new Error(`Failed to create field: ${error.message}`);
+  }
+
+  // Обновляем обратное поле, устанавливая relation_field_id
+  if (reverseFieldId) {
+    const { error: updateReverseError } = await supabase
+      .from("field")
+      .update({ relation_field_id: created.id })
+      .eq("id", reverseFieldId);
+
+    if (updateReverseError) {
+      console.error(
+        "[EntityDefinitionService] Update reverse field error:",
+        updateReverseError
+      );
+      // Откатываем изменения
+      await supabase.from("field").delete().eq("id", created.id);
+      await supabase.from("field").delete().eq("id", reverseFieldId);
+      throw new Error(
+        `Failed to link reverse field: ${updateReverseError.message}`
+      );
+    }
   }
 
   // Очищаем кэш
@@ -537,55 +676,134 @@ export async function updateField(
 }
 
 /**
+ * Удалить значения поля из JSONB data всех instances
+ */
+async function removeFieldFromInstances(
+  entityDefinitionId: string,
+  fieldName: string
+): Promise<void> {
+  const supabase = await createClient();
+
+  // Получаем все instances для entityDefinition
+  const { data: instances, error: fetchError } = await supabase
+    .from("entity_instance")
+    .select("id, data")
+    .eq("entity_definition_id", entityDefinitionId);
+
+  if (fetchError) {
+    console.error(
+      "[EntityDefinitionService] Fetch instances error:",
+      fetchError
+    );
+    throw new Error(`Failed to fetch instances: ${fetchError.message}`);
+  }
+
+  if (!instances || instances.length === 0) {
+    return; // Нет instances для обновления
+  }
+
+  // Обновляем каждый instance, удаляя поле из JSONB
+  for (const instance of instances) {
+    const currentData = (instance.data as Record<string, any>) || {};
+    const { [fieldName]: removed, ...updatedData } = currentData;
+
+    const { error: updateError } = await supabase
+      .from("entity_instance")
+      .update({
+        data: updatedData,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", instance.id);
+
+    if (updateError) {
+      console.error(
+        `[EntityDefinitionService] Failed to remove field from instance ${instance.id}:`,
+        updateError
+      );
+      // Продолжаем обработку других instances
+    }
+  }
+}
+
+/**
  * Удалить Field
- * Проверяет наличие связей перед удалением
+ * Удаляет связанные данные и связи для relation полей
  */
 export async function deleteField(id: string): Promise<void> {
   const supabase = await createClient();
 
-  // Проверяем, не используется ли это поле как relation_field_id в других полях
-  const { data: referencingFields, error: checkError } = await supabase
+  // Получаем информацию о поле
+  const { data: field, error: fetchError } = await supabase
     .from("field")
-    .select("id, name, entity_definition_id")
-    .eq("relation_field_id", id)
-    .limit(1);
+    .select("*")
+    .eq("id", id)
+    .single();
 
-  if (checkError) {
-    console.error(
-      "[EntityDefinitionService] Check relations error:",
-      checkError
-    );
-    throw new Error("Failed to check for field relations");
+  if (fetchError || !field) {
+    throw new Error("Field not found");
   }
 
-  if (referencingFields && referencingFields.length > 0) {
+  const fieldRow = field as any;
+
+  // Проверка: если поле relation и НЕ является источником (is_relation_source = false),
+  // то его нельзя удалить (это автоматически созданное обратное поле)
+  if (
+    fieldRow.is_relation_source === false &&
+    fieldRow.related_entity_definition_id &&
+    ["manyToOne", "oneToMany", "manyToMany", "oneToOne"].includes(
+      fieldRow.db_type
+    )
+  ) {
     throw new Error(
-      "Cannot delete field: it is referenced by other fields. Please remove those references first."
+      "Cannot delete field: this is an automatically created reverse relation field. Delete the source field instead."
     );
   }
 
-  // Проверяем, не используется ли это поле в entity_relation
-  const { data: relations, error: relationsError } = await supabase
+  // Если поле является relation source и имеет связанное поле
+  if (
+    fieldRow.is_relation_source === true &&
+    fieldRow.relation_field_id
+  ) {
+    // Удаляем связанное поле (обратное поле)
+    const { error: deleteReverseError } = await supabase
+      .from("field")
+      .delete()
+      .eq("id", fieldRow.relation_field_id);
+
+    if (deleteReverseError) {
+      console.error(
+        "[EntityDefinitionService] Delete reverse field error:",
+        deleteReverseError
+      );
+      throw new Error(
+        `Failed to delete reverse field: ${deleteReverseError.message}`
+      );
+    }
+  }
+
+  // Удаляем все записи из entity_relation, где это поле используется
+  const { error: deleteRelationsError } = await supabase
     .from("entity_relation")
-    .select("id")
-    .or(`relation_field_id.eq.${id},reverse_field_id.eq.${id}`)
-    .limit(1);
+    .delete()
+    .or(`relation_field_id.eq.${id},reverse_field_id.eq.${id}`);
 
-  if (relationsError) {
+  if (deleteRelationsError) {
     console.error(
-      "[EntityDefinitionService] Check entity relations error:",
-      relationsError
+      "[EntityDefinitionService] Delete entity relations error:",
+      deleteRelationsError
     );
-    throw new Error("Failed to check for entity relations");
-  }
-
-  if (relations && relations.length > 0) {
     throw new Error(
-      "Cannot delete field: it is used in entity relations. Please remove those relations first."
+      `Failed to delete entity relations: ${deleteRelationsError.message}`
     );
   }
 
-  // Удаляем
+  // Удаляем значения поля из JSONB data всех instances
+  await removeFieldFromInstances(
+    fieldRow.entity_definition_id,
+    fieldRow.name
+  );
+
+  // Удаляем само поле
   const { error } = await supabase.from("field").delete().eq("id", id);
 
   if (error) {

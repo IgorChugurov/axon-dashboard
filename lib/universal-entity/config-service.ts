@@ -70,6 +70,8 @@ function transformField(row: any): Field {
     relationFieldId: row.relation_field_id,
     isRelationSource: row.is_relation_source,
     selectorRelationId: row.selector_relation_id,
+    relationFieldName: row.relation_field_name,
+    relationFieldLabel: row.relation_field_label,
     defaultStringValue: row.default_string_value,
     defaultNumberValue: row.default_number_value,
     defaultBooleanValue: row.default_boolean_value,

@@ -7,7 +7,9 @@ import { ArrowLeft } from "lucide-react";
 import {
   getEntityDefinitionWithFields,
 } from "@/lib/universal-entity/config-service";
-import { FieldListClient } from "./FieldListClient";
+import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
+import { UniversalEntityList } from "@/components/UniversalEntityList";
+import type { EntityDefinition } from "@/lib/universal-entity/types";
 
 interface FieldsPageProps {
   params: Promise<{ projectId: string; entityDefinitionId: string }>;
@@ -39,6 +41,34 @@ export default async function FieldsPage({ params }: FieldsPageProps) {
   }
 
   const { entityDefinition, fields } = result;
+
+  // Загружаем UI конфиг для fields
+  const uiConfig = loadUIConfigFromFile("fields");
+
+  if (!uiConfig) {
+    throw new Error("Failed to load UI config for fields");
+  }
+
+  // Создаем фиктивную entityDefinition для использования в UniversalEntityList
+  const entityDefinitionForList: EntityDefinition = {
+    id: "field-list",
+    name: "Field",
+    url: "/api/entity-fields",
+    tableName: "field",
+    type: "primary",
+    projectId: projectId,
+    createPermission: "Admin",
+    readPermission: "ALL",
+    updatePermission: "Admin",
+    deletePermission: "Admin",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  // Сортируем поля по displayIndex
+  const sortedFields = [...fields].sort(
+    (a, b) => a.displayIndex - b.displayIndex
+  );
 
   return (
     <div className="space-y-6">
@@ -75,13 +105,15 @@ export default async function FieldsPage({ params }: FieldsPageProps) {
         </Button>
       </div>
 
-      <div className="rounded-lg border bg-card p-6">
-        <FieldListClient
-          projectId={projectId}
-          entityDefinitionId={entityDefinitionId}
-          fields={fields}
-        />
-      </div>
+      <UniversalEntityList
+        entityDefinition={entityDefinitionForList}
+        fields={[]}
+        uiConfig={uiConfig}
+        initialInstances={sortedFields}
+        initialPage={1}
+        initialSearch=""
+        projectId={projectId}
+      />
     </div>
   );
 }

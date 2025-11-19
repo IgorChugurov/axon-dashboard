@@ -1,541 +1,100 @@
 {
-  "title": "Fields",
-  "collectionName": "fields",
-  "forServicePackage": {
-    "url": "/api/entity-fields",
-
-    "reloadEvents": {
-      "update": "reloadFields",
-      "create": "reloadFields",
-      "delete": "reloadFields"
-    }
-  },
-  "reloadEventTitle": "reloadFields",
-  "forList": {
-    "searchBlock": "Search for fields",
-
-    "buttonBlock": { "title": "New field" },
-    "columnsForGrid": [
+  "list": {
+    "pageTitle": "Fields",
+    "searchPlaceholder": "Search for fields...",
+    "emptyStateTitle": "You have no fields",
+    "emptyStateMessages": [
+      "Fields that you create will end up here.",
+      "Add a field to get started."
+    ],
+    "showCreateButton": true,
+    "createButtonText": "New field",
+    "showSearch": true,
+    "enablePagination": true,
+    "pageSize": 20,
+    "enableFilters": false,
+    "columns": [
+      {
+        "field": "displayIndex",
+        "headerName": "Index",
+        "flex": 1
+      },
       {
         "field": "name",
         "headerName": "Name",
-        "flex": 1,
+        "flex": 2,
         "type": "openEditPage"
-      },
-      {
-        "field": "dbType",
-        "headerName": "DB type",
-        "flex": 2
       },
       {
         "field": "label",
         "headerName": "Label",
         "flex": 2
       },
-
+      {
+        "field": "type",
+        "headerName": "Type",
+        "flex": 1
+      },
+      {
+        "field": "dbType",
+        "headerName": "DB Type",
+        "flex": 1
+      },
+      {
+        "field": "required",
+        "headerName": "Required",
+        "flex": 1,
+        "type": "boolean"
+      },
+      {
+        "field": "displayInTable",
+        "headerName": "In Table",
+        "flex": 1,
+        "type": "boolean"
+      },
       {
         "field": "actions",
         "headerName": "",
         "type": "actions",
-        "width": 100,
-        "options": {
-          "actions": [
-            {
-              "action": "edit"
-            }
-          ]
-        }
-      }
-    ],
-    "forEmptyList": {
-      "title": "You have no fields",
-      "messages": [
-        "Fields that you create will end up here.",
-        "Add a fields to get started."
-      ]
-    },
-    "messages": {
-      "afterCreate": "Field was created successfully!",
-      "afterDelete": "Field was deleted successfully!",
-      "afterEdit": "Field was updated successfully!",
-      "forDeleteModal": {
-        "modalText": "Are you sure you want to delete ${item.name}? This action cannot be undone.",
-        "modalTitle": "Confirm deleting field",
-        "buttonTitle": "Delete"
-      }
-    }
-  },
-  "forEdit": {
-    "title": ["Create new field", "Edit Felds"],
-    "pageHeader": "Field details",
-    "buttonText": { "create": "Create", "edit": "Update" },
-    "sections": [
-      {
-        "title": "Field Identification",
-        "fields": [
+        "flex": 1,
+        "actions": [
           {
-            "name": "name",
-            "label": "Field name",
-            "placeholder": "Enter name",
-            "type": "text",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": true,
-            "requiredText": "Name is required",
-            "forEditPageDisabled": false,
-            "sectionIndex": 0
-          },
-
-          {
-            "name": "dbType",
-            "label": "Database type",
-            "placeholder": "Chose database type",
-            "type": "select",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": true,
-            "requiredText": "Database type is required",
-            "forEditPageDisabled": true,
-            "sectionIndex": 0,
-            "options": [
-              { "id": "varchar", "name": "varchar" },
-              { "id": "float", "name": "float" },
-              { "id": "boolean", "name": "boolean" },
-              { "id": "timestamptz", "name": "timestamptz" },
-              { "id": "manyToOne", "name": "manyToOne" },
-              { "id": "oneToMany", "name": "oneToMany" },
-              { "id": "manyToMany", "name": "manyToMany" },
-              { "id": "oneToOne", "name": "oneToOne" }
-            ]
+            "action": "edit",
+            "link": true,
+            "icon": "edit"
           },
           {
-            "name": "isRelationSource",
-            "label": "Main for relation",
-            "placeholder": "Indicate whether the field is main for relation",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": true,
-            "defaultValue": false,
-            "foreignKey": "dbType",
-            "foreignKeyValue": "manyToOne|oneToMany|manyToMany|oneToOne",
-            "sectionIndex": 0
-          },
-
-          {
-            "name": "type",
-            "label": "Field UX type",
-            "placeholder": "Chose field type",
-            "type": "select",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": true,
-            "requiredText": "Field type is required",
-            "forEditPageDisabled": true,
-            "options": [
-              { "id": "text", "name": "Text", "filter": "varchar" },
-              { "id": "number", "name": "Number", "filter": "float" },
-              { "id": "boolean", "name": "Boolean", "filter": "boolean" },
-              { "id": "date", "name": "Date", "filter": "timestamptz" },
-              { "id": "textarea", "name": "Textarea", "filter": "varchar" },
-              {
-                "id": "textareaEditor",
-                "name": "Textarea Editor",
-                "filter": "varchar"
-              },
-              { "id": "image", "name": "Image", "filter": "varchar" },
-              { "id": "gallery", "name": "Gallery", "filter": "varchar" },
-              {
-                "id": "select",
-                "name": "select",
-                "filter": "manyToOne|oneToOne"
-              },
-              {
-                "id": "multipleSelect",
-                "name": "multiple select",
-                "filter": "manyToMany|oneToMany"
-              }
-            ],
-            "foreignKey": "dbType",
-            "foreignKeyValue": "any"
-          },
-          {
-            "name": "relatedEntityDefinitionId",
-            "label": "Select entity",
-            "placeholder": "Select entity",
-            "type": "select",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": true,
-            "requiredText": "Entity is required",
-            "forEditPageDisabled": true,
-            "options": [],
-            "collectionName": "entities",
-            "foreignKey": "dbType",
-            "foreignKeyValue": "manyToOne|oneToMany|manyToMany|oneToOne",
-            "exclude": "parentEntityId"
-          },
-          {
-            "name": "isOptionTitleField",
-            "label": "Use as option title field",
-            "placeholder": "Indicate whether this field should be used as title in options",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": false,
-            "foreignKey": "dbType",
-            "foreignKeyValue": "varchar"
+            "action": "delete",
+            "icon": "trash"
           }
         ]
-      },
-      {
-        "title": "Relation Field Configuration",
-        "info": {
-          "title": "Automatic Reverse Field Creation",
-          "text": "These fields define the reverse relation field that will be automatically created in the selected entity. When you create this field, a corresponding field will be added to the related entity."
-        },
-        "fields": [
-          {
-            "name": "relationFieldName",
-            "label": "Related field name",
-            "placeholder": "Enter field name for related entity",
-            "type": "text",
-            "forEditPage": "no",
-            "forCreatePage": "yes",
-            "required": true,
-            "requiredText": "Related field name is required",
-            "forEditPageDisabled": false,
-            "foreignKey": "dbType",
-            "foreignKeyValue": "manyToOne|oneToMany|manyToMany|oneToOne"
-          },
-          {
-            "name": "relationFieldLabel",
-            "label": "Label for related field",
-            "placeholder": "Enter label for related field",
-            "type": "text",
-            "forEditPage": "no",
-            "forCreatePage": "yes",
-            "required": true,
-            "requiredText": "Related field label is required",
-            "forEditPageDisabled": false,
-            "foreignKey": "dbType",
-            "foreignKeyValue": "manyToOne|oneToMany|manyToMany|oneToOne"
-          },
-          {
-            "name": "relationFieldRequired",
-            "label": "Is related field required?",
-            "placeholder": "Indicate whether the related field is mandatory",
-            "type": "switch",
-            "forEditPage": "no",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": false,
-            "foreignKey": "dbType",
-            "foreignKeyValue": "manyToOne|oneToMany|manyToMany|oneToOne"
-          },
-          {
-            "name": "relationFieldRequiredText",
-            "label": "Enter error message for required field",
-            "placeholder": "Enter error message for required field",
-            "type": "text",
-            "forEditPage": "no",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "foreignKey": "relationFieldRequired",
-            "foreignKeyValue": "true",
-            "defaultValue": ""
-          }
-        ]
-      },
-      {
-        "title": "Field behavior",
-        "fields": [
-          {
-            "name": "required",
-            "label": "Required",
-            "placeholder": "Indicate whether the field is mandatory",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": true,
-            "defaultValue": false
-          },
-          {
-            "name": "requiredText",
-            "label": "Enter error message for required field",
-            "placeholder": "Enter error message for required field",
-            "type": "text",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": true,
-            "requiredText": "This field is required",
-            "forEditPageDisabled": false,
-            "foreignKey": "required",
-            "foreignKeyValue": "true"
-          },
-          {
-            "name": "searchable",
-            "label": "Searchable",
-            "placeholder": "Determines whether this field is searchable in the Management Admin interface",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "foreignKey": "dbType",
-            "foreignKeyValue": "varchar"
-          },
-
-          {
-            "name": "defaultStringValue",
-            "label": "Default string value",
-            "placeholder": "Enter default value",
-            "type": "text",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "foreignKey": "type",
-            "foreignKeyValue": "text|textarea|textareaEditor"
-          },
-          {
-            "name": "defaultNumberValue",
-            "label": "Default number value",
-            "placeholder": "Enter default value",
-            "type": "number",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "foreignKey": "type",
-            "foreignKeyValue": "number"
-          },
-          {
-            "name": "defaultBooleanValue",
-            "label": "Default boolean value",
-            "placeholder": "Set default value",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": false,
-            "foreignKey": "type",
-            "foreignKeyValue": "boolean"
-          },
-          {
-            "name": "defaultDateValue",
-            "label": "Default date value",
-            "placeholder": "Select default date",
-            "type": "date",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "foreignKey": "type",
-            "foreignKeyValue": "date"
-          }
-        ]
-      },
-      {
-        "title": "Field appearance and information",
-        "fields": [
-          {
-            "name": "label",
-            "label": "Label name",
-            "placeholder": "Enter label",
-            "type": "text",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": true,
-            "requiredText": "Label is required",
-            "forEditPageDisabled": false
-          },
-          {
-            "name": "placeholder",
-            "label": "Placeholder",
-            "placeholder": "Enter placeholder",
-            "type": "text",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "Placeholder is required",
-            "forEditPageDisabled": false
-          }
-        ]
-      },
-
-      {
-        "title": "Management Admin — Field Visibility Configuration",
-        "info": {
-          "title": "Control Field Visibility and Accessibility",
-          "text": "These settings define where and how this field is displayed and accessed within the Management Admin interface. Use the options below to configure its visibility and accessibility across list and detail views."
-        },
-        "fields": [
-          {
-            "name": "displayIndex",
-            "label": "Display order",
-            "placeholder": "Enter display order",
-            "type": "number",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false
-          },
-          {
-            "name": "forCreatePage",
-            "label": "Display on Create",
-            "placeholder": "Determines whether this field is displayed in the creation form when adding a new record",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": true
-          },
-          {
-            "name": "forEditPage",
-            "label": "Display on Edit",
-            "placeholder": "Determines whether this field is displayed in the edit form when updating an existing record",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": true
-          },
-
-          {
-            "name": "forEditPageDisabled",
-            "label": "Disable on Edit",
-            "placeholder": "Determines whether this field should be disabled when editing an existing record",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": false
-          },
-          {
-            "name": "displayInTable",
-            "label": "Display in Grids",
-            "placeholder": "Determines whether this field is displayed in the grids view of the Management Admin interface",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": true
-          }
-        ]
-      },
-      {
-        "title": "API Response Transformation Configuration",
-        "info": {
-          "title": "Control Field Response Transformation",
-          "text": "These settings define how this field is included in API responses across different endpoints."
-        },
-        "fields": [
-          {
-            "name": "includeInListSa",
-            "label": "Secondary API - Include in List Responses",
-            "placeholder": "Determines whether this field is included in list responses returned by the Secondary API",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": true
-          },
-          {
-            "name": "includeInSingleSa",
-            "label": "Secondary API - Include in Single Object Responses",
-            "placeholder": "Determines whether this field is included in single-object responses returned by the Secondary API",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": true
-          },
-          {
-            "name": "includeInListMfat",
-            "label": "Microfrontend API - Include in List Responses",
-            "placeholder": "Determines whether this field is included in list responses returned by the Microfrontend API.",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": true
-          },
-          {
-            "name": "includeInSingleMfa",
-            "label": "Microfrontend API - Include in Single Object Responses",
-            "placeholder": "Determines whether this field is included in in single-object responses returned  by the Microfrontend API.",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": true
-          },
-          {
-            "name": "autoPopulate",
-            "label": "Populate Relation in Responses",
-            "placeholder": "Determines whether this related field should be populated in API responses when applicable.",
-            "type": "switch",
-            "forEditPage": "yes",
-            "forCreatePage": "yes",
-            "required": false,
-            "requiredText": "",
-            "forEditPageDisabled": false,
-            "defaultValue": false,
-            "foreignKey": "dbType",
-            "foreignKeyValue": "manyToOne|oneToMany|manyToMany|oneToOne"
-          }
-        ]
-      },
-      {
-        "title": "Deletion",
-        "button": {
-          "action": "delete",
-          "label": "Deletion this field cannot be undone.",
-          "title": "Delete field",
-          "options": {
-            "modalText": "Are you sure you want to delete ${item.name}?",
-            "modalTitle": "Confirm deleting!",
-            "confirmWord": "Delete!",
-            "confirmText": "To confirm, please type the word Delete!"
-          }
-        },
-        "fields": []
       }
     ]
-  }
+  },
+  "form": {
+    "createPageTitle": "Create new field",
+    "editPageTitle": "Edit field",
+    "pageHeader": "Field details",
+    "createButtonLabel": "Create",
+    "updateButtonLabel": "Update",
+    "cancelButtonLabel": "Cancel"
+  },
+  "messages": {
+    "afterCreate": "Field was created successfully!",
+    "afterUpdate": "Field was updated successfully!",
+    "afterDelete": "Field was deleted successfully!",
+    "errorCreate": "Failed to create field. Please try again.",
+    "errorUpdate": "Failed to update field. Please try again.",
+    "deleteModalTitle": "Confirm deleting field",
+    "deleteModalText": "Are you sure you want to delete this field? This action cannot be undone.",
+    "deleteModalButtonText": "Delete",
+    "reloadEvents": {
+      "create": "reloadFields",
+      "update": "reloadFields",
+      "delete": "reloadFields"
+    }
+  },
+  "collectionName": "field",
+  "apiUrl": "/api/entity-fields",
+  "apiUrlAll": "/api/entity-fields/all"
 }

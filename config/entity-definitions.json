@@ -1,0 +1,86 @@
+{
+  "list": {
+    "pageTitle": "Entities",
+    "searchPlaceholder": "Search for entities...",
+    "emptyStateTitle": "You have no entities",
+    "emptyStateMessages": [
+      "Entities that you create will end up here.",
+      "Add an entity to get started."
+    ],
+    "showCreateButton": true,
+    "createButtonText": "New entity",
+    "showSearch": true,
+    "enablePagination": true,
+    "pageSize": 20,
+    "enableFilters": false,
+    "columns": [
+      {
+        "field": "name",
+        "headerName": "Name",
+        "flex": 5,
+        "type": "naigateToDetails"
+      },
+      {
+        "field": "tableName",
+        "headerName": "Table name",
+        "flex": 2
+      },
+      {
+        "field": "url",
+        "headerName": "Url",
+        "flex": 2
+      },
+      {
+        "field": "type",
+        "headerName": "Type",
+        "flex": 2
+      },
+      {
+        "field": "actions",
+        "headerName": "",
+        "type": "actions",
+        "flex": 1,
+        "actions": [
+          {
+            "action": "edit",
+            "link": true,
+            "icon": "settings"
+          },
+          {
+            "action": "link",
+            "link": true,
+            "icon": "list",
+            "additionalUrl": "/fields"
+          }
+        ]
+      }
+    ]
+  },
+  "form": {
+    "createPageTitle": "Create new entity",
+    "editPageTitle": "Edit entity",
+    "pageHeader": "Entity details",
+    "createButtonLabel": "Create",
+    "updateButtonLabel": "Update",
+    "cancelButtonLabel": "Cancel"
+  },
+  "messages": {
+    "afterCreate": "Entity was created successfully!",
+    "afterUpdate": "Entity was updated successfully!",
+    "afterDelete": "Entity was deleted successfully!",
+    "errorCreate": "Failed to create entity. Please try again.",
+    "errorUpdate": "Failed to update entity. Please try again.",
+    "deleteModalTitle": "Confirm deleting entity",
+    "deleteModalText": "Are you sure you want to delete this entity? This action cannot be undone.",
+    "deleteModalButtonText": "Delete",
+    "reloadEvents": {
+      "create": "reloadEntity",
+      "update": "reloadEntity",
+      "delete": "reloadEntity"
+    }
+  },
+  "collectionName": "entity_definition",
+  "apiUrl": "/api/entity-definitions",
+  "apiUrlAll": "/api/entity-definitions/all"
+}
+

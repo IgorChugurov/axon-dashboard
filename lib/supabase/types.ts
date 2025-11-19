@@ -197,6 +197,10 @@ export interface Database {
           include_in_list_pma: boolean;
           include_in_single_sa: boolean;
           include_in_list_sa: boolean;
+          relation_field_name: string | null;
+          relation_field_label: string | null;
+          foreign_key: string | null;
+          foreign_key_value: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -231,6 +235,10 @@ export interface Database {
           include_in_list_pma?: boolean;
           include_in_single_sa?: boolean;
           include_in_list_sa?: boolean;
+          relation_field_name?: string | null;
+          relation_field_label?: string | null;
+          foreign_key?: string | null;
+          foreign_key_value?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -265,6 +273,10 @@ export interface Database {
           include_in_list_pma?: boolean;
           include_in_single_sa?: boolean;
           include_in_list_sa?: boolean;
+          relation_field_name?: string | null;
+          relation_field_label?: string | null;
+          foreign_key?: string | null;
+          foreign_key_value?: string | null;
           created_at?: string;
           updated_at?: string;
         };
