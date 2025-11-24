@@ -32,6 +32,9 @@ export interface ListPageConfig {
   enableFilters: boolean; // Показывать фильтры
   filterEntityDefinitionIds?: string[]; // ID сущностей для фильтрации
 
+  // Поиск
+  searchableFields?: string[]; // Поля для поиска (автоматически генерируется из полей с searchable: true)
+
   // Колонки таблицы
   columns: ColumnConfig[];
 }
@@ -80,8 +83,13 @@ export interface FormPageConfig {
   updateButtonLabel: string; // "Update", "Save changes"
   cancelButtonLabel?: string; // "Cancel"
 
-  // Секции формы формируются через createFormStructure
-  // на основе titleSection0-3 в EntityDefinition
+  // Заголовки секций формы (0-3)
+  sectionTitles?: {
+    0?: string; // "General Information" (default)
+    1?: string; // "Section 1" (default)
+    2?: string; // "Section 2" (default)
+    3?: string; // "Section 3" (default)
+  };
 }
 
 // =====================================================
@@ -123,8 +131,7 @@ export interface EntityUIConfig {
   messages: MessagesConfig;
 
   // Метаданные для API
-  collectionName: string; // "projects", "blocks"
-  apiUrl: string; // "/api/projects"
+  apiUrl: string; // "/api/projects" (генерируется автоматически из tableName)
   apiUrlAll?: string; // "/api/projects/all" для получения всех данных
 }
 
@@ -142,7 +149,6 @@ export type PartialUIConfig = {
   };
   form?: Partial<FormPageConfig>;
   messages?: Partial<MessagesConfig>;
-  collectionName?: string;
   apiUrl?: string;
   apiUrlAll?: string;
 };

@@ -1,7 +1,7 @@
 /**
  * Генерация UI конфигурации из EntityDefinition и Fields
  * Заменяет lib/form-generation/utils/createJSONDefinitionForEntity.ts
- * 
+ *
  * Основная логика:
  * 1. Генерируем defaults на основе имени сущности
  * 2. Мержим с custom конфигом из entityDefinition.uiConfig
@@ -32,7 +32,10 @@ export function generateUIConfig(
 
   // 2. Мержим с custom конфигом (если есть)
   if (entityDefinition.uiConfig) {
-    return deepMerge(defaults, entityDefinition.uiConfig as Partial<EntityUIConfig>);
+    return deepMerge(
+      defaults,
+      entityDefinition.uiConfig as Partial<EntityUIConfig>
+    );
   }
 
   return defaults;
@@ -50,6 +53,16 @@ function generateDefaults(
   const namePlural = pluralize(nameLower);
   const tableName = entityDefinition.tableName;
 
+  // Генерируем searchableFields из полей с searchable: true
+  // Если нет таких полей, используем поле "name" по умолчанию
+  const searchableFields = fields
+    .filter((f) => f.searchable)
+    .map((f) => f.name);
+
+  // Если нет searchable полей, используем "name" по умолчанию
+  const finalSearchableFields =
+    searchableFields.length > 0 ? searchableFields : ["name"];
+
   // List configuration
   const list: ListPageConfig = {
     pageTitle: name,
@@ -66,6 +79,7 @@ function generateDefaults(
     pageSize: entityDefinition.pageSize ?? 20,
     enableFilters: entityDefinition.enableFilters ?? false,
     filterEntityDefinitionIds: entityDefinition.filterEntityDefinitionIds ?? [],
+    searchableFields: finalSearchableFields,
     columns: generateColumns(fields),
   };
 
@@ -77,6 +91,12 @@ function generateDefaults(
     createButtonLabel: "Create",
     updateButtonLabel: "Update",
     cancelButtonLabel: "Cancel",
+    sectionTitles: {
+      0: entityDefinition.titleSection0 || "General Information",
+      1: entityDefinition.titleSection1 || "Section 1",
+      2: entityDefinition.titleSection2 || "Section 2",
+      3: entityDefinition.titleSection3 || "Section 3",
+    },
   };
 
   // Messages configuration
@@ -97,8 +117,7 @@ function generateDefaults(
   };
 
   return {
-    collectionName: tableName,
-    apiUrl: entityDefinition.url || `/api/${tableName}`,
+    apiUrl: `/api/${tableName}`,
     apiUrlAll: `/api/entity-instances/all`,
     list,
     form,
@@ -109,9 +128,7 @@ function generateDefaults(
 /**
  * Генерирует колонки таблицы из полей с displayInTable: true
  */
-function generateColumns(
-  fields: Field[]
-): ColumnConfig[] {
+function generateColumns(fields: Field[]): ColumnConfig[] {
   // Фильтруем поля для отображения в таблице
   const displayFields = fields
     .filter((f) => f.displayInTable)
@@ -239,4 +256,3 @@ export function getColumnsFromFields(fields: Field[]): ColumnConfig[] {
       flex: 1,
     }));
 }
-

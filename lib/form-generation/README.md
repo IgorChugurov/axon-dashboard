@@ -121,15 +121,15 @@ import { getItemForEdit } from "@/lib/form-generation";
 const formData = getItemForEdit(fields, serverData);
 ```
 
-### createFormStructure(entityDefinition, fields, mode)
+### createFormStructure(fields, mode, uiConfig?)
 
 Group fields into sections:
 
 ```typescript
 import { createFormStructure } from "@/lib/form-generation";
 
-const structure = createFormStructure(entityDefinition, fields, "create");
-// Returns: { entityDefinition, sections, allFields }
+const structure = createFormStructure(fields, "create", uiConfig);
+// Returns: { sections, allFields }
 ```
 
 ## 🎨 Components

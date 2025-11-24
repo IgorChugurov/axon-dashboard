@@ -47,6 +47,7 @@ export function getDefaultValueForField(field: Field): FieldValue {
     case "date":
       return null;
     case "multipleSelect":
+    case "array":
       return [];
     case "select":
       return isRelationField(field) ? [] : null;
@@ -69,6 +70,7 @@ export function getDefaultValueForFieldType(type: FieldType): FieldValue {
     case "date":
       return null;
     case "multipleSelect":
+    case "array":
       return [];
     case "select":
       return null;
@@ -93,11 +95,13 @@ export function getDefaultValueForRelationField(
 /**
  * Check if two values are equal (handles arrays)
  */
-export function areValuesEqual(value1: FieldValue, value2: FieldValue): boolean {
+export function areValuesEqual(
+  value1: FieldValue,
+  value2: FieldValue
+): boolean {
   if (Array.isArray(value1) && Array.isArray(value2)) {
     return (
-      value1.length === value2.length &&
-      value1.every((v, i) => v === value2[i])
+      value1.length === value2.length && value1.every((v, i) => v === value2[i])
     );
   }
   return value1 === value2;
@@ -143,16 +147,20 @@ export function getVisibleFields(
 
 /**
  * Get the title for a section
+ * @param sectionIndex - Index of the section (0-3)
+ * @param sectionTitles - Optional section titles from uiConfig.form.sectionTitles
+ * @returns Section title with defaults
  */
 export function getSectionTitle(
   sectionIndex: number,
-  entityDefinition: { [key: string]: any }
+  sectionTitles?: { [key: number]: string | undefined }
 ): string {
-  const key = `titleSection${sectionIndex}`;
-  const customTitle = entityDefinition[key];
-
-  if (customTitle && typeof customTitle === "string" && customTitle.trim()) {
-    return customTitle.trim();
+  // Check if custom title is provided
+  if (sectionTitles && sectionTitles[sectionIndex]) {
+    const customTitle = sectionTitles[sectionIndex];
+    if (typeof customTitle === "string" && customTitle.trim()) {
+      return customTitle.trim();
+    }
   }
 
   // Defaults
@@ -184,4 +192,3 @@ export function validateFieldValue(
 
   return null;
 }
-

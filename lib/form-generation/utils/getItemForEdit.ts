@@ -46,6 +46,7 @@ function normalizeValue(value: any, field: Field): any {
       return value;
 
     case "multipleSelect":
+    case "array":
       // Ensure array
       if (!Array.isArray(value)) {
         return value ? [value] : [];
@@ -81,6 +82,7 @@ function getDefaultForNull(field: Field): any {
       return null;
 
     case "multipleSelect":
+    case "array":
       return [];
 
     case "number":

@@ -54,7 +54,10 @@
     "pageHeader": "Project details",
     "createButtonLabel": "Create project",
     "updateButtonLabel": "Save",
-    "cancelButtonLabel": "Cancel"
+    "cancelButtonLabel": "Cancel",
+    "sectionTitles": {
+      "0": "General Information"
+    }
   },
   "messages": {
     "afterCreate": "Project created successfully!",

@@ -59,6 +59,7 @@ function getValidatorForType(field: Field): Yup.AnySchema {
         });
 
     case "multipleSelect":
+    case "array":
       return Yup.array().of(Yup.string());
 
     case "select":
@@ -89,6 +90,7 @@ function applyRequiredValidation(
 ): Yup.AnySchema {
   switch (field.type) {
     case "multipleSelect":
+    case "array":
       return (validator as any).min(1, message);
 
     case "select":
@@ -190,6 +192,7 @@ export function createInitialFormData(
           initialData[field.name] = null;
           break;
         case "multipleSelect":
+        case "array":
           initialData[field.name] = [];
           break;
         case "select":

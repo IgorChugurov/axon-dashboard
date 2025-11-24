@@ -62,7 +62,10 @@
     "pageHeader": "Entity details",
     "createButtonLabel": "Create",
     "updateButtonLabel": "Update",
-    "cancelButtonLabel": "Cancel"
+    "cancelButtonLabel": "Cancel",
+    "sectionTitles": {
+      "0": "General Information"
+    }
   },
   "messages": {
     "afterCreate": "Entity was created successfully!",
@@ -83,4 +86,3 @@
   "apiUrl": "/api/entity-definitions",
   "apiUrlAll": "/api/entity-definitions/all"
 }
-

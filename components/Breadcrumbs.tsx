@@ -167,6 +167,35 @@ export function Breadcrumbs({
       return renderBreadcrumbs(breadcrumbItems);
     }
 
+    // Environment routes
+    if (pathname.includes("/settings/environment/")) {
+      breadcrumbItems.push(projectDropdown);
+      breadcrumbItems.push({
+        label: "Settings",
+        href: `/projects/${projectId}/settings`,
+      });
+
+      // New Environment
+      if (pathname === `/projects/${projectId}/settings/environment/new`) {
+        breadcrumbItems.push({ label: "New Environment" });
+        return renderBreadcrumbs(breadcrumbItems);
+      }
+
+      // Edit Environment
+      const environmentMatch = pathname.match(
+        /\/settings\/environment\/([^/]+)$/
+      );
+      if (environmentMatch) {
+        const environmentId = environmentMatch[1];
+        breadcrumbItems.push({
+          label: "Environments",
+          href: `/projects/${projectId}/settings?tab=environments`,
+        });
+        breadcrumbItems.push({ label: "Edit Environment" });
+        return renderBreadcrumbs(breadcrumbItems);
+      }
+    }
+
     // Entity Definition routes
     if (pathname.includes("/entity-definition/")) {
       breadcrumbItems.push(projectDropdown);

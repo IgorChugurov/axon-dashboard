@@ -17,7 +17,6 @@ interface RelationSelectProps {
   multiple?: boolean;
   required?: boolean;
   disabled?: boolean;
-  label: string;
 }
 
 export function RelationSelect({
@@ -28,7 +27,6 @@ export function RelationSelect({
   multiple = false,
   required = false,
   disabled = false,
-  label,
 }: RelationSelectProps) {
   const [options, setOptions] = useState<Option[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,20 +74,12 @@ export function RelationSelect({
 
   if (loading) {
     return (
-      <div className="space-y-2">
-        <Label>{label}</Label>
-        <div className="text-sm text-muted-foreground">Loading options...</div>
-      </div>
+      <div className="text-sm text-muted-foreground">Loading options...</div>
     );
   }
 
   return (
     <div className="space-y-2">
-      <Label>
-        {label}
-        {required && <span className="text-red-500">*</span>}
-      </Label>
-
       {multiple ? (
         // Множественный выбор
         <div className="space-y-2">

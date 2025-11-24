@@ -10,9 +10,11 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ProjectsProvider } from "@/components/providers/ProjectsProvider";
 import { ProjectsEventListener } from "@/components/providers/ProjectsEventListener";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/toaster";
+import { GlobalLoader } from "@/components/GlobalLoader";
 import { cookies } from "next/headers";
 import { getServerUser } from "@/lib/supabase/auth";
 import { getAllProjectsFromSupabase } from "@/lib/projects/supabase";
@@ -86,25 +88,28 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider initialUser={user}>
-            {isPublicRoute ? (
-              // Для публичных маршрутов (login, logout) показываем только children
-              children
-            ) : (
-              // Для защищенных маршрутов показываем полный интерфейс
-              <ProjectsProvider initialProjects={projects}>
-                <ProjectsEventListener />
-                <SidebarProvider defaultOpen={defaultOpen}>
-                  <AppSidebar projects={projects} />
-                  <main className="w-full ">
-                    <Navbar />
-                    <div className="px-4">{children}</div>
-                  </main>
-                </SidebarProvider>
-              </ProjectsProvider>
-            )}
-            <Toaster />
-          </AuthProvider>
+          <QueryProvider>
+            <AuthProvider initialUser={user}>
+              {isPublicRoute ? (
+                // Для публичных маршрутов (login, logout) показываем только children
+                children
+              ) : (
+                // Для защищенных маршрутов показываем полный интерфейс
+                <ProjectsProvider initialProjects={projects}>
+                  <ProjectsEventListener />
+                  <SidebarProvider defaultOpen={defaultOpen}>
+                    <AppSidebar projects={projects} />
+                    <main className="w-full pb-8 ">
+                      <Navbar />
+                      <div className="px-4">{children}</div>
+                    </main>
+                  </SidebarProvider>
+                </ProjectsProvider>
+              )}
+              <Toaster />
+              <GlobalLoader />
+            </AuthProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

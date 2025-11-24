@@ -1,6 +1,6 @@
 /**
  * Yup схема для валидации UI конфигурации
- * 
+ *
  * Используется для:
  * - Валидации uiConfig JSONB поля при сохранении в БД
  * - Проверки структуры config/*.json файлов
@@ -60,6 +60,7 @@ const listPageConfigSchema = Yup.object({
   pageSize: Yup.number().min(1).max(100).optional(),
   enableFilters: Yup.boolean().required(),
   filterEntityDefinitionIds: Yup.array().of(Yup.string()).optional(),
+  searchableFields: Yup.array().of(Yup.string()).optional(),
   columns: Yup.array().of(columnConfigSchema).min(1).required(),
 });
 
@@ -103,7 +104,6 @@ export const entityUIConfigSchema = Yup.object({
   list: listPageConfigSchema.required(),
   form: formPageConfigSchema.required(),
   messages: messagesConfigSchema.required(),
-  collectionName: Yup.string().required(),
   apiUrl: Yup.string().required(),
   apiUrlAll: Yup.string().optional(),
 });
@@ -125,6 +125,7 @@ export const partialUIConfigSchema = Yup.object({
     pageSize: Yup.number().min(1).max(100).optional(),
     enableFilters: Yup.boolean().optional(),
     filterEntityDefinitionIds: Yup.array().of(Yup.string()).optional(),
+    searchableFields: Yup.array().of(Yup.string()).optional(),
     columns: Yup.array().of(columnConfigSchema).optional(),
   }).optional(),
   form: Yup.object({
@@ -152,7 +153,6 @@ export const partialUIConfigSchema = Yup.object({
       delete: Yup.string().optional(),
     }).optional(),
   }).optional(),
-  collectionName: Yup.string().optional(),
   apiUrl: Yup.string().optional(),
   apiUrlAll: Yup.string().optional(),
 }).optional();
@@ -202,4 +202,3 @@ export async function validatePartialUIConfig(
     };
   }
 }
-

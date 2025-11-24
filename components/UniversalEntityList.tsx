@@ -13,98 +13,147 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Trash2, Edit, Settings, List } from "lucide-react";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
-import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
+import type { EntityDefinition } from "@/lib/universal-entity/types";
+
+interface RoutingConfig {
+  createUrlTemplate: string; // Шаблон URL для создания, например "/projects/{projectId}/settings/environment/new"
+  editUrlTemplate: string; // Шаблон URL для редактирования, например "/projects/{projectId}/settings/environment/{instanceId}"
+  detailsUrlTemplate: string; // Шаблон URL для деталей, например "/projects/{projectId}/settings/environment/{instanceId}"
+}
 
 interface UniversalEntityListProps {
   entityDefinition: EntityDefinition;
-  fields: Field[];
   uiConfig: EntityUIConfig;
-  initialInstances: any[];
-  initialPage?: number;
-  initialSearch?: string;
+  onLoadData: (params: {
+    page: number;
+    limit: number;
+    search?: string;
+  }) => Promise<{
+    data: any[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasPreviousPage: boolean;
+      hasNextPage: boolean;
+    };
+  }>;
   projectId: string;
+  fields?: any[];
+  routing: RoutingConfig;
 }
 
 export function UniversalEntityList({
   entityDefinition,
   uiConfig,
-  initialInstances,
-  initialPage = 1,
-  initialSearch = "",
+  onLoadData,
   projectId,
+  routing,
 }: UniversalEntityListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const [instances] = useState(initialInstances);
-  const [page, setPage] = useState(initialPage);
-  const [search, setSearch] = useState(initialSearch);
+  // Читаем page и search из URL
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const search = searchParams.get("search") || "";
+
+  // Состояние для данных
+  const [instances, setInstances] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasPreviousPage: false,
+    hasNextPage: false,
+  });
 
   const { list } = uiConfig;
+  const pageSize = list.pageSize || 20;
+
+  // Debounce для поиска
+  const [searchInput, setSearchInput] = useState(search);
+
+  // Загрузка данных
+  const loadData = useCallback(
+    async (currentPage: number, currentSearch: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await onLoadData({
+          page: currentPage,
+          limit: pageSize,
+          search: currentSearch || undefined,
+        });
+        setInstances(result.data);
+        setPagination(result.pagination);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load data";
+        setError(errorMessage);
+        setInstances([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [onLoadData, pageSize]
+  );
+
+  // Загрузка данных при изменении page или search
+  useEffect(() => {
+    loadData(page, search);
+  }, [page, search, loadData]);
+
+  // Debounce для поиска
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput !== search) {
+        startTransition(() => {
+          const params = new URLSearchParams(searchParams.toString());
+          if (searchInput) {
+            params.set("search", searchInput);
+          } else {
+            params.delete("search");
+          }
+          params.set("page", "1");
+          router.push(`?${params.toString()}`);
+        });
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, search, searchParams, router]);
 
   // Обработчик поиска
   const handleSearch = (value: string) => {
-    setSearch(value);
-    startTransition(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set("search", value);
-      } else {
-        params.delete("search");
-      }
-      params.set("page", "1");
-      router.push(`?${params.toString()}`);
-    });
+    setSearchInput(value);
+  };
+
+  // Генерация URL из шаблона
+  const generateUrl = (template: string, instanceId?: string) => {
+    return template
+      .replace("{projectId}", projectId)
+      .replace("{instanceId}", instanceId || "");
   };
 
   // Обработчик создания
   const handleCreate = () => {
-    // Для entityDefinitions - создание новой entityDefinition
-    // Для fields - создание нового field
-    // Для обычных сущностей - создание нового instance
-    if (entityDefinition.tableName === "entity_definition") {
-      router.push(`/projects/${projectId}/entity-definition/new`);
-    } else if (entityDefinition.tableName === "field") {
-      // Для fields нужно получить entityDefinitionId из контекста
-      // Пока используем projectId, но это нужно будет исправить
-      // TODO: Передавать entityDefinitionId как проп
-      const currentPath = window.location.pathname;
-      const match = currentPath.match(/\/entity-definition\/([^/]+)\/fields/);
-      if (match) {
-        router.push(`/projects/${projectId}/entity-definition/${match[1]}/fields/new`);
-      }
-    } else {
-      router.push(`/projects/${projectId}/entity-instances/${entityDefinition.id}/new`);
-    }
+    router.push(generateUrl(routing.createUrlTemplate));
   };
 
   // Обработчик редактирования
   const handleEdit = (instanceId: string) => {
-    // Для entityDefinitions - редактирование самой entityDefinition
-    // Для fields - редактирование field
-    // Для обычных сущностей - редактирование instance
-    if (entityDefinition.tableName === "entity_definition") {
-      router.push(`/projects/${projectId}/entity-definition/${instanceId}/edit`);
-    } else if (entityDefinition.tableName === "field") {
-      const currentPath = window.location.pathname;
-      const match = currentPath.match(/\/entity-definition\/([^/]+)\/fields/);
-      if (match) {
-        router.push(
-          `/projects/${projectId}/entity-definition/${match[1]}/fields/${instanceId}/edit`
-        );
-      }
-    } else {
-      router.push(
-        `/projects/${projectId}/entity-instances/${entityDefinition.id}/${instanceId}/edit`
-      );
-    }
+    router.push(generateUrl(routing.editUrlTemplate, instanceId));
   };
 
   // Обработчик навигации к деталям (переход на редактирование)
@@ -112,36 +161,22 @@ export function UniversalEntityList({
     instanceId: string,
     additionalUrl?: string
   ) => {
-    // Для entityDefinitions без additionalUrl - переход на список сущностей
-    if (entityDefinition.tableName === "entity_definition" && !additionalUrl) {
-      router.push(`/projects/${projectId}/entity-instances/${instanceId}`);
-    } else if (entityDefinition.tableName === "field") {
-      // Для fields - переход на редактирование
-      const currentPath = window.location.pathname;
-      const match = currentPath.match(/\/entity-definition\/([^/]+)\/fields/);
-      if (match) {
-        router.push(
-          `/projects/${projectId}/entity-definition/${match[1]}/fields/${instanceId}/edit`
-        );
-      }
+    const baseUrl = generateUrl(routing.detailsUrlTemplate, instanceId);
+    // Если есть additionalUrl, добавляем его к URL
+    if (additionalUrl) {
+      router.push(`${baseUrl}${additionalUrl}`);
     } else {
-      // Для обычных сущностей - переход на редактирование
-      router.push(
-        `/projects/${projectId}/entity-instances/${entityDefinition.id}/${instanceId}/edit`
-      );
+      router.push(baseUrl);
     }
   };
 
   // Обработчик link action (для перехода на связанные страницы)
   const handleLink = (instanceId: string, additionalUrl?: string) => {
-    if (entityDefinition.tableName === "entity_definition") {
-      // Для entityDefinitions - переход на список экземпляров
-      router.push(`/projects/${projectId}/entity-instances/${instanceId}`);
+    const baseUrl = generateUrl(routing.detailsUrlTemplate, instanceId);
+    if (additionalUrl) {
+      router.push(`${baseUrl}${additionalUrl}`);
     } else {
-      // Для обычных сущностей - переход на редактирование
-      router.push(
-        `/projects/${projectId}/entity-instances/${entityDefinition.id}/${instanceId}/edit`
-      );
+      router.push(baseUrl);
     }
   };
 
@@ -151,7 +186,25 @@ export function UniversalEntityList({
       return;
     }
 
-    // TODO: Реализовать удаление через Server Action
+    if (entityDefinition.tableName === "environments") {
+      try {
+        const { deleteEnvironmentAction } = await import(
+          `@/app/projects/${projectId}/settings/environment/actions`
+        );
+        const result = await deleteEnvironmentAction(projectId, instanceId);
+
+        if (result.success) {
+          router.refresh();
+        } else {
+          alert(result.error || "Failed to delete environment");
+        }
+      } catch (error) {
+        console.error("[UniversalEntityList] Delete error:", error);
+        alert("Failed to delete environment");
+      }
+      return;
+    }
+
     console.warn("Delete not implemented yet", instanceId);
   };
 
@@ -193,8 +246,43 @@ export function UniversalEntityList({
     }
   };
 
+  // Обработка ошибок
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 border rounded-lg bg-destructive/10">
+        <div className="text-center max-w-md">
+          <h3 className="text-xl font-semibold mb-2 text-destructive">
+            Error loading data
+          </h3>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => loadData(page, search)} variant="outline">
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Индикатор загрузки
+  if (loading && instances.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {list.pageTitle}
+            </h1>
+          </div>
+        </div>
+        <div className="border rounded-lg p-8">
+          <p className="text-center text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Пустое состояние
-  if (instances.length === 0 && !search) {
+  if (instances.length === 0 && !search && !loading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 border rounded-lg bg-muted/10">
         <div className="text-center max-w-md">
@@ -245,7 +333,7 @@ export function UniversalEntityList({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={list.searchPlaceholder}
-                value={search}
+                value={searchInput}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10"
               />
@@ -283,7 +371,7 @@ export function UniversalEntityList({
       )}
 
       {/* Таблица */}
-      {instances.length > 0 && (
+      {instances.length > 0 && !loading && (
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full">
             <thead className="bg-muted/50">
@@ -416,44 +504,41 @@ export function UniversalEntityList({
       )}
 
       {/* Пагинация */}
-      {list.enablePagination && instances.length > 0 && (
+      {list.enablePagination && instances.length > 0 && !loading && (
         <div className="flex justify-center items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
               const newPage = page - 1;
-              setPage(newPage);
               const params = new URLSearchParams(searchParams.toString());
               params.set("page", String(newPage));
               router.push(`?${params.toString()}`);
             }}
-            disabled={page <= 1 || isPending}
+            disabled={!pagination.hasPreviousPage || isPending || loading}
           >
             Previous
           </Button>
           <span className="text-sm text-muted-foreground px-4">
-            Page {page}
+            Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
           </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
               const newPage = page + 1;
-              setPage(newPage);
               const params = new URLSearchParams(searchParams.toString());
               params.set("page", String(newPage));
               router.push(`?${params.toString()}`);
             }}
-            disabled={instances.length < (list.pageSize || 20) || isPending}
+            disabled={!pagination.hasNextPage || isPending || loading}
           >
             Next
           </Button>
         </div>
       )}
 
-      {/* Индикатор загрузки */}
-      {isPending && (
+      {(isPending || loading) && (
         <div className="fixed bottom-4 right-4 bg-background border rounded-lg px-4 py-2 shadow-lg">
           <p className="text-sm">Loading...</p>
         </div>

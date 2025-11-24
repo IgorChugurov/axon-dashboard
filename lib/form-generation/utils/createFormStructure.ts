@@ -2,7 +2,7 @@
  * Create form structure with sections from fields
  */
 
-import type { Field, EntityDefinition } from "@/lib/universal-entity/types";
+import type { Field } from "@/lib/universal-entity/types";
 import type { FormSection, FormStructure } from "../types";
 import { getSectionTitle } from "./fieldHelpers";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
@@ -13,7 +13,6 @@ import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
  * Adds delete section for edit mode
  */
 export function createFormStructure(
-  entityDefinition: EntityDefinition,
   fields: Field[],
   mode: "create" | "edit",
   uiConfig?: EntityUIConfig
@@ -60,7 +59,7 @@ export function createFormStructure(
 
     sections.push({
       sectionIndex: i,
-      title: getSectionTitle(i, entityDefinition),
+      title: getSectionTitle(i, uiConfig?.form?.sectionTitles),
       fields: sectionFields,
     });
   }
@@ -76,7 +75,9 @@ export function createFormStructure(
         action: "delete",
         title: messages.deleteModalButtonText || "Delete",
         options: {
-          modalText: messages.deleteModalText || "Are you sure you want to delete this item?",
+          modalText:
+            messages.deleteModalText ||
+            "Are you sure you want to delete this item?",
           modalTitle: messages.deleteModalTitle || "Confirm deletion",
           confirmWord: messages.deleteModalConfirmWord,
           confirmText: messages.deleteModalConfirmText,
@@ -86,7 +87,6 @@ export function createFormStructure(
   }
 
   return {
-    entityDefinition,
     sections,
     allFields: sortedFields,
   };
@@ -112,9 +112,10 @@ export function filterVisibleSections(
         fields: visibleFields,
       };
     })
-    .filter((section) => 
-      // Keep sections with fields OR sections with actions (like delete section)
-      section.fields.length > 0 || section.action !== undefined
+    .filter(
+      (section) =>
+        // Keep sections with fields OR sections with actions (like delete section)
+        section.fields.length > 0 || section.action !== undefined
     );
 }
 
@@ -155,4 +156,3 @@ export function getValidatableFields(
 ): Field[] {
   return fields.filter((field) => isFieldVisible(field, formData));
 }
-

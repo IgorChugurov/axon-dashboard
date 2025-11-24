@@ -28,7 +28,7 @@ export default async function EntityNewPage({ params }: EntityNewPageProps) {
         entityDefinitionId={entityDefinitionId}
         entityDefinitionName={config.entityDefinition.name}
       />
-      
+
       <UniversalEntityForm
         entityDefinition={config.entityDefinition}
         fields={config.fields}

@@ -336,6 +336,38 @@ export interface Database {
           created_at?: string;
         };
       };
+      environments: {
+        Row: {
+          id: string;
+          project_id: string;
+          key: string;
+          type: "string" | "number" | "boolean" | "select";
+          value: Json | null;
+          options: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          key: string;
+          type: "string" | "number" | "boolean" | "select";
+          value?: Json | null;
+          options?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          key?: string;
+          type?: "string" | "number" | "boolean" | "select";
+          value?: Json | null;
+          options?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

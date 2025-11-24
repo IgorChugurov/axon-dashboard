@@ -1,0 +1,44 @@
+/**
+ * Типы для универсального компонента списка
+ */
+
+export interface LoadParams {
+  page: number;
+  limit: number;
+  search?: string;
+  filters?: Record<string, unknown>; // для будущих фильтров
+  sortBy?: string; // для будущей сортировки
+  sortOrder?: "asc" | "desc";
+}
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface LoadDataResult<TData> {
+  data: TData[];
+  pagination: PaginationInfo;
+}
+
+export type LoadDataFn<TData> = (
+  params: LoadParams,
+  signal?: AbortSignal
+) => Promise<LoadDataResult<TData>>;
+
+export type ServiceType =
+  | "environment"
+  | "entity-definition"
+  | "entity-instance"
+  | "field";
+
+export interface RoutingConfig {
+  createUrlTemplate: string;
+  editUrlTemplate: string;
+  detailsUrlTemplate: string;
+}
+

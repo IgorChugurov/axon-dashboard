@@ -14,9 +14,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
-import { FormWithSections } from "@/lib/form-generation";
+import { FormWithSectionsShadcn } from "@/lib/form-generation";
 import { useToast } from "@/hooks/use-toast";
-import { createEntityInstance, updateEntityInstance, deleteEntityInstance } from "@/app/projects/[projectId]/entity-instances/[entityDefinitionId]/actions";
+import {
+  createEntityInstance,
+  updateEntityInstance,
+  deleteEntityInstance,
+} from "@/app/projects/[projectId]/entity-instances/[entityDefinitionId]/actions";
+import { withGlobalLoader } from "@/lib/global-loader/with-global-loader";
 
 interface UniversalEntityFormProps {
   entityDefinition: EntityDefinition;
@@ -41,116 +46,114 @@ export function UniversalEntityForm({
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
 
-  const { form, messages } = uiConfig;
-
-  // Заголовок страницы
-  const pageTitle = mode === "create" ? form.createPageTitle : form.editPageTitle;
-
-  // Тексты кнопок
-  const submitButtonText =
-    mode === "create" ? form.createButtonLabel : form.updateButtonLabel;
-  const cancelButtonText = form.cancelButtonLabel || "Cancel";
+  const { messages } = uiConfig;
 
   const handleSubmit = async (formData: Record<string, any>) => {
     setError(null);
 
-    try {
-      // Разделяем данные и связи
-      const relations: Record<string, string[]> = {};
-      const data: Record<string, any> = {};
+    await withGlobalLoader(
+      (async () => {
+        try {
+          // Разделяем данные и связи
+          const relations: Record<string, string[]> = {};
+          const data: Record<string, any> = {};
 
-      for (const [key, value] of Object.entries(formData)) {
-        const field = fields.find((f) => f.name === key);
-        if (
-          field &&
-          (field.dbType === "manyToMany" ||
-            field.dbType === "manyToOne" ||
-            field.dbType === "oneToMany" ||
-            field.dbType === "oneToOne")
-        ) {
-          // Поле связи
-          relations[key] = Array.isArray(value) ? value : value ? [value] : [];
-        } else {
-          // Обычное поле
-          data[key] = value;
+          for (const [key, value] of Object.entries(formData)) {
+            const field = fields.find((f) => f.name === key);
+            if (
+              field &&
+              (field.dbType === "manyToMany" ||
+                field.dbType === "manyToOne" ||
+                field.dbType === "oneToMany" ||
+                field.dbType === "oneToOne")
+            ) {
+              // Поле связи
+              relations[key] = Array.isArray(value)
+                ? value
+                : value
+                ? [value]
+                : [];
+            } else {
+              // Обычное поле
+              data[key] = value;
+            }
+          }
+
+          let result;
+          if (mode === "create") {
+            result = await createEntityInstance(
+              projectId,
+              entityDefinition.id,
+              data,
+              Object.keys(relations).length > 0 ? relations : undefined
+            );
+          } else if (instanceId) {
+            result = await updateEntityInstance(
+              projectId,
+              entityDefinition.id,
+              instanceId,
+              data,
+              Object.keys(relations).length > 0 ? relations : undefined
+            );
+          } else {
+            throw new Error("Instance ID is required for update");
+          }
+
+          if (!result.success) {
+            // Показываем ошибку через toast
+            const errorMessage =
+              (mode === "create"
+                ? messages.errorCreate
+                : messages.errorUpdate) ||
+              result.error ||
+              "Failed to save. Please try again.";
+
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: errorMessage,
+            });
+
+            setError(result.error || errorMessage);
+            return; // Выходим, остаемся на странице
+          }
+
+          // Успех - показываем toast и перенаправляем
+          const successMessage =
+            mode === "create" ? messages.afterCreate : messages.afterUpdate;
+
+          toast({
+            variant: "success",
+            title: "Success",
+            description: successMessage,
+          });
+
+          router.push(
+            `/projects/${projectId}/entity-instances/${entityDefinition.id}`
+          );
+          router.refresh();
+        } catch (err) {
+          // Обработка неожиданных ошибок
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : "Failed to save. Please try again.";
+
+          const errorText =
+            (mode === "create" ? messages.errorCreate : messages.errorUpdate) ||
+            errorMessage;
+
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: errorText,
+          });
+
+          setError(errorMessage);
+          // НЕ делаем throw, чтобы избежать дублирования ошибок
         }
-      }
-
-      let result;
-      if (mode === "create") {
-        result = await createEntityInstance(
-          projectId,
-          entityDefinition.id,
-          data,
-          Object.keys(relations).length > 0 ? relations : undefined
-        );
-      } else if (instanceId) {
-        result = await updateEntityInstance(
-          projectId,
-          entityDefinition.id,
-          instanceId,
-          data,
-          Object.keys(relations).length > 0 ? relations : undefined
-        );
-      } else {
-        throw new Error("Instance ID is required for update");
-      }
-
-      if (!result.success) {
-        // Показываем ошибку через toast
-        const errorMessage =
-          (mode === "create"
-            ? messages.errorCreate
-            : messages.errorUpdate) ||
-          result.error ||
-          "Failed to save. Please try again.";
-
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: errorMessage,
-        });
-
-        setError(result.error || errorMessage);
-        throw new Error(result.error || errorMessage);
-      }
-
-      // Успех - показываем toast и перенаправляем
-      const successMessage =
-        mode === "create" ? messages.afterCreate : messages.afterUpdate;
-
-      toast({
-        variant: "success",
-        title: "Success",
-        description: successMessage,
-      });
-
-      // Перенаправляем на список
-      router.push(`/projects/${projectId}/entity-instances/${entityDefinition.id}`);
-      router.refresh();
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to save. Please try again.";
-
-      // Если ошибка не была обработана выше, показываем через toast
-      if (!error) {
-        const errorText =
-          (mode === "create"
-            ? messages.errorCreate
-            : messages.errorUpdate) || errorMessage;
-
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: errorText,
-        });
-      }
-
-      setError(errorMessage);
-      throw err; // Re-throw so FormWithSections can handle it
-    }
+      })()
+    );
   };
 
   const handleCancel = () => {
@@ -162,63 +165,66 @@ export function UniversalEntityForm({
       return;
     }
 
-    try {
-      const result = await deleteEntityInstance(
-        projectId,
-        entityDefinition.id,
-        instanceId
-      );
+    await withGlobalLoader(
+      (async () => {
+        try {
+          const result = await deleteEntityInstance(
+            projectId,
+            entityDefinition.id,
+            instanceId
+          );
 
-      if (!result.success) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: result.error || "Failed to delete item",
-        });
-        throw new Error(result.error || "Failed to delete item");
-      }
+          if (!result.success) {
+            toast({
+              variant: "destructive",
+              title: "Error",
+              description: result.error || "Failed to delete item",
+            });
+            return; // Выходим, остаемся на странице
+          }
 
-      // Success - show toast and redirect
-      toast({
-        variant: "success",
-        title: "Success",
-        description: messages.afterDelete,
-      });
+          // Success - show toast and redirect
+          toast({
+            variant: "success",
+            title: "Success",
+            description: messages.afterDelete,
+          });
 
-      // Redirect to list
-      router.push(`/projects/${projectId}/entity-instances/${entityDefinition.id}`);
-      router.refresh();
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to delete. Please try again.";
+          router.push(
+            `/projects/${projectId}/entity-instances/${entityDefinition.id}`
+          );
+          router.refresh();
+        } catch (err) {
+          // Обработка неожиданных ошибок
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : "Failed to delete. Please try again.";
 
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: errorMessage,
-      });
-      throw err;
-    }
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: errorMessage,
+          });
+          // НЕ делаем throw, чтобы избежать дублирования ошибок
+        }
+      })()
+    );
   };
 
   // Get item name for delete confirmation (try to find a name field)
-  const itemName = initialData?.name || 
-                   initialData?.title || 
-                   entityDefinition.name;
+  const itemName =
+    initialData?.name || initialData?.title || entityDefinition.name;
 
   return (
     <div className="space-y-6">
       {/* Описание (если есть) */}
-      {entityDefinition.description && (
-        <p className="text-muted-foreground">
-          {entityDefinition.description}
-        </p>
+      {/* {entityDefinition.description && (
+        <p className="text-muted-foreground">{entityDefinition.description}</p>
       )}
-      {form.pageHeader && (
-        <p className="text-muted-foreground">{form.pageHeader}</p>
-      )}
+      {uiConfig.form.pageHeader && (
+        <p className="text-muted-foreground">{uiConfig.form.pageHeader}</p>
+      )} */}
 
       {/* Inline ошибка (дополнительно к toast) */}
       {error && (
@@ -228,20 +234,16 @@ export function UniversalEntityForm({
       )}
 
       {/* Форма */}
-      <FormWithSections
-        entityDefinition={entityDefinition}
+      <FormWithSectionsShadcn
         fields={fields}
         mode={mode}
         initialData={initialData}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         onDelete={mode === "edit" ? handleDelete : undefined}
-        submitButtonText={submitButtonText}
-        cancelButtonText={cancelButtonText}
         uiConfig={uiConfig}
         itemName={itemName}
       />
     </div>
   );
 }
-

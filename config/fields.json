@@ -77,6 +77,12 @@
     "pageHeader": "Field details",
     "createButtonLabel": "Create",
     "updateButtonLabel": "Update",
+    "sectionTitles": {
+      "0": "General Information",
+      "1": "UI Configuration",
+      "2": "Relations",
+      "3": "Defaults"
+    },
     "cancelButtonLabel": "Cancel"
   },
   "messages": {

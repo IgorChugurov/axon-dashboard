@@ -1,19 +1,19 @@
 /**
  * GET /api/entity-instances/all
- * 
+ *
  * Получить ВСЕ экземпляры сущности (без пагинации)
- * 
+ *
  * Используется для:
  * - Селектов (выбор тегов, категорий и т.д.)
  * - Фильтров на страницах списков
  * - UI элементов где нужны все данные
- * 
+ *
  * ⚠️ ВНИМАНИЕ: Использовать только для сущностей с небольшим количеством записей (< 1000)
  * Для больших таблиц используйте endpoint с пагинацией
- * 
+ *
  * Headers:
  * - entityDefinitionId: ID определения сущности (обязательно)
- * 
+ *
  * Query params:
  * - search: поисковый запрос (опционально)
  * - sortBy: поле для сортировки (опционально, default: created_at)
@@ -22,7 +22,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getEntityDefinitionWithFields } from "@/lib/universal-entity/config-service";
+import { getEntityDefinitionWithUIConfig } from "@/lib/universal-entity/config-service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,8 +48,8 @@ export async function GET(request: NextRequest) {
       | "asc"
       | "desc";
 
-    // Загружаем конфигурацию сущности
-    const config = await getEntityDefinitionWithFields(entityDefinitionId);
+    // Загружаем конфигурацию сущности с UI конфигом
+    const config = await getEntityDefinitionWithUIConfig(entityDefinitionId);
 
     if (!config) {
       return NextResponse.json(
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { entityDefinition, fields } = config;
+    const { entityDefinition, fields, uiConfig } = config;
     const supabase = await createClient();
 
     // Строим базовый запрос
@@ -72,13 +72,14 @@ export async function GET(request: NextRequest) {
 
     // Добавляем поиск если указан
     if (search) {
-      // Находим searchable поля
-      const searchableFields = fields.filter((f) => f.searchable);
+      // Используем searchableFields из uiConfig, если есть, иначе fallback на поля с searchable: true, иначе "name"
+      const searchableFields = uiConfig.list.searchableFields ||
+        fields.filter((f) => f.searchable).map((f) => f.name) || ["name"];
 
       if (searchableFields.length > 0) {
         // Строим OR условие для поиска по всем searchable полям
         const orConditions = searchableFields
-          .map((f) => `${f.name}.ilike.%${search}%`)
+          .map((fieldName) => `${fieldName}.ilike.%${search}%`)
           .join(",");
 
         query = query.or(orConditions);
@@ -117,4 +118,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

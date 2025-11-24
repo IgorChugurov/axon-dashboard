@@ -1,10 +1,10 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/roles";
-import { EntityDefinitionForm } from "@/components/entity-definition/EntityDefinitionForm";
+import { EntityDefinitionFormUniversal } from "@/components/entity-definition/EntityDefinitionFormUniversal";
 import { getEntityDefinitionById } from "@/lib/universal-entity/config-service";
-import { updateEntityDefinitionAction } from "../../actions";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
 
 interface EditEntityDefinitionPageProps {
   params: Promise<{ projectId: string; entityDefinitionId: string }>;
@@ -37,6 +37,13 @@ export default async function EditEntityDefinitionPage({
     notFound();
   }
 
+  // Загружаем UI конфиг
+  const uiConfig = loadUIConfigFromFile("entity-definition");
+
+  if (!uiConfig) {
+    throw new Error("Failed to load config for entity-definition");
+  }
+
   return (
     <div className="space-y-6">
       <Breadcrumbs
@@ -46,21 +53,14 @@ export default async function EditEntityDefinitionPage({
       />
 
       <div className="rounded-lg border bg-card p-6">
-        <EntityDefinitionForm
+        <EntityDefinitionFormUniversal
           projectId={projectId}
           mode="edit"
+          entityDefinitionId={entityDefinitionId}
           initialData={entityDefinition}
-          onSubmit={async (data) => {
-            "use server";
-            return await updateEntityDefinitionAction(
-              projectId,
-              entityDefinitionId,
-              data
-            );
-          }}
+          uiConfig={uiConfig}
         />
       </div>
     </div>
   );
 }
-

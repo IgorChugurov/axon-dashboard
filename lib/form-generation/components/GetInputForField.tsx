@@ -32,6 +32,8 @@ export function GetInputForField({
   disabled,
   options = [],
 }: GetInputForFieldProps) {
+  const resolvedOptions = field.options ?? options;
+
   // Relation fields
   if (isRelationField(field)) {
     return <InputRelation field={field} control={control} disabled={disabled} />;
@@ -59,7 +61,7 @@ export function GetInputForField({
           field={field}
           control={control}
           disabled={disabled}
-          options={options}
+          options={resolvedOptions}
         />
       );
 

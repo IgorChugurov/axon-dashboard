@@ -13,7 +13,6 @@ import { clearCache } from "./config-service";
 
 export interface CreateEntityDefinitionData {
   name: string;
-  url: string;
   description?: string | null;
   tableName: string;
   type: "primary" | "secondary" | "tertiary";
@@ -26,11 +25,14 @@ export interface CreateEntityDefinitionData {
   titleSection1?: string | null;
   titleSection2?: string | null;
   titleSection3?: string | null;
+  enablePagination?: boolean | null;
+  pageSize?: number | null;
+  enableFilters?: boolean | null;
+  filterEntityDefinitionIds?: string[] | null;
 }
 
 export interface UpdateEntityDefinitionData {
   name?: string;
-  url?: string;
   description?: string | null;
   type?: "primary" | "secondary" | "tertiary";
   createPermission?: string;
@@ -41,6 +43,10 @@ export interface UpdateEntityDefinitionData {
   titleSection1?: string | null;
   titleSection2?: string | null;
   titleSection3?: string | null;
+  enablePagination?: boolean | null;
+  pageSize?: number | null;
+  enableFilters?: boolean | null;
+  filterEntityDefinitionIds?: string[] | null;
   // tableName нельзя изменить после создания
 }
 
@@ -57,14 +63,17 @@ export async function createEntityDefinition(
     throw new Error("Name must be at least 2 characters long");
   }
 
-  if (!data.url || !data.url.startsWith("/api/")) {
-    throw new Error("URL must start with /api/");
-  }
-
   if (!data.tableName || !/^[a-z_]+$/.test(data.tableName)) {
     throw new Error(
       "Table name must be lowercase with underscores only (e.g., my_table)"
     );
+  }
+
+  // Валидация pageSize
+  if (data.pageSize !== null && data.pageSize !== undefined) {
+    if (data.pageSize < 1 || data.pageSize > 100) {
+      throw new Error("Page size must be between 1 and 100");
+    }
   }
 
   // Проверка уникальности name в проекте
@@ -78,20 +87,6 @@ export async function createEntityDefinition(
   if (existingByName) {
     throw new Error(
       `Entity with name "${data.name}" already exists in this project`
-    );
-  }
-
-  // Проверка уникальности url в проекте
-  const { data: existingByUrl } = await supabase
-    .from("entity_definition")
-    .select("id")
-    .eq("project_id", data.projectId)
-    .eq("url", data.url)
-    .single();
-
-  if (existingByUrl) {
-    throw new Error(
-      `Entity with URL "${data.url}" already exists in this project`
     );
   }
 
@@ -114,7 +109,6 @@ export async function createEntityDefinition(
     .from("entity_definition")
     .insert({
       name: data.name,
-      url: data.url,
       description: data.description || null,
       table_name: data.tableName,
       type: data.type,
@@ -127,6 +121,10 @@ export async function createEntityDefinition(
       title_section_1: data.titleSection1 || null,
       title_section_2: data.titleSection2 || null,
       title_section_3: data.titleSection3 || null,
+      enable_pagination: data.enablePagination ?? true,
+      page_size: data.pageSize ?? 20,
+      enable_filters: data.enableFilters ?? false,
+      filter_entity_definition_ids: data.filterEntityDefinitionIds || null,
     } as any)
     .select()
     .single();
@@ -156,8 +154,11 @@ export async function updateEntityDefinition(
     throw new Error("Name must be at least 2 characters long");
   }
 
-  if (data.url && !data.url.startsWith("/api/")) {
-    throw new Error("URL must start with /api/");
+  // Валидация pageSize
+  if (data.pageSize !== null && data.pageSize !== undefined) {
+    if (data.pageSize < 1 || data.pageSize > 100) {
+      throw new Error("Page size must be between 1 and 100");
+    }
   }
 
   // Получаем текущую entity для проверок
@@ -190,27 +191,9 @@ export async function updateEntityDefinition(
     }
   }
 
-  // Проверка уникальности url (если изменяется)
-  if (data.url && data.url !== currentRow.url) {
-    const { data: existingByUrl } = await supabase
-      .from("entity_definition")
-      .select("id")
-      .eq("project_id", currentRow.project_id)
-      .eq("url", data.url)
-      .neq("id", id)
-      .single();
-
-    if (existingByUrl) {
-      throw new Error(
-        `Entity with URL "${data.url}" already exists in this project`
-      );
-    }
-  }
-
   // Обновление
   const updatePayload: any = {};
   if (data.name !== undefined) updatePayload.name = data.name;
-  if (data.url !== undefined) updatePayload.url = data.url;
   if (data.description !== undefined)
     updatePayload.description = data.description;
   if (data.type !== undefined) updatePayload.type = data.type;
@@ -230,6 +213,13 @@ export async function updateEntityDefinition(
     updatePayload.title_section_2 = data.titleSection2;
   if (data.titleSection3 !== undefined)
     updatePayload.title_section_3 = data.titleSection3;
+  if (data.enablePagination !== undefined)
+    updatePayload.enable_pagination = data.enablePagination;
+  if (data.pageSize !== undefined) updatePayload.page_size = data.pageSize;
+  if (data.enableFilters !== undefined)
+    updatePayload.enable_filters = data.enableFilters;
+  if (data.filterEntityDefinitionIds !== undefined)
+    updatePayload.filter_entity_definition_ids = data.filterEntityDefinitionIds;
 
   const { data: updated, error } = await supabase
     .from("entity_definition")
@@ -388,9 +378,12 @@ export async function createField(data: CreateFieldData): Promise<Field> {
 
   // Проверка и создание обратного поля для relation типов
   let reverseFieldId: string | null = null;
-  const isRelationType = ["manyToOne", "oneToMany", "manyToMany", "oneToOne"].includes(
-    data.dbType
-  );
+  const isRelationType = [
+    "manyToOne",
+    "oneToMany",
+    "manyToMany",
+    "oneToOne",
+  ].includes(data.dbType);
 
   if (
     isRelationType &&
@@ -466,7 +459,9 @@ export async function createField(data: CreateFieldData): Promise<Field> {
         reverseError
       );
       throw new Error(
-        `Failed to create reverse field: ${reverseError?.message || "Unknown error"}`
+        `Failed to create reverse field: ${
+          reverseError?.message || "Unknown error"
+        }`
       );
     }
 
@@ -496,10 +491,17 @@ export async function createField(data: CreateFieldData): Promise<Field> {
       searchable: data.searchable ?? false,
       related_entity_definition_id: data.relatedEntityDefinitionId || null,
       relation_field_id: reverseFieldId || data.relationFieldId || null,
-      is_relation_source: isRelationType && reverseFieldId ? true : (data.isRelationSource ?? false),
+      is_relation_source:
+        isRelationType && reverseFieldId
+          ? true
+          : data.isRelationSource ?? false,
       selector_relation_id: data.selectorRelationId || null,
-      relation_field_name: reverseFieldId ? data.relationFieldName || null : null,
-      relation_field_label: reverseFieldId ? data.relationFieldLabel || null : null,
+      relation_field_name: reverseFieldId
+        ? data.relationFieldName || null
+        : null,
+      relation_field_label: reverseFieldId
+        ? data.relationFieldLabel || null
+        : null,
       default_string_value: data.defaultStringValue || null,
       default_number_value: data.defaultNumberValue || null,
       default_boolean_value: data.defaultBooleanValue || null,
@@ -539,7 +541,10 @@ export async function createField(data: CreateFieldData): Promise<Field> {
       );
       // Откатываем изменения
       if (created) {
-        await supabase.from("field").delete().eq("id", (created as { id: string }).id);
+        await supabase
+          .from("field")
+          .delete()
+          .eq("id", (created as { id: string }).id);
       }
       await supabase.from("field").delete().eq("id", reverseFieldId);
       throw new Error(
@@ -706,7 +711,10 @@ async function removeFieldFromInstances(
   }
 
   // Обновляем каждый instance, удаляя поле из JSONB
-  for (const instance of (instances || []) as Array<{ id: string; data: unknown }>) {
+  for (const instance of (instances || []) as Array<{
+    id: string;
+    data: unknown;
+  }>) {
     const currentData = (instance.data as Record<string, any>) || {};
     const { [fieldName]: removed, ...updatedData } = currentData;
 
@@ -763,10 +771,7 @@ export async function deleteField(id: string): Promise<void> {
   }
 
   // Если поле является relation source и имеет связанное поле
-  if (
-    fieldRow.is_relation_source === true &&
-    fieldRow.relation_field_id
-  ) {
+  if (fieldRow.is_relation_source === true && fieldRow.relation_field_id) {
     // Удаляем связанное поле (обратное поле)
     const { error: deleteReverseError } = await supabase
       .from("field")
@@ -801,10 +806,7 @@ export async function deleteField(id: string): Promise<void> {
   }
 
   // Удаляем значения поля из JSONB data всех instances
-  await removeFieldFromInstances(
-    fieldRow.entity_definition_id,
-    fieldRow.name
-  );
+  await removeFieldFromInstances(fieldRow.entity_definition_id, fieldRow.name);
 
   // Удаляем само поле
   const { error } = await supabase.from("field").delete().eq("id", id);
@@ -826,7 +828,6 @@ function transformEntityDefinition(row: any): EntityDefinition {
   return {
     id: row.id,
     name: row.name,
-    url: row.url,
     description: row.description,
     tableName: row.table_name,
     type: row.type,
@@ -839,6 +840,11 @@ function transformEntityDefinition(row: any): EntityDefinition {
     titleSection1: row.title_section_1,
     titleSection2: row.title_section_2,
     titleSection3: row.title_section_3,
+    enablePagination: row.enable_pagination,
+    pageSize: row.page_size,
+    enableFilters: row.enable_filters,
+    filterEntityDefinitionIds: row.filter_entity_definition_ids,
+    uiConfig: row.ui_config,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

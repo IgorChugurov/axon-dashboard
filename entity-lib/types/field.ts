@@ -52,6 +52,7 @@ export interface Field {
   // Conditional field visibility based on another field's value
   foreignKey?: string | null; // Name of the field this field depends on
   foreignKeyValue?: string | null; // Value(s) of foreignKey that make this field visible (pipe-separated: "value1|value2" or "any")
+  options?: Array<{ id: string; name: string }>;
 }
 
 export enum DbType {

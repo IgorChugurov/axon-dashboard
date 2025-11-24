@@ -11,7 +11,6 @@ import type { PartialUIConfig } from "./ui-config-types";
 export interface EntityDefinition {
   id: string;
   name: string;
-  url: string;
   description?: string | null;
   tableName: string;
   type: "primary" | "secondary" | "tertiary";
@@ -30,14 +29,14 @@ export interface EntityDefinition {
   titleSection3?: string | null;
 
   // UI Configuration
-  uiConfig?: PartialUIConfig | null;    // Partial override для UI метаданных
-  
+  uiConfig?: PartialUIConfig | null; // Partial override для UI метаданных
+
   // Pagination settings
-  enablePagination?: boolean | null;    // default: true
-  pageSize?: number | null;             // default: 20
-  
+  enablePagination?: boolean | null; // default: true
+  pageSize?: number | null; // default: 20
+
   // Filter settings
-  enableFilters?: boolean | null;       // default: false
+  enableFilters?: boolean | null; // default: false
   filterEntityDefinitionIds?: string[] | null; // ID сущностей для фильтрации
 
   createdAt: string;
@@ -56,7 +55,9 @@ export type FieldType =
   | "date"
   | "boolean"
   | "radio"
-  | "multipleSelect";
+  | "multipleSelect"
+  | "array"
+  | "dynamicValue"; // Кастомный тип: динамическое поле, меняющее тип в зависимости от других полей
 
 export type DbType =
   | "varchar"
@@ -67,6 +68,11 @@ export type DbType =
   | "oneToMany"
   | "manyToMany"
   | "oneToOne";
+
+export interface FieldOption {
+  id: string;
+  name: string;
+}
 
 export interface Field {
   id: string;
@@ -89,13 +95,14 @@ export interface Field {
   sectionIndex: number; // Index of the section this field belongs to (0-3)
   isOptionTitleField: boolean;
   searchable: boolean;
+  options?: FieldOption[];
 
   // Связи
   relatedEntityDefinitionId?: string | null;
   relationFieldId?: string | null;
   isRelationSource: boolean;
   selectorRelationId?: string | null;
-  
+
   // Информация о связанном поле (для отображения при редактировании)
   relationFieldName?: string | null; // Имя связанного поля
   relationFieldLabel?: string | null; // Лейбл связанного поля
@@ -116,6 +123,10 @@ export interface Field {
   // Conditional field visibility based on another field's value
   foreignKey?: string | null; // Name of the field this field depends on
   foreignKeyValue?: string | null; // Value(s) of foreignKey that make this field visible (pipe-separated: "value1|value2" or "any")
+
+  // Dynamic value field configuration (for type: "dynamicValue")
+  typeFieldName?: string | null; // Name of the field that determines the input type (default: "type")
+  optionsFieldName?: string | null; // Name of the field that contains options for select type (default: "options")
 
   createdAt: string;
   updatedAt: string;
@@ -154,13 +165,17 @@ export type DbTypeToTSType = {
 /**
  * Generic тип для данных сущности с типобезопасностью
  */
-export type EntityData<T extends Record<string, FieldValue> = Record<string, FieldValue>> = T;
+export type EntityData<
+  T extends Record<string, FieldValue> = Record<string, FieldValue>
+> = T;
 
 // =====================================================
 // Экземпляры сущностей
 // =====================================================
 
-export interface EntityInstance<TData extends Record<string, FieldValue> = Record<string, FieldValue>> {
+export interface EntityInstance<
+  TData extends Record<string, FieldValue> = Record<string, FieldValue>
+> {
   id: string;
   entityDefinitionId: string;
   projectId: string;
@@ -218,7 +233,9 @@ export type FilterValue = FieldValue | FieldValue[];
 /**
  * Конфигурация для получения списка экземпляров
  */
-export interface GetInstancesOptions<TFilters extends Record<string, FilterValue> = Record<string, FilterValue>> {
+export interface GetInstancesOptions<
+  TFilters extends Record<string, FilterValue> = Record<string, FilterValue>
+> {
   includeRelations?: string[]; // имена полей для загрузки связей
   relationsAsIds?: boolean; // если true, связи как ID, иначе как объекты (default: false)
   filters?: TFilters; // фильтры по полям
@@ -231,7 +248,9 @@ export interface GetInstancesOptions<TFilters extends Record<string, FilterValue
 /**
  * Данные для создания/обновления экземпляра
  */
-export type InstanceData<TData extends Record<string, FieldValue> = Record<string, FieldValue>> = TData;
+export type InstanceData<
+  TData extends Record<string, FieldValue> = Record<string, FieldValue>
+> = TData;
 
 /**
  * Связи для создания/обновления
@@ -262,7 +281,9 @@ export function isFieldValue(value: unknown): value is FieldValue {
 /**
  * Type guard для проверки EntityData
  */
-export function isEntityData(value: unknown): value is Record<string, FieldValue> {
+export function isEntityData(
+  value: unknown
+): value is Record<string, FieldValue> {
   if (typeof value !== "object" || value === null) {
     return false;
   }
@@ -284,4 +305,5 @@ export function getFieldValue<T extends FieldValue>(
 /**
  * Partial тип для обновления данных сущности
  */
-export type PartialInstanceData<T extends Record<string, FieldValue>> = Partial<T>;
+export type PartialInstanceData<T extends Record<string, FieldValue>> =
+  Partial<T>;

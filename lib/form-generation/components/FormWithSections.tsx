@@ -9,17 +9,19 @@ import { useMemo, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
-import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
+import type { Field } from "@/lib/universal-entity/types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { FormData } from "../types";
 import { createSchema, createInitialFormData } from "../utils/createSchema";
-import { createFormStructure, filterVisibleSections } from "../utils/createFormStructure";
+import {
+  createFormStructure,
+  filterVisibleSections,
+} from "../utils/createFormStructure";
 import { getItemForEdit } from "../utils/getItemForEdit";
 import { GetInputForField } from "./GetInputForField";
 import { DeleteSection } from "./DeleteSection";
 
 interface FormWithSectionsProps {
-  entityDefinition: EntityDefinition;
   fields: Field[];
   mode: "create" | "edit";
   initialData?: FormData;
@@ -33,7 +35,6 @@ interface FormWithSectionsProps {
 }
 
 export function FormWithSections({
-  entityDefinition,
   fields,
   mode,
   initialData = {},
@@ -59,8 +60,8 @@ export function FormWithSections({
 
   // Create form structure with sections
   const formStructure = useMemo(() => {
-    return createFormStructure(entityDefinition, fields, mode, uiConfig);
-  }, [entityDefinition, fields, mode, uiConfig]);
+    return createFormStructure(fields, mode, uiConfig);
+  }, [fields, mode, uiConfig]);
 
   // Prepare initial form data
   const preparedInitialData = useMemo(() => {
@@ -82,10 +83,7 @@ export function FormWithSections({
     defaultValues: preparedInitialData,
   });
 
-  const {
-    handleSubmit,
-    watch,
-  } = methods;
+  const { handleSubmit, watch } = methods;
 
   // Watch all form values for conditional field visibility
   const formValues = watch();
@@ -129,7 +127,10 @@ export function FormWithSections({
         {/* Render sections */}
         {visibleSections.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            <p>No fields available for {mode === "create" ? "creation" : "editing"}.</p>
+            <p>
+              No fields available for{" "}
+              {mode === "create" ? "creation" : "editing"}.
+            </p>
           </div>
         ) : (
           visibleSections.map((section, sectionIdx) => {
@@ -176,7 +177,7 @@ export function FormWithSections({
                           field={field}
                           control={methods.control}
                           disabled={isDisabled}
-                          options={[]} // Options will be loaded by InputSelect/InputRelation
+                          options={field.options ?? []}
                         />
                       </div>
                     );
@@ -210,4 +211,3 @@ export function FormWithSections({
     </FormProvider>
   );
 }
-

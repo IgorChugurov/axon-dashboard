@@ -23,7 +23,6 @@ function transformEntityDefinition(row: any): EntityDefinition {
   return {
     id: row.id,
     name: row.name,
-    url: row.url,
     description: row.description,
     tableName: row.table_name,
     type: row.type,

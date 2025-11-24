@@ -23,12 +23,14 @@ interface DeleteSectionProps {
   action: SectionAction;
   onDelete: () => Promise<void>;
   itemName?: string; // For replacing ${item.name} in modal text
+  onlyButton?: boolean;
 }
 
 export function DeleteSection({
   action,
   onDelete,
   itemName,
+  onlyButton = false,
 }: DeleteSectionProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -64,30 +66,41 @@ export function DeleteSection({
 
   return (
     <>
-      <div className="space-y-6 pt-6 border-t border-destructive/20">
-        <div className="space-y-1">
-          <h3 className="text-lg font-semibold tracking-tight text-destructive">
-            {action.title || "Danger Zone"}
-          </h3>
-          <div className="h-1 w-12 bg-destructive rounded-full" />
-        </div>
+      {onlyButton ? (
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={() => setIsOpen(true)}
+          className="w-full sm:w-auto"
+        >
+          {action.title || "Delete"}
+        </Button>
+      ) : (
+        <div className="space-y-6 pt-6 border-t border-destructive/20">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold tracking-tight text-destructive">
+              {action.title || "Danger Zone"}
+            </h3>
+            <div className="h-1 w-12 bg-destructive rounded-full" />
+          </div>
 
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            This action cannot be undone. This will permanently delete this
-            item.
-          </p>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This action cannot be undone. This will permanently delete this
+              item.
+            </p>
 
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => setIsOpen(true)}
-            className="w-full sm:w-auto"
-          >
-            {action.title || "Delete"}
-          </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => setIsOpen(true)}
+              className="w-full sm:w-auto"
+            >
+              {action.title || "Delete"}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent>

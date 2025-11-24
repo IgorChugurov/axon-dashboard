@@ -34,15 +34,9 @@ export {
   validateFieldValue,
 } from "./utils/fieldHelpers";
 
-export {
-  createSchema,
-  createInitialFormData,
-} from "./utils/createSchema";
+export { createSchema, createInitialFormData } from "./utils/createSchema";
 
-export {
-  getItemForEdit,
-  cleanFormDataForSubmit,
-} from "./utils/getItemForEdit";
+export { getItemForEdit, cleanFormDataForSubmit } from "./utils/getItemForEdit";
 
 export {
   createFormStructure,
@@ -52,7 +46,9 @@ export {
 
 // Components
 export { FormWithSections } from "./components/FormWithSections";
+export { FormWithSectionsShadcn } from "./components/FormWithSectionsShadcn";
 export { GetInputForField } from "./components/GetInputForField";
+export { GetInputForFieldShadcn } from "./components/GetInputForFieldShadcn";
 
 // Individual Input Components
 export { InputText } from "./components/inputs/InputText";
@@ -62,3 +58,5 @@ export { InputDate } from "./components/inputs/InputDate";
 export { InputSelect } from "./components/inputs/InputSelect";
 export { InputRelation } from "./components/inputs/InputRelation";
 
+// Shadcn Input Components
+export { InputArrayShadcn } from "./components/inputs-shadcn/InputArrayShadcn";

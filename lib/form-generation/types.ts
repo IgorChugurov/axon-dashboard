@@ -2,7 +2,12 @@
  * Types for form generation system
  */
 
-import type { Field, EntityDefinition, FieldType, DbType } from "@/lib/universal-entity/types";
+import type {
+  Field,
+  EntityDefinition,
+  FieldType,
+  DbType,
+} from "@/lib/universal-entity/types";
 
 // =====================================================
 // Form Structure Types
@@ -36,7 +41,6 @@ export interface FormSection {
  * Complete form structure with sections
  */
 export interface FormStructure {
-  entityDefinition: EntityDefinition;
   sections: FormSection[];
   allFields: Field[];
 }
@@ -143,4 +147,3 @@ export interface InputProps {
   disabled?: boolean;
   error?: string;
 }
-

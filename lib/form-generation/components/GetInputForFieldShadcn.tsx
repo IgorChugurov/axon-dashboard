@@ -1,0 +1,128 @@
+/**
+ * Input Router Component (Shadcn UI version)
+ * Routes to the appropriate input component based on field type
+ * Uses Field components from shadcn/ui
+ */
+
+"use client";
+
+import { Control, useWatch } from "react-hook-form";
+import type { Field as FieldType } from "@/lib/universal-entity/types";
+import type { FormData } from "../types";
+import { InputTextShadcn } from "./inputs-shadcn/InputTextShadcn";
+import { InputNumberShadcn } from "./inputs-shadcn/InputNumberShadcn";
+import { InputSwitchShadcn } from "./inputs-shadcn/InputSwitchShadcn";
+import { InputDateShadcn } from "./inputs-shadcn/InputDateShadcn";
+import { InputSelectShadcn } from "./inputs-shadcn/InputSelectShadcn";
+import { InputRelationShadcn } from "./inputs-shadcn/InputRelationShadcn";
+import { InputArrayShadcn } from "./inputs-shadcn/InputArrayShadcn";
+import { InputEnvironmentValue } from "./inputs-shadcn/InputEnvironmentValue";
+import { isRelationField } from "../utils/fieldHelpers";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+
+interface GetInputForFieldShadcnProps {
+  field: FieldType;
+  control: Control<FormData>;
+  disabled?: boolean;
+  options?: Array<{ id: string; name: string }>;
+}
+
+/**
+ * Get the appropriate input component for a field
+ */
+export function GetInputForFieldShadcn({
+  field,
+  control,
+  disabled,
+  options = [],
+}: GetInputForFieldShadcnProps) {
+  const resolvedOptions = field.options ?? options;
+
+  // Dynamic value field (кастомный тип)
+  if (field.type === "dynamicValue") {
+    return (
+      <InputEnvironmentValue
+        field={field}
+        control={control}
+        disabled={disabled}
+        typeFieldName={field.typeFieldName || undefined}
+        optionsFieldName={field.optionsFieldName || undefined}
+      />
+    );
+  }
+
+  // Relation fields
+  if (isRelationField(field)) {
+    return (
+      <InputRelationShadcn
+        field={field}
+        control={control}
+        disabled={disabled}
+      />
+    );
+  }
+
+  // Regular fields by type
+  switch (field.type) {
+    case "text":
+    case "textarea":
+      return (
+        <InputTextShadcn field={field} control={control} disabled={disabled} />
+      );
+
+    case "number":
+      return (
+        <InputNumberShadcn
+          field={field}
+          control={control}
+          disabled={disabled}
+        />
+      );
+
+    case "boolean":
+      return (
+        <InputSwitchShadcn
+          field={field}
+          control={control}
+          disabled={disabled}
+        />
+      );
+
+    case "date":
+      return (
+        <InputDateShadcn field={field} control={control} disabled={disabled} />
+      );
+
+    case "select":
+    case "multipleSelect":
+      return (
+        <InputSelectShadcn
+          field={field}
+          control={control}
+          disabled={disabled}
+          options={resolvedOptions}
+        />
+      );
+
+    case "array":
+      return (
+        <InputArrayShadcn field={field} control={control} disabled={disabled} />
+      );
+
+    default:
+      return (
+        <Field data-invalid={true}>
+          <FieldLabel className="text-destructive">
+            Unsupported field type: {field.type}
+          </FieldLabel>
+          <FieldError
+            errors={[
+              {
+                message: `Field type "${field.type}" is not supported`,
+              },
+            ]}
+          />
+        </Field>
+      );
+  }
+}
