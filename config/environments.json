@@ -25,7 +25,8 @@
     "showSearch": true,
     "enablePagination": true,
     "pageSize": 20,
-    "enableFilters": false,
+    "enableFilters": true,
+
     "searchableFields": ["key", "type"],
     "columns": [
       {
@@ -79,7 +80,7 @@
     "afterUpdate": "Environment updated successfully!",
     "afterDelete": "Environment deleted successfully!",
     "deleteModalTitle": "Confirm deleting environment",
-    "deleteModalText": "Are you sure you want to delete this environment variable? This action cannot be undone.",
+    "deleteModalText": "Are you sure you want to delete environment \"{itemName}\"? This action cannot be undone.",
     "deleteModalButtonText": "Delete",
     "reloadEvents": {
       "create": "reloadEnvironments",
@@ -132,6 +133,7 @@
       "label": "Type",
       "placeholder": "Select type",
       "description": "Type of the environment variable value",
+      "filterableInList": true,
       "forEditPage": true,
       "forCreatePage": true,
       "required": true,

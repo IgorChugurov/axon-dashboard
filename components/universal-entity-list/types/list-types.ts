@@ -6,7 +6,7 @@ export interface LoadParams {
   page: number;
   limit: number;
   search?: string;
-  filters?: Record<string, unknown>; // для будущих фильтров
+  filters?: Record<string, string[]>; // Фильтры: ключ - имя поля, значение - массив выбранных значений
   sortBy?: string; // для будущей сортировки
   sortOrder?: "asc" | "desc";
 }

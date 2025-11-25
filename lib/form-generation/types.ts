@@ -20,10 +20,10 @@ export interface SectionAction {
   action: "delete";
   title: string;
   options: {
-    modalText: string;
+    modalText: string; // Supports {itemName} placeholder for item name substitution
     modalTitle: string;
-    confirmWord?: string;
-    confirmText?: string;
+    confirmWord?: string; // Word user must type to confirm (e.g., "DELETE")
+    confirmText?: string; // Label for confirm input (e.g., "Type DELETE to confirm")
   };
 }
 

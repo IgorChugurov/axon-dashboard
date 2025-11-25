@@ -22,9 +22,9 @@ import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { EntityDefinition } from "@/lib/universal-entity/types";
 
 interface RoutingConfig {
-  createUrlTemplate: string; // Шаблон URL для создания, например "/projects/{projectId}/settings/environment/new"
-  editUrlTemplate: string; // Шаблон URL для редактирования, например "/projects/{projectId}/settings/environment/{instanceId}"
-  detailsUrlTemplate: string; // Шаблон URL для деталей, например "/projects/{projectId}/settings/environment/{instanceId}"
+  createUrlTemplate: string; // Шаблон URL для создания, например "/projects/{projectId}/settings/environments/new"
+  editUrlTemplate: string; // Шаблон URL для редактирования, например "/projects/{projectId}/settings/environments/{instanceId}"
+  detailsUrlTemplate: string; // Шаблон URL для деталей, например "/projects/{projectId}/settings/environments/{instanceId}"
 }
 
 interface UniversalEntityListProps {
@@ -189,7 +189,7 @@ export function UniversalEntityList({
     if (entityDefinition.tableName === "environments") {
       try {
         const { deleteEnvironmentAction } = await import(
-          `@/app/projects/${projectId}/settings/environment/actions`
+          `@/app/projects/${projectId}/settings/environments/actions`
         );
         const result = await deleteEnvironmentAction(projectId, instanceId);
 

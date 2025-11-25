@@ -1,51 +1,53 @@
 /**
  * Client Component обертка для UniversalEntityList
  * Использует прямой доступ к Supabase для загрузки данных (SPA)
+ *
+ * Теперь принимает onLoadData и onDelete через пропсы для полной универсальности
  */
 
 "use client";
 
-import { useMemo, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UniversalEntityListDataTable } from "./UniversalEntityListDataTable";
-import {
-  getEnvironmentsFromClient,
-  deleteEnvironmentFromClient,
-} from "@/lib/environments/client-service";
 import { generateColumnsFromConfig } from "@/lib/universal-entity/table-column-generator";
 import { createEntityDefinitionAndFieldsFromConfig } from "@/lib/universal-entity/config-utils";
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
-import type {
-  Environment,
-  EnvironmentsResponse,
-} from "@/lib/environments/types";
 import { useRouter } from "next/navigation";
 import type {
   ServiceType,
   RoutingConfig,
   LoadDataFn,
 } from "./types/list-types";
-import { getListQueryKey } from "./utils/list-query-key";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
-interface UniversalEntityListClientProps {
+interface UniversalEntityListClientProps<
+  TData extends { id: string } = { id: string }
+> {
   projectId: string;
-  serviceType: ServiceType;
+  serviceType: ServiceType; // Используется для query key в React Query
   config: EntityConfigFile;
   routing: RoutingConfig;
+  onLoadData: LoadDataFn<TData>;
+  onDelete: (id: string) => Promise<void>;
 }
 
-export function UniversalEntityListClient({
+export function UniversalEntityListClient<
+  TData extends { id: string } = { id: string }
+>({
   projectId,
   serviceType,
   config,
   routing,
-}: UniversalEntityListClientProps) {
+  onLoadData,
+  onDelete,
+}: UniversalEntityListClientProps<TData>) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
   // Создаем entityDefinition и fields из config
-  const { entityDefinition } = useMemo(
+  const { entityDefinition, fields } = useMemo(
     () => createEntityDefinitionAndFieldsFromConfig(projectId, config),
     [projectId, config]
   );
@@ -57,75 +59,53 @@ export function UniversalEntityListClient({
     return uiConfig as EntityUIConfig;
   }, [config]);
 
-  // Создаем функцию загрузки данных через прямой доступ к Supabase (SPA)
-  // Используем useCallback для стабильности ссылки
-  const onLoadData: LoadDataFn<Environment> = useCallback(
-    async (params, _signal) => {
-      switch (serviceType) {
-        case "environment": {
-          // Прямой доступ к Supabase из браузера
-          const result = await getEnvironmentsFromClient(projectId, {
-            page: params.page,
-            limit: params.limit,
-            search: params.search,
-          });
+  // Состояние для диалога подтверждения удаления
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    id: string | null;
+    itemName: string | null;
+  }>({
+    open: false,
+    id: null,
+    itemName: null,
+  });
 
-          return {
-            data: result.data || [],
-            pagination: result.pagination || {
-              page: params.page,
-              limit: params.limit,
-              total: 0,
-              totalPages: 0,
-              hasPreviousPage: false,
-              hasNextPage: false,
-            },
-          };
+  // Получение имени элемента из кэша React Query
+  const getItemName = useCallback(
+    (id: string): string => {
+      // Получаем все данные из кэша для текущего списка
+      const queries = queryClient.getQueriesData<{
+        data: Array<{
+          id: string;
+          name?: string;
+          key?: string;
+          title?: string;
+        }>;
+      }>({
+        queryKey: ["list", projectId, serviceType],
+      });
+
+      // Ищем элемент по id во всех закэшированных страницах
+      for (const [, queryData] of queries) {
+        if (queryData?.data) {
+          const item = queryData.data.find((item) => item.id === id);
+          if (item) {
+            // Возвращаем первое найденное "имя" поле
+            return item.name || item.key || item.title || "this item";
+          }
         }
-        case "entity-definition": {
-          // TODO: Реализовать загрузку entity definitions
-          throw new Error("Entity definition list not implemented yet");
-        }
-        case "entity-instance": {
-          // TODO: Реализовать загрузку entity instances
-          throw new Error("Entity instance list not implemented yet");
-        }
-        case "field": {
-          // TODO: Реализовать загрузку fields
-          throw new Error("Field list not implemented yet");
-        }
-        default:
-          throw new Error(`Unknown service type: ${serviceType}`);
       }
+
+      return "this item";
     },
-    [projectId, serviceType]
+    [queryClient, projectId, serviceType]
   );
 
   // Mutation для удаления с оптимистичными обновлениями
-  // Используем прямой доступ к Supabase
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      switch (serviceType) {
-        case "environment": {
-          // Прямой доступ к Supabase из браузера
-          await deleteEnvironmentFromClient(projectId, id);
-          return { id, serviceType };
-        }
-        case "entity-definition": {
-          // TODO: Реализовать удаление entity definition
-          throw new Error("Entity definition delete not implemented yet");
-        }
-        case "entity-instance": {
-          // TODO: Реализовать удаление entity instance
-          throw new Error("Entity instance delete not implemented yet");
-        }
-        case "field": {
-          // TODO: Реализовать удаление field
-          throw new Error("Field delete not implemented yet");
-        }
-        default:
-          throw new Error(`Unknown service type: ${serviceType}`);
-      }
+      await onDelete(id);
+      return { id, serviceType };
     },
     // Оптимистичное обновление: сразу удаляем из кеша
     onMutate: async (id) => {
@@ -175,21 +155,39 @@ export function UniversalEntityListClient({
     },
   });
 
-  // Обработчик удаления с подтверждением
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this item?")) {
-      return;
-    }
+  // Открытие диалога подтверждения удаления
+  const handleDeleteRequest = useCallback(
+    (id: string) => {
+      const itemName = getItemName(id);
+      setDeleteDialog({
+        open: true,
+        id,
+        itemName,
+      });
+    },
+    [getItemName]
+  );
+
+  // Подтверждение удаления
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteDialog.id) return;
+
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(deleteDialog.id);
+      setDeleteDialog({ open: false, id: null, itemName: null });
     } catch (error) {
-      // Ошибка уже обработана в onError
+      // Ошибка уже обработана в onError mutation
       console.error("Delete error:", error);
     }
-  };
+  }, [deleteDialog.id, deleteMutation]);
+
+  // Закрытие диалога
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteDialog({ open: false, id: null, itemName: null });
+  }, []);
 
   // Генерируем колонки на основе конфигурации
-  const columns = generateColumnsFromConfig<Environment>(
+  const columns = generateColumnsFromConfig<TData>(
     uiConfig.list.columns,
     routing,
     projectId,
@@ -199,7 +197,7 @@ export function UniversalEntityListClient({
         .replace("{instanceId}", id);
       router.push(url);
     },
-    handleDelete,
+    handleDeleteRequest,
     (id, additionalUrl) => {
       const url = routing.detailsUrlTemplate
         .replace("{projectId}", projectId)
@@ -209,27 +207,46 @@ export function UniversalEntityListClient({
   );
 
   return (
-    <UniversalEntityListDataTable
-      columns={columns}
-      entityDefinition={entityDefinition}
-      uiConfig={uiConfig}
-      projectId={projectId}
-      serviceType={serviceType}
-      onLoadData={onLoadData}
-      routing={routing}
-      onEdit={(id) => {
-        const url = routing.editUrlTemplate
-          .replace("{projectId}", projectId)
-          .replace("{instanceId}", id);
-        router.push(url);
-      }}
-      onDelete={handleDelete}
-      onLink={(id, additionalUrl) => {
-        const url = routing.detailsUrlTemplate
-          .replace("{projectId}", projectId)
-          .replace("{instanceId}", id);
-        router.push(additionalUrl ? `${url}${additionalUrl}` : url);
-      }}
-    />
+    <>
+      <UniversalEntityListDataTable
+        columns={columns}
+        entityDefinition={entityDefinition}
+        uiConfig={uiConfig}
+        fields={fields}
+        projectId={projectId}
+        serviceType={serviceType}
+        onLoadData={onLoadData}
+        routing={routing}
+        onEdit={(id) => {
+          const url = routing.editUrlTemplate
+            .replace("{projectId}", projectId)
+            .replace("{instanceId}", id);
+          router.push(url);
+        }}
+        onDelete={handleDeleteRequest}
+        onLink={(id, additionalUrl) => {
+          const url = routing.detailsUrlTemplate
+            .replace("{projectId}", projectId)
+            .replace("{instanceId}", id);
+          router.push(additionalUrl ? `${url}${additionalUrl}` : url);
+        }}
+      />
+
+      {/* Диалог подтверждения удаления */}
+      <ConfirmationDialog
+        open={deleteDialog.open}
+        onOpenChange={(open: boolean) => {
+          if (!open) handleDeleteCancel();
+        }}
+        title="Delete Item"
+        description={`Are you sure you want to delete "${deleteDialog.itemName}"? This action cannot be undone.`}
+        itemName={deleteDialog.itemName}
+        confirmButtonText="Delete"
+        cancelButtonText="Cancel"
+        variant="destructive"
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteMutation.isPending}
+      />
+    </>
   );
 }

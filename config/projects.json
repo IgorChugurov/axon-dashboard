@@ -64,7 +64,7 @@
     "afterUpdate": "Project updated successfully!",
     "afterDelete": "Project deleted successfully!",
     "deleteModalTitle": "Confirm deleting project",
-    "deleteModalText": "Are you sure you want to delete this project? This action cannot be undone.",
+    "deleteModalText": "Are you sure you want to delete project \"{itemName}\"? This action cannot be undone.",
     "deleteModalButtonText": "Delete",
     "reloadEvents": {
       "create": "reloadProjects",

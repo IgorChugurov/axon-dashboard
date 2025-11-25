@@ -9,7 +9,7 @@ import {
   getFieldById,
 } from "@/lib/universal-entity/config-service";
 import { updateFieldAction } from "../../actions";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
 
 interface EditFieldPageProps {
   params: Promise<{
@@ -59,7 +59,7 @@ export default async function EditFieldPage({ params }: EditFieldPageProps) {
 
   return (
     <div className="space-y-6">
-      <Breadcrumbs
+      <BreadcrumbsSetter
         projectId={projectId}
         entityDefinitionId={entityDefinitionId}
         entityDefinitionName={entityDefinition.name}
@@ -89,4 +89,3 @@ export default async function EditFieldPage({ params }: EditFieldPageProps) {
     </div>
   );
 }
-

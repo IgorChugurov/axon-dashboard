@@ -158,7 +158,7 @@ SET ui_config = jsonb_build_object(
     'afterUpdate', 'Изменения сохранены ✅',
     'afterDelete', 'Удалено безвозвратно ❌',
     'deleteModalTitle', 'Подтвердите удаление',
-    'deleteModalText', 'Это действие нельзя отменить. Продолжить?'
+    'deleteModalText', 'Удалить "{itemName}"? Это действие нельзя отменить.'
   )
 )
 WHERE id = 'your-entity-id';

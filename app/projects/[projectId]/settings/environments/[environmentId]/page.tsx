@@ -3,10 +3,10 @@
  */
 
 import { notFound } from "next/navigation";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { EnvironmentForm } from "../EnvironmentForm";
 import { getEnvironmentById } from "@/lib/environments/service";
 import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
+import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
 
 interface EnvironmentEditPageProps {
   params: Promise<{ projectId: string; environmentId: string }>;
@@ -37,7 +37,11 @@ export default async function EnvironmentEditPage({
 
   return (
     <div className="space-y-6">
-      <Breadcrumbs projectId={projectId} />
+      <BreadcrumbsSetter
+        projectId={projectId}
+        environmentId={environmentId}
+        environmentName={environment.key}
+      />
 
       <EnvironmentForm
         projectId={projectId}

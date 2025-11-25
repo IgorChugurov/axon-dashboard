@@ -1,6 +1,7 @@
 "use client";
 import { LogOut, Moon, Settings, Sun, User } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -14,10 +15,37 @@ import { Button } from "./ui/button";
 import { useTheme } from "next-themes";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 
 const Navbar = () => {
   const { setTheme } = useTheme();
   const { user, logout, isLoading } = useAuth();
+  const pathname = usePathname();
+
+  // Извлекаем projectId из pathname
+  const projectIdMatch = pathname.match(/^\/projects\/([^/]+)/);
+  const projectId = projectIdMatch ? projectIdMatch[1] : undefined;
+
+  // Извлекаем entityDefinitionId из pathname (работает для /entity-definition/ и /entity-instances/)
+  const entityDefinitionIdMatch =
+    pathname.match(/\/entity-definition\/([^/]+)/) ||
+    pathname.match(/\/entity-instances\/([^/]+)/);
+  const entityDefinitionIdRaw = entityDefinitionIdMatch
+    ? entityDefinitionIdMatch[1]
+    : undefined;
+  const entityDefinitionId =
+    entityDefinitionIdRaw &&
+    !["new", "edit", "fields"].includes(entityDefinitionIdRaw)
+      ? entityDefinitionIdRaw
+      : undefined;
+
+  // Извлекаем instanceId из pathname (для entity-instances, исключая new/edit)
+  const instanceIdMatch = pathname.match(/\/entity-instances\/[^/]+\/([^/]+)/);
+  const instanceIdRaw = instanceIdMatch ? instanceIdMatch[1] : undefined;
+  const instanceId =
+    instanceIdRaw && !["new", "edit"].includes(instanceIdRaw)
+      ? instanceIdRaw
+      : undefined;
 
   const handleLogout = async () => {
     try {
@@ -49,67 +77,76 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="p-2 py-4 flex items-center justify-between ">
-      <SidebarTrigger />
-      <div className="flex items-center gap-4">
-        <Link href="/">Dashboard</Link>
-        {/* theme menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-              <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setTheme("light")}>
-              Light
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme("dark")}>
-              Dark
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme("system")}>
-              System
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
+      <div className="p-2 py-4 flex items-center justify-between">
+        <SidebarTrigger />
+        <div className="flex-1 min-w-0 px-4">
+          <Breadcrumbs
+            projectId={projectId}
+            entityDefinitionId={entityDefinitionId}
+            instanceId={instanceId}
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="/">Dashboard</Link>
+          {/* theme menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+                <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setTheme("light")}>
+                Light
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")}>
+                Dark
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("system")}>
+                System
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        {/* user menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Avatar>
-              <AvatarImage
-                src={user?.avatar || "https://github.com/shadcn.png"}
-              />
-              <AvatarFallback>{getUserInitials(user)}</AvatarFallback>
-            </Avatar>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent sideOffset={10}>
-            <DropdownMenuLabel>
-              {user?.firstName && user?.lastName
-                ? `${user.firstName} ${user.lastName}`
-                : user?.email || "My Account"}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="h-[1.2rem] w-[1.2rem] mr-2" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={handleLogout}
-              disabled={isLoading}
-            >
-              <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
-              {isLoading ? "Logging out..." : "Logout"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          {/* user menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Avatar>
+                <AvatarImage
+                  src={user?.avatar || "https://github.com/shadcn.png"}
+                />
+                <AvatarFallback>{getUserInitials(user)}</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent sideOffset={10}>
+              <DropdownMenuLabel>
+                {user?.firstName && user?.lastName
+                  ? `${user.firstName} ${user.lastName}`
+                  : user?.email || "My Account"}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="h-[1.2rem] w-[1.2rem] mr-2" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="h-[1.2rem] w-[1.2rem] mr-2" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={handleLogout}
+                disabled={isLoading}
+              >
+                <LogOut className="h-[1.2rem] w-[1.2rem] mr-2" />
+                {isLoading ? "Logging out..." : "Logout"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </nav>
   );

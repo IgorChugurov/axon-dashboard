@@ -107,7 +107,7 @@ function generateDefaults(
     errorCreate: `Failed to create ${nameLower}. Please try again.`,
     errorUpdate: `Failed to update ${nameLower}. Please try again.`,
     deleteModalTitle: `Confirm deleting ${nameLower}`,
-    deleteModalText: `Are you sure you want to delete this ${nameLower}? This action cannot be undone.`,
+    deleteModalText: `Are you sure you want to delete "{itemName}"? This action cannot be undone.`,
     deleteModalButtonText: "Delete",
     reloadEvents: {
       create: `reload${name}`,
@@ -126,6 +126,18 @@ function generateDefaults(
 }
 
 /**
+ * Проверяет, является ли поле связью
+ */
+function isRelationField(field: Field): boolean {
+  return (
+    field.dbType === "manyToOne" ||
+    field.dbType === "oneToOne" ||
+    field.dbType === "manyToMany" ||
+    field.dbType === "oneToMany"
+  );
+}
+
+/**
  * Генерирует колонки таблицы из полей с displayInTable: true
  */
 function generateColumns(fields: Field[]): ColumnConfig[] {
@@ -136,12 +148,24 @@ function generateColumns(fields: Field[]): ColumnConfig[] {
 
   // Генерируем колонки из полей
   const columns: ColumnConfig[] = displayFields.map((field, index) => {
+    const columnType = index === 0 ? "naigateToDetails" : getColumnType(field);
+    const isRelation = isRelationField(field);
+
     const column: ColumnConfig = {
       field: field.name,
       headerName: field.label || field.name,
       flex: 1,
-      type: index === 0 ? "naigateToDetails" : getColumnType(field),
+      type: columnType,
       sortable: true,
+      additionalUrl: index === 0 ? "/edit" : undefined,
+      // Добавляем relationDbType для полей-связей
+      ...(isRelation && {
+        relationDbType: field.dbType as
+          | "manyToOne"
+          | "oneToOne"
+          | "manyToMany"
+          | "oneToMany",
+      }),
     };
 
     return column;
@@ -157,6 +181,7 @@ function generateColumns(fields: Field[]): ColumnConfig[] {
       {
         action: "edit",
         link: true,
+        additionalUrl: "/edit",
       },
       {
         action: "delete",
@@ -171,6 +196,12 @@ function generateColumns(fields: Field[]): ColumnConfig[] {
  * Определяет тип колонки по типу поля
  */
 function getColumnType(field: Field): ColumnConfig["type"] {
+  // Сначала проверяем, является ли поле связью
+  if (isRelationField(field)) {
+    return "relation";
+  }
+
+  // Для обычных полей определяем тип по field.type
   switch (field.type) {
     case "date":
       return "date";

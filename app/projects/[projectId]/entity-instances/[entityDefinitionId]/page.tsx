@@ -2,85 +2,61 @@
  * Универсальная страница списка экземпляров сущности
  */
 
-import { getInstances } from "@/lib/universal-entity/instance-service";
-import { EntityListClient } from "./EntityListClient";
-import { EntityDefinitionServerWrapper } from "./EntityDefinitionServerWrapper";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { notFound } from "next/navigation";
+import {
+  getEntityDefinitionById,
+  getFields,
+} from "@/lib/universal-entity/config-service";
+import { EntityInstancesListClient } from "@/components/universal-entity-list";
+import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
 
 interface EntityListPageProps {
   params: Promise<{ projectId: string; entityDefinitionId: string }>;
-  searchParams: Promise<{
-    page?: string;
-    search?: string;
-  }>;
 }
 
-export default async function EntityListPage({
-  params,
-  searchParams,
-}: EntityListPageProps) {
+export default async function EntityListPage({ params }: EntityListPageProps) {
   const { projectId, entityDefinitionId } = await params;
-  const searchParamsResolved = await searchParams;
-  const page = parseInt(searchParamsResolved.page || "1", 10);
-  const search = searchParamsResolved.search || "";
+
+  // Загружаем entityDefinition
+  const entityDefinition = await getEntityDefinitionById(entityDefinitionId);
+
+  if (!entityDefinition) {
+    notFound();
+  }
+
+  // Проверяем, что entityDefinition принадлежит проекту
+  if (entityDefinition.projectId !== projectId) {
+    notFound();
+  }
+
+  // Загружаем поля
+  const fields = await getFields(entityDefinitionId);
 
   return (
-    <EntityDefinitionServerWrapper
-      projectId={projectId}
-      entityDefinitionId={entityDefinitionId}
-    >
-      {async ({ entityDefinition, fields }) => {
+    <div className="space-y-6">
+      <BreadcrumbsSetter
+        projectId={projectId}
+        entityDefinitionId={entityDefinitionId}
+        entityDefinitionName={entityDefinition.name}
+      />
 
-        // Определяем поля со связями для загрузки
-        const relationFields = fields.filter(
-          (f) =>
-            f.relatedEntityDefinitionId &&
-            (f.dbType === "manyToMany" ||
-              f.dbType === "manyToOne" ||
-              f.dbType === "oneToMany" ||
-              f.dbType === "oneToOne") &&
-            f.displayInTable // Загружаем только связи, которые отображаются в таблице
-        );
+      {entityDefinition.description && (
+        <p className="text-muted-foreground">{entityDefinition.description}</p>
+      )}
 
-        const relationFieldNames = relationFields.map((f) => f.name);
-
-        // Загружаем экземпляры с связями
-        const instances = await getInstances(
-          entityDefinitionId,
-          projectId,
-          {
-            limit: 10,
-            offset: (page - 1) * 10,
-            includeRelations:
-              relationFieldNames.length > 0 ? relationFieldNames : undefined,
-            // TODO: Добавить поиск по полям
-          }
-        );
-
-        return (
-          <div className="space-y-6">
-            <Breadcrumbs
-              projectId={projectId}
-              entityDefinitionId={entityDefinitionId}
-              entityDefinitionName={entityDefinition.name}
-            />
-            
-            {entityDefinition.description && (
-              <p className="text-muted-foreground">
-                {entityDefinition.description}
-              </p>
-            )}
-
-            <EntityListClient
-              entityDefinition={entityDefinition}
-              fields={fields}
-              initialInstances={instances}
-              initialPage={page}
-              initialSearch={search}
-            />
-          </div>
-        );
-      }}
-    </EntityDefinitionServerWrapper>
+      <EntityInstancesListClient
+        projectId={projectId}
+        entityDefinition={entityDefinition}
+        fields={fields}
+        routing={{
+          createUrlTemplate:
+            "/projects/{projectId}/entity-instances/{entityDefinitionId}/new",
+          editUrlTemplate:
+            "/projects/{projectId}/entity-instances/{entityDefinitionId}/{instanceId}/edit",
+          detailsUrlTemplate:
+            "/projects/{projectId}/entity-instances/{entityDefinitionId}/{instanceId}",
+        }}
+      />
+    </div>
   );
 }

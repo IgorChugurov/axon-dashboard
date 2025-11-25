@@ -72,7 +72,6 @@ export function InputRelation({ field, control, disabled }: InputRelationProps) 
               multiple={isMultiple}
               required={field.required}
               disabled={disabled}
-              label={field.label}
             />
 
             {field.description && (

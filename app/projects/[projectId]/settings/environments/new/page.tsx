@@ -2,9 +2,9 @@
  * Страница создания нового environment
  */
 
-import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
 import { EnvironmentForm } from "../EnvironmentForm";
+import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
 
 interface EnvironmentNewPageProps {
   params: Promise<{ projectId: string }>;
@@ -24,8 +24,8 @@ export default async function EnvironmentNewPage({
 
   return (
     <div className="space-y-6">
-      <Breadcrumbs projectId={projectId} />
-
+      <BreadcrumbsSetter projectId={projectId} />
+      
       <EnvironmentForm projectId={projectId} mode="create" uiConfig={uiConfig} />
     </div>
   );

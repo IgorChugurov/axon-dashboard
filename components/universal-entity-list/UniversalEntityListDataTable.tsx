@@ -28,8 +28,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { DataTableHeader } from "./DataTableHeader";
+import { DataTableToolbar } from "./DataTableToolbar";
 import { DataTablePagination } from "./DataTablePagination";
 import { useListParams } from "./hooks/use-list-params";
 import { useListQuery } from "./hooks/use-list-query";
@@ -39,12 +40,13 @@ import type {
   RoutingConfig,
 } from "./types/list-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
-import type { EntityDefinition } from "@/lib/universal-entity/types";
+import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
 
 interface UniversalEntityListDataTableProps<TData extends { id: string }> {
   columns: ColumnDef<TData>[];
   entityDefinition: EntityDefinition;
   uiConfig: EntityUIConfig;
+  fields?: Field[]; // Поля для генерации фильтров
   projectId: string;
   serviceType: ServiceType;
   onLoadData: LoadDataFn<TData>;
@@ -53,7 +55,7 @@ interface UniversalEntityListDataTableProps<TData extends { id: string }> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onEdit?: (id: string) => void;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onDelete?: (id: string) => Promise<void>;
+  onDelete?: (id: string) => void | Promise<void>;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onLink?: (id: string, additionalUrl?: string) => void;
 }
@@ -62,6 +64,7 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
   columns,
   entityDefinition,
   uiConfig,
+  fields = [],
   projectId,
   serviceType,
   onLoadData,
@@ -199,17 +202,19 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
   // ERROR - Показываем ошибку с возможностью повтора
   if (hasError) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 border rounded-lg bg-destructive/10">
-        <div className="text-center max-w-md">
-          <h3 className="text-xl font-semibold mb-2 text-destructive">
-            Error loading data
-          </h3>
-          <p className="text-muted-foreground mb-4">{errorMessage}</p>
-          <Button onClick={handleRetry} variant="outline">
-            Retry
-          </Button>
-        </div>
-      </div>
+      <Card className="w-full">
+        <CardContent className="flex flex-col items-center justify-center py-12 px-4">
+          <div className="text-center max-w-md">
+            <h3 className="text-xl font-semibold mb-2 text-destructive">
+              Error loading data
+            </h3>
+            <p className="text-muted-foreground mb-4">{errorMessage}</p>
+            <Button onClick={handleRetry} variant="outline">
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -217,179 +222,175 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
   // Не показываем loading при изменении размера страницы или пагинации
   if (isInitialLoading) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {list.pageTitle}
-            </h1>
-            {entityDefinition.description && (
-              <p className="text-muted-foreground mt-1">
-                {entityDefinition.description}
-              </p>
-            )}
+      <Card className="w-full">
+        <DataTableHeader
+          pageTitle={list.pageTitle}
+          description={entityDefinition.description || ""}
+        />
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Loading...</p>
           </div>
-        </div>
-        <div className="text-center py-8 border rounded-lg">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   // EMPTY (нет данных, не было поиска) - Показываем пустое состояние
   if (isEmpty) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 border rounded-lg bg-muted/10">
-        <div className="text-center max-w-md">
-          <h3 className="text-xl font-semibold mb-2">{list.emptyStateTitle}</h3>
-          {list.emptyStateMessages.map((msg, i) => (
-            <p key={i} className="text-muted-foreground mb-2">
-              {msg}
-            </p>
-          ))}
-          {list.showCreateButton && (
-            <Button onClick={handleCreate} className="mt-4">
-              <Plus className="mr-2 h-4 w-4" />
-              {list.createButtonText}
-            </Button>
-          )}
-        </div>
-      </div>
+      <Card className="w-full">
+        <DataTableHeader
+          pageTitle={list.pageTitle}
+          description={entityDefinition.description || ""}
+        />
+        <CardContent className="flex flex-col items-center justify-center py-12 px-4">
+          <div className="text-center max-w-md">
+            <h3 className="text-xl font-semibold mb-2">
+              {list.emptyStateTitle}
+            </h3>
+            {list.emptyStateMessages.map((msg, i) => (
+              <p key={i} className="text-muted-foreground mb-2">
+                {msg}
+              </p>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Заголовок и кнопка создания */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            {list.pageTitle}
-          </h1>
-          {entityDefinition.description && (
-            <p className="text-muted-foreground mt-1">
-              {entityDefinition.description}
-            </p>
-          )}
-        </div>
-        {list.showCreateButton && (
-          <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" />
-            {list.createButtonText}
-          </Button>
-        )}
-      </div>
-
-      {/* Поиск */}
-      {list.showSearch && (
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={list.searchPlaceholder}
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      )}
-
-      {/* SEARCH_EMPTY - Поиск выполнен, но результатов нет */}
-      {isSearchEmpty && (
-        <div className="text-center py-8 border rounded-lg">
-          <p className="text-muted-foreground">
-            No results found for &quot;{searchInput}&quot;
-          </p>
-          <Button variant="link" onClick={handleClearSearch} className="mt-2">
-            Clear search
-          </Button>
-        </div>
-      )}
-
-      {/* SUCCESS или LOADING (обновление данных) - Показываем таблицу */}
-      {hasData && (
-        <div className="relative overflow-hidden rounded-md border">
-          {/* Overlay loading при обновлении данных (не при первой загрузке) */}
-          {isFetching && hasLoadedOnceRef.current && (
-            <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-                <p className="text-sm text-muted-foreground">Loading...</p>
-              </div>
-            </div>
-          )}
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      {/* Пагинация */}
-      {list.enablePagination && data.length > 0 && !isLoading && (
-        <DataTablePagination
-          page={paginationInfo.page}
-          pageSize={paginationInfo.limit}
-          total={paginationInfo.total}
-          totalPages={paginationInfo.totalPages}
-          hasPreviousPage={paginationInfo.hasPreviousPage}
-          hasNextPage={paginationInfo.hasNextPage}
-          onPageChange={(newPage) => {
-            setParams({ page: newPage });
+    <Card className="w-full">
+      <DataTableHeader
+        pageTitle={list.pageTitle}
+        description={entityDefinition.description || ""}
+        statistics={
+          list.enablePagination && paginationInfo.total > 0
+            ? {
+                total: paginationInfo.total,
+                currentPage: paginationInfo.page,
+                pageSize: paginationInfo.limit,
+                totalPages: paginationInfo.totalPages,
+              }
+            : undefined
+        }
+      />
+      <CardContent className="space-y-4">
+        {/* Toolbar с поиском, фильтрами и кнопкой создания */}
+        <DataTableToolbar
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder={list.searchPlaceholder}
+          showSearch={list.showSearch}
+          enableFilters={list.enableFilters}
+          fields={fields}
+          filters={params.filters}
+          onFiltersChange={(newFilters) => {
+            setParams({ filters: newFilters, page: 1 }); // Сбрасываем на первую страницу при изменении фильтров
           }}
-          onPageSizeChange={(newPageSize) => {
-            setParams({
-              limit: newPageSize,
-              page: 1, // Сбрасываем на первую страницу при изменении размера
-            });
-          }}
-          disabled={isLoading}
+          showCreateButton={list.showCreateButton}
+          createButtonText={list.createButtonText}
+          onCreate={handleCreate}
         />
-      )}
-    </div>
+
+        {/* SEARCH_EMPTY - Поиск выполнен, но результатов нет */}
+        {isSearchEmpty && (
+          <div className="text-center py-8 border rounded-lg">
+            <p className="text-muted-foreground">
+              No results found for &quot;{searchInput}&quot;
+            </p>
+            <Button variant="link" onClick={handleClearSearch} className="mt-2">
+              Clear search
+            </Button>
+          </div>
+        )}
+
+        {/* SUCCESS или LOADING (обновление данных) - Показываем таблицу */}
+        {hasData && (
+          <div className="relative overflow-hidden rounded-md border">
+            {/* Overlay loading при обновлении данных (не при первой загрузке) */}
+            {isFetching && hasLoadedOnceRef.current && (
+              <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                  <p className="text-sm text-muted-foreground">Loading...</p>
+                </div>
+              </div>
+            )}
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {/* Пагинация */}
+        {list.enablePagination && data.length > 0 && !isLoading && (
+          <DataTablePagination
+            page={paginationInfo.page}
+            pageSize={paginationInfo.limit}
+            total={paginationInfo.total}
+            totalPages={paginationInfo.totalPages}
+            hasPreviousPage={paginationInfo.hasPreviousPage}
+            hasNextPage={paginationInfo.hasNextPage}
+            onPageChange={(newPage) => {
+              setParams({ page: newPage });
+            }}
+            onPageSizeChange={(newPageSize) => {
+              setParams({
+                limit: newPageSize,
+                page: 1, // Сбрасываем на первую страницу при изменении размера
+              });
+            }}
+            disabled={isLoading}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 }

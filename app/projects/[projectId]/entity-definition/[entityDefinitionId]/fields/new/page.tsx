@@ -8,7 +8,7 @@ import {
   getFields,
 } from "@/lib/universal-entity/config-service";
 import { createFieldAction } from "../actions";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
 
 interface NewFieldPageProps {
   params: Promise<{ projectId: string; entityDefinitionId: string }>;
@@ -47,7 +47,7 @@ export default async function NewFieldPage({ params }: NewFieldPageProps) {
 
   return (
     <div className="space-y-6">
-      <Breadcrumbs
+      <BreadcrumbsSetter
         projectId={projectId}
         entityDefinitionId={entityDefinitionId}
         entityDefinitionName={entityDefinition.name}

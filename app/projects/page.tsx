@@ -1,6 +1,5 @@
 import { projectsService } from "@/lib/entities/projects/service";
 import { ProjectsList } from "@/components/ProjectsList";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { Suspense } from "react";
 
 /**
@@ -37,8 +36,6 @@ export default async function ProjectsPage({
 
   return (
     <div className="space-y-6">
-      <Breadcrumbs />
-
       <p className="text-muted-foreground">
         Manage your projects and track their progress
       </p>

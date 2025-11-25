@@ -51,8 +51,12 @@ export interface ColumnConfig {
     | "boolean"
     | "naigateToDetails"
     | "openEditPage"
-    | "actions";
+    | "actions"
+    | "relation"; // Для полей-связей
   sortable?: boolean; // Сортировка (для будущей реализации)
+
+  // Для relation колонок - тип связи
+  relationDbType?: "manyToOne" | "oneToOne" | "manyToMany" | "oneToMany";
 
   // Для actions колонки
   actions?: ActionConfig[];
@@ -66,6 +70,7 @@ export interface ActionConfig {
   icon?: string; // "settings", "trash", "list", "edit", etc.
   link?: boolean; // Использовать Link вместо модалки
   additionalUrl?: string; // Дополнительный URL (/fields)
+  label?: string; // Label for the action
 }
 
 // =====================================================
@@ -108,9 +113,9 @@ export interface MessagesConfig {
 
   // Модалка удаления
   deleteModalTitle: string; // "Confirm deleting project"
-  deleteModalText: string; // "Are you sure you want to delete {name}?"
-  deleteModalConfirmWord?: string; // "Delete!"
-  deleteModalConfirmText?: string; // "To confirm, type Delete!"
+  deleteModalText: string; // "Are you sure you want to delete {itemName}?" - supports {itemName} placeholder
+  deleteModalConfirmWord?: string; // "DELETE" - word user must type to confirm
+  deleteModalConfirmText?: string; // "Type DELETE to confirm" - label for confirm input
   deleteModalButtonText: string; // "Delete"
 
   // События для перезагрузки данных

@@ -34,6 +34,7 @@ export async function createEnvironmentAction(
 
     // Обновляем кэш
     revalidatePath(`/projects/${projectId}/settings`);
+    revalidatePath(`/projects/${projectId}/settings/environments`);
 
     return {
       success: true,
@@ -63,8 +64,10 @@ export async function updateEnvironmentAction(
 
     // Обновляем кэш
     revalidatePath(`/projects/${projectId}/settings`);
+    revalidatePath(`/projects/${projectId}/settings/environments`);
+    revalidatePath(`/projects/${projectId}/settings/environments`);
     revalidatePath(
-      `/projects/${projectId}/settings/environment/${environmentId}`
+      `/projects/${projectId}/settings/environments/${environmentId}`
     );
 
     return {
@@ -94,6 +97,7 @@ export async function deleteEnvironmentAction(
 
     // Обновляем кэш
     revalidatePath(`/projects/${projectId}/settings`);
+    revalidatePath(`/projects/${projectId}/settings/environments`);
 
     return {
       success: true,

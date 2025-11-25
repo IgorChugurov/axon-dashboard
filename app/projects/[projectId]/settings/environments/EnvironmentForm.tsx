@@ -109,7 +109,7 @@ export function EnvironmentForm({
                 : uiConfig.messages.afterUpdate,
           });
 
-          router.push(`/projects/${projectId}/settings?tab=environments`);
+          router.push(`/projects/${projectId}/settings/environments`);
           router.refresh();
         } catch (err) {
           const errorMessage =
@@ -164,7 +164,7 @@ export function EnvironmentForm({
             description: uiConfig.messages.afterDelete,
           });
 
-          router.push(`/projects/${projectId}/settings?tab=environments`);
+          router.push(`/projects/${projectId}/settings/environments`);
           router.refresh();
         } catch (err) {
           const errorMessage =

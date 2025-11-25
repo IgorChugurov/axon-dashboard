@@ -176,7 +176,7 @@ export function AppSidebar({ projects = [], entities = [] }: AppSidebarProps) {
           </SidebarGroup>
         </Collapsible>
         {/* NESTED MENU */}
-        <SidebarGroup>
+        {/* <SidebarGroup>
           <SidebarGroupLabel>Nested Menu</SidebarGroupLabel>
 
           <SidebarGroupContent>
@@ -209,7 +209,7 @@ export function AppSidebar({ projects = [], entities = [] }: AppSidebarProps) {
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup> */}
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

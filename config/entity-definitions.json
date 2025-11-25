@@ -50,7 +50,8 @@
             "action": "link",
             "link": true,
             "icon": "list",
-            "additionalUrl": "/fields"
+            "additionalUrl": "/fields",
+            "label": "`Fileds`"
           }
         ]
       }
@@ -74,7 +75,7 @@
     "errorCreate": "Failed to create entity. Please try again.",
     "errorUpdate": "Failed to update entity. Please try again.",
     "deleteModalTitle": "Confirm deleting entity",
-    "deleteModalText": "Are you sure you want to delete this entity? This action cannot be undone.",
+    "deleteModalText": "Are you sure you want to delete \"{itemName}\"? This action cannot be undone.",
     "deleteModalButtonText": "Delete",
     "reloadEvents": {
       "create": "reloadEntity",

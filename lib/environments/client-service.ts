@@ -74,6 +74,7 @@ export async function getEnvironmentsFromClient(
     page?: number;
     limit?: number;
     search?: string;
+    filters?: Record<string, string[]>;
   } = {}
 ): Promise<EnvironmentsResponse> {
   const supabase = createClient(); // Браузерный клиент
@@ -91,6 +92,16 @@ export async function getEnvironmentsFromClient(
   // Поиск по ключу (если указан)
   if (params.search) {
     query = query.ilike("key", `%${params.search}%`);
+  }
+
+  // Применяем фильтры
+  if (params.filters) {
+    Object.entries(params.filters).forEach(([fieldName, values]) => {
+      if (values && values.length > 0) {
+        // Для множественного выбора используем .in()
+        query = query.in(fieldName, values);
+      }
+    });
   }
 
   // Сортировка по ключу

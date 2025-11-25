@@ -52,7 +52,8 @@ export function InputArrayShadcn({
   addButtonText = "Add Item",
 }: InputArrayShadcnProps) {
   // Получаем setValue из FormContext (если доступен)
-  let setValue: ((name: string, value: any) => void) | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let setValue: ((name: string, value: any, options?: { shouldValidate?: boolean }) => void) | undefined;
   try {
     const formContext = useFormContext();
     setValue = formContext.setValue;
@@ -70,7 +71,6 @@ export function InputArrayShadcn({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { fields, append, remove } = useFieldArray({
     control: control as any,
-    // @ts-expect-error - useFieldArray requires dynamic field name, FormData is Record<string, any>
     name: field.name,
   });
 

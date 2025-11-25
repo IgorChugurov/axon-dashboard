@@ -16,8 +16,8 @@ export function getListQueryKey(
     "list",
     projectId,
     serviceType,
-    params.page,
-    params.limit,
+    String(params.page),
+    String(params.limit),
     params.search || "",
     // Фильтры (если есть)
     ...(params.filters ? [JSON.stringify(params.filters)] : []),

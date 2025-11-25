@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Slash } from "lucide-react";
+import { ChevronDown, Slash, MoreHorizontal } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -18,6 +18,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useProjects } from "@/components/providers/ProjectsProvider";
+import { useBreadcrumbsContextSafe } from "@/components/providers/BreadcrumbsProvider";
+import { useIsMobile } from "@/hooks/use-mobile";
+import * as React from "react";
 
 export interface BreadcrumbItemData {
   label: string;
@@ -34,13 +37,12 @@ interface BreadcrumbsProps {
   items?: BreadcrumbItemData[];
   // Автоматическое определение из pathname
   pathname?: string;
-  // Данные для автоматического построения
+  // Данные для автоматического построения (fallback, если нет контекста)
   projectId?: string;
   projectName?: string;
   entityDefinitionId?: string;
   entityDefinitionName?: string;
   instanceId?: string;
-  instanceName?: string;
   fieldId?: string;
   fieldName?: string;
 }
@@ -48,64 +50,59 @@ interface BreadcrumbsProps {
 export function Breadcrumbs({
   items,
   pathname: pathnameProp,
-  projectId,
+  projectId: projectIdProp,
   projectName: projectNameProp,
-  entityDefinitionId,
-  entityDefinitionName,
-  instanceId,
-  instanceName,
-  fieldId,
-  fieldName,
+  entityDefinitionId: entityDefinitionIdProp,
+  entityDefinitionName: entityDefinitionNameProp,
+  instanceId: instanceIdProp,
+  fieldId: fieldIdProp,
+  fieldName: fieldNameProp,
 }: BreadcrumbsProps) {
   const pathnameFromRouter = usePathname();
   const pathname = pathnameProp || pathnameFromRouter;
   const { getProjectName } = useProjects();
+  const breadcrumbsContext = useBreadcrumbsContextSafe();
+  const isMobile = useIsMobile();
 
-  // Получаем имя проекта из контекста, если не передано явно
-  const projectName = projectNameProp || (projectId ? getProjectName(projectId) : undefined);
+  // Определяем, является ли экран планшетом или меньше (меньше 1024px)
+  const [isTabletOrMobile, setIsTabletOrMobile] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    const checkScreenSize = () => {
+      setIsTabletOrMobile(window.innerWidth < 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  // Комбинируем данные из контекста и props (контекст имеет приоритет)
+  const contextData = breadcrumbsContext?.data;
+  const projectId = contextData?.projectId || projectIdProp;
+  const entityDefinitionId = contextData?.entityDefinitionId || entityDefinitionIdProp;
+  const instanceId = contextData?.instanceId || instanceIdProp;
+  const fieldId = contextData?.fieldId || fieldIdProp;
+
+  // Имена: сначала из контекста, потом из props, потом из ProjectsProvider
+  // projectName всегда доступен из ProjectsProvider
+  const projectName =
+    contextData?.projectName ||
+    projectNameProp ||
+    (projectId ? getProjectName(projectId) : undefined);
+
+  // Для entityDefinitionName - всегда используем из контекста если есть
+  // При навигации между разными entities будет короткий момент с предыдущим именем,
+  // но это лучше чем мигание в "Entity Definition"
+  const entityDefinitionName =
+    contextData?.entityDefinitionName || entityDefinitionNameProp;
+
+  // Аналогично для fieldName
+  const fieldName = contextData?.fieldName || fieldNameProp;
 
   // Если переданы items, используем их
   if (items) {
-    return (
-      <Breadcrumb>
-        <BreadcrumbList>
-          {items.map((item, index) => (
-            <div key={index} className="flex items-center">
-              {index > 0 && (
-                <BreadcrumbSeparator>
-                  <Slash className="h-4 w-4" />
-                </BreadcrumbSeparator>
-              )}
-              <BreadcrumbItem>
-                {item.dropdown ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="flex items-center gap-1 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5">
-                      {item.label}
-                      <ChevronDown className="h-4 w-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      {item.dropdown.items.map((dropdownItem, idx) => (
-                        <DropdownMenuItem key={idx} asChild>
-                          <Link href={dropdownItem.href}>
-                            {dropdownItem.label}
-                          </Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : item.href ? (
-                  <BreadcrumbLink asChild>
-                    <Link href={item.href}>{item.label}</Link>
-                  </BreadcrumbLink>
-                ) : (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                )}
-              </BreadcrumbItem>
-            </div>
-          ))}
-        </BreadcrumbList>
-      </Breadcrumb>
-    );
+    return renderBreadcrumbs(items, isMobile, isTabletOrMobile);
   }
 
   // Автоматическое построение из pathname
@@ -114,7 +111,7 @@ export function Breadcrumbs({
   // Home
   if (pathname === "/") {
     breadcrumbItems.push({ label: "Home" });
-    return renderBreadcrumbs(breadcrumbItems);
+    return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
   }
 
   // Projects
@@ -125,22 +122,22 @@ export function Breadcrumbs({
 
   if (pathname === "/projects") {
     breadcrumbItems.push({ label: "Projects" });
-    return renderBreadcrumbs(breadcrumbItems);
+    return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
   }
 
-  // Project
+  // Project routes
   if (pathname.startsWith("/projects/") && projectId) {
     breadcrumbItems.push({
       label: "Projects",
       href: "/projects",
     });
 
-    // Project page
+    // Project page (main - entity definitions list)
     if (pathname === `/projects/${projectId}`) {
       breadcrumbItems.push({
         label: projectName || "Project",
       });
-      return renderBreadcrumbs(breadcrumbItems);
+      return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
     }
 
     // Project with dropdown
@@ -160,39 +157,63 @@ export function Breadcrumbs({
       },
     };
 
-    // Settings
+    // Settings dropdown
+    const settingsDropdown: BreadcrumbItemData = {
+      label: "Settings",
+      dropdown: {
+        items: [
+          {
+            label: "Project Settings",
+            href: `/projects/${projectId}/settings`,
+          },
+          {
+            label: "Environments",
+            href: `/projects/${projectId}/settings/environments`,
+          },
+        ],
+      },
+    };
+
+    // Settings page
     if (pathname === `/projects/${projectId}/settings`) {
       breadcrumbItems.push(projectDropdown);
-      breadcrumbItems.push({ label: "Settings" });
-      return renderBreadcrumbs(breadcrumbItems);
+      breadcrumbItems.push(settingsDropdown);
+      breadcrumbItems.push({ label: "Project Settings" });
+      return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
     }
 
-    // Environment routes
-    if (pathname.includes("/settings/environment/")) {
+    // Environments routes
+    if (pathname.includes("/settings/environments")) {
       breadcrumbItems.push(projectDropdown);
-      breadcrumbItems.push({
-        label: "Settings",
-        href: `/projects/${projectId}/settings`,
-      });
+      breadcrumbItems.push(settingsDropdown);
+
+      // Environments list page
+      if (pathname === `/projects/${projectId}/settings/environments`) {
+        breadcrumbItems.push({ label: "Environments" });
+        return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
+      }
 
       // New Environment
-      if (pathname === `/projects/${projectId}/settings/environment/new`) {
-        breadcrumbItems.push({ label: "New Environment" });
-        return renderBreadcrumbs(breadcrumbItems);
+      if (pathname === `/projects/${projectId}/settings/environments/new`) {
+        breadcrumbItems.push({
+          label: "Environments",
+          href: `/projects/${projectId}/settings/environments`,
+        });
+        breadcrumbItems.push({ label: "New" });
+        return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
       }
 
       // Edit Environment
       const environmentMatch = pathname.match(
-        /\/settings\/environment\/([^/]+)$/
+        /\/settings\/environments\/([^/]+)$/
       );
       if (environmentMatch) {
-        const environmentId = environmentMatch[1];
         breadcrumbItems.push({
           label: "Environments",
-          href: `/projects/${projectId}/settings?tab=environments`,
+          href: `/projects/${projectId}/settings/environments`,
         });
-        breadcrumbItems.push({ label: "Edit Environment" });
-        return renderBreadcrumbs(breadcrumbItems);
+        breadcrumbItems.push({ label: "Edit" });
+        return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
       }
     }
 
@@ -203,7 +224,7 @@ export function Breadcrumbs({
       // New Entity Definition
       if (pathname === `/projects/${projectId}/entity-definition/new`) {
         breadcrumbItems.push({ label: "New Entity Definition" });
-        return renderBreadcrumbs(breadcrumbItems);
+        return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
       }
 
       // Entity Definition with ID
@@ -229,10 +250,13 @@ export function Breadcrumbs({
         };
 
         // Edit Entity Definition
-        if (pathname === `/projects/${projectId}/entity-definition/${entityDefinitionId}/edit`) {
+        if (
+          pathname ===
+          `/projects/${projectId}/entity-definition/${entityDefinitionId}/edit`
+        ) {
           breadcrumbItems.push(entityDefinitionDropdown);
           breadcrumbItems.push({ label: "Edit" });
-          return renderBreadcrumbs(breadcrumbItems);
+          return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
         }
 
         // Fields
@@ -240,23 +264,35 @@ export function Breadcrumbs({
           breadcrumbItems.push(entityDefinitionDropdown);
 
           // Fields list
-          if (pathname === `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`) {
+          if (
+            pathname ===
+            `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`
+          ) {
             breadcrumbItems.push({ label: "Fields" });
-            return renderBreadcrumbs(breadcrumbItems);
+            return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
           }
 
           // New Field
-          if (pathname === `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields/new`) {
-            breadcrumbItems.push({ label: "Fields", href: `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields` });
-            breadcrumbItems.push({ label: "New Field" });
-            return renderBreadcrumbs(breadcrumbItems);
+          if (
+            pathname ===
+            `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields/new`
+          ) {
+            breadcrumbItems.push({
+              label: "Fields",
+              href: `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`,
+            });
+            breadcrumbItems.push({ label: "New" });
+            return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
           }
 
           // Edit Field
           if (fieldId && pathname.includes(`/fields/${fieldId}/edit`)) {
-            breadcrumbItems.push({ label: "Fields", href: `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields` });
-            breadcrumbItems.push({ label: fieldName || "Edit Field" });
-            return renderBreadcrumbs(breadcrumbItems);
+            breadcrumbItems.push({
+              label: "Fields",
+              href: `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`,
+            });
+            breadcrumbItems.push({ label: fieldName || "Edit" });
+            return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
           }
         }
       }
@@ -287,39 +323,41 @@ export function Breadcrumbs({
       };
 
       // Instances list
-      if (pathname === `/projects/${projectId}/entity-instances/${entityDefinitionId}`) {
+      if (
+        pathname === `/projects/${projectId}/entity-instances/${entityDefinitionId}`
+      ) {
         breadcrumbItems.push(entityDefinitionDropdown);
         breadcrumbItems.push({ label: "Instances" });
-        return renderBreadcrumbs(breadcrumbItems);
+        return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
       }
 
       // New Instance
-      if (pathname === `/projects/${projectId}/entity-instances/${entityDefinitionId}/new`) {
+      if (
+        pathname ===
+        `/projects/${projectId}/entity-instances/${entityDefinitionId}/new`
+      ) {
         breadcrumbItems.push(entityDefinitionDropdown);
-        breadcrumbItems.push({ 
-          label: "Instances", 
-          href: `/projects/${projectId}/entity-instances/${entityDefinitionId}` 
+        breadcrumbItems.push({
+          label: "Instances",
+          href: `/projects/${projectId}/entity-instances/${entityDefinitionId}`,
         });
         breadcrumbItems.push({ label: "New" });
-        return renderBreadcrumbs(breadcrumbItems);
+        return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
       }
 
-      // Instance detail/edit
-      if (instanceId) {
+      // Edit Instance
+      if (
+        instanceId &&
+        pathname ===
+          `/projects/${projectId}/entity-instances/${entityDefinitionId}/${instanceId}/edit`
+      ) {
         breadcrumbItems.push(entityDefinitionDropdown);
-        breadcrumbItems.push({ 
-          label: "Instances", 
-          href: `/projects/${projectId}/entity-instances/${entityDefinitionId}` 
+        breadcrumbItems.push({
+          label: "Instances",
+          href: `/projects/${projectId}/entity-instances/${entityDefinitionId}`,
         });
-
-        // Edit Instance (view роут удален, только edit)
-        if (pathname === `/projects/${projectId}/entity-instances/${entityDefinitionId}/${instanceId}/edit`) {
-          breadcrumbItems.push({ 
-            label: instanceName || "Instance"
-          });
-          breadcrumbItems.push({ label: "Edit" });
-          return renderBreadcrumbs(breadcrumbItems);
-        }
+        breadcrumbItems.push({ label: "Edit" });
+        return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
       }
     }
   }
@@ -337,10 +375,133 @@ export function Breadcrumbs({
     }),
   ];
 
-  return renderBreadcrumbs(fallbackItems);
+  return renderBreadcrumbs(fallbackItems, isMobile, isTabletOrMobile);
 }
 
-function renderBreadcrumbs(items: BreadcrumbItemData[]) {
+function renderBreadcrumbs(
+  items: BreadcrumbItemData[],
+  isMobile: boolean,
+  isTabletOrMobile: boolean
+) {
+  // Если элементов больше 3 И экран планшет или меньше, показываем только первый и последний, промежуточные в dropdown
+  if (items.length > 3 && isTabletOrMobile) {
+    const firstItem = items[0];
+    const middleItems = items.slice(1, -1);
+    const lastItem = items[items.length - 1];
+
+    return (
+      <Breadcrumb>
+        <BreadcrumbList>
+          {/* Первый элемент */}
+          <div className="flex items-center">
+            <BreadcrumbItem>
+              {firstItem.dropdown ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center gap-1 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5">
+                    {firstItem.label}
+                    <ChevronDown className="h-4 w-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {firstItem.dropdown.items.map((dropdownItem, idx) => (
+                      <DropdownMenuItem key={idx} asChild>
+                        <Link href={dropdownItem.href}>{dropdownItem.label}</Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : firstItem.href ? (
+                <BreadcrumbLink asChild>
+                  <Link href={firstItem.href}>{firstItem.label}</Link>
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>{firstItem.label}</BreadcrumbPage>
+              )}
+            </BreadcrumbItem>
+          </div>
+
+          {/* Separator */}
+          <BreadcrumbSeparator>
+            <Slash className="h-4 w-4" />
+          </BreadcrumbSeparator>
+
+          {/* Dropdown для промежуточных элементов */}
+          <div className="flex items-center">
+            <BreadcrumbItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1 [&_svg]:pointer-events-none [&_svg]:shrink-0">
+                  <MoreHorizontal className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="max-w-xs">
+                  {middleItems.flatMap((item, idx) => {
+                    // Если у элемента есть dropdown, показываем все его элементы
+                    if (item.dropdown) {
+                      return item.dropdown.items.map((dropdownItem, dropdownIdx) => (
+                        <DropdownMenuItem key={`${idx}-${dropdownIdx}`} asChild>
+                          <Link href={dropdownItem.href} className="block">
+                            {dropdownItem.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      ));
+                    }
+                    // Если у элемента есть href, показываем как ссылку
+                    if (item.href) {
+                      return (
+                        <DropdownMenuItem key={idx} asChild>
+                          <Link href={item.href} className="block">
+                            {item.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      );
+                    }
+                    // Иначе просто текст
+                    return (
+                      <DropdownMenuItem key={idx} disabled>
+                        <span>{item.label}</span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </BreadcrumbItem>
+          </div>
+
+          {/* Separator */}
+          <BreadcrumbSeparator>
+            <Slash className="h-4 w-4" />
+          </BreadcrumbSeparator>
+
+          {/* Последний элемент */}
+          <div className="flex items-center">
+            <BreadcrumbItem>
+              {lastItem.dropdown ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex items-center gap-1 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5">
+                    {lastItem.label}
+                    <ChevronDown className="h-4 w-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {lastItem.dropdown.items.map((dropdownItem, idx) => (
+                      <DropdownMenuItem key={idx} asChild>
+                        <Link href={dropdownItem.href}>{dropdownItem.label}</Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : lastItem.href ? (
+                <BreadcrumbLink asChild>
+                  <Link href={lastItem.href}>{lastItem.label}</Link>
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage>{lastItem.label}</BreadcrumbPage>
+              )}
+            </BreadcrumbItem>
+          </div>
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  }
+
+  // Если элементов 3 или меньше, показываем все как обычно
   return (
     <Breadcrumb>
       <BreadcrumbList>
@@ -361,9 +522,7 @@ function renderBreadcrumbs(items: BreadcrumbItemData[]) {
                   <DropdownMenuContent align="start">
                     {item.dropdown.items.map((dropdownItem, idx) => (
                       <DropdownMenuItem key={idx} asChild>
-                        <Link href={dropdownItem.href}>
-                          {dropdownItem.label}
-                        </Link>
+                        <Link href={dropdownItem.href}>{dropdownItem.label}</Link>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
@@ -382,4 +541,3 @@ function renderBreadcrumbs(items: BreadcrumbItemData[]) {
     </Breadcrumb>
   );
 }
-

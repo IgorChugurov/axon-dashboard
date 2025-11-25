@@ -154,7 +154,7 @@
     "errorCreate": "Failed to create environment",
     "errorUpdate": "Failed to update environment",
     "deleteModalTitle": "Confirm deleting environment",
-    "deleteModalText": "Are you sure?",
+    "deleteModalText": "Are you sure you want to delete \"{itemName}\"? This action cannot be undone.",
     "deleteModalButtonText": "Delete",
     "deleteModalConfirmWord": "DELETE",
     "deleteModalConfirmText": "Type DELETE to confirm",
@@ -384,7 +384,7 @@
     "afterUpdate": "Environment updated successfully!",
     "afterDelete": "Environment deleted successfully!",
     "deleteModalTitle": "Confirm deleting environment",
-    "deleteModalText": "Are you sure you want to delete this environment variable?",
+    "deleteModalText": "Are you sure you want to delete \"{itemName}\"?",
     "deleteModalButtonText": "Delete",
     "reloadEvents": {
       "create": "reloadEnvironments",

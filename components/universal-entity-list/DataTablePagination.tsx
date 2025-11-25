@@ -52,7 +52,7 @@ export function DataTablePagination({
   hasNextPage,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 20, 25, 30, 40, 50],
+  pageSizeOptions = [5, 20, 25, 50, 100],
   disabled = false,
 }: DataTablePaginationProps) {
   const handleFirstPage = () => {
@@ -173,4 +173,3 @@ export function DataTablePagination({
     </div>
   );
 }
-

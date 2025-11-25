@@ -14,6 +14,7 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/toaster";
+import { BreadcrumbsProvider } from "@/components/providers/BreadcrumbsProvider";
 import { GlobalLoader } from "@/components/GlobalLoader";
 import { cookies } from "next/headers";
 import { getServerUser } from "@/lib/supabase/auth";
@@ -95,16 +96,18 @@ export default async function RootLayout({
                 children
               ) : (
                 // Для защищенных маршрутов показываем полный интерфейс
-                <ProjectsProvider initialProjects={projects}>
-                  <ProjectsEventListener />
-                  <SidebarProvider defaultOpen={defaultOpen}>
-                    <AppSidebar projects={projects} />
-                    <main className="w-full pb-8 ">
-                      <Navbar />
-                      <div className="px-4">{children}</div>
-                    </main>
-                  </SidebarProvider>
-                </ProjectsProvider>
+                <BreadcrumbsProvider>
+                  <ProjectsProvider initialProjects={projects}>
+                    <ProjectsEventListener />
+                    <SidebarProvider defaultOpen={defaultOpen}>
+                      <AppSidebar projects={projects} />
+                      <main className="w-full pb-8">
+                        <Navbar />
+                        <div className="px-4">{children}</div>
+                      </main>
+                    </SidebarProvider>
+                  </ProjectsProvider>
+                </BreadcrumbsProvider>
               )}
               <Toaster />
               <GlobalLoader />

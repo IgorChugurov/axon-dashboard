@@ -95,6 +95,7 @@ export interface Field {
   sectionIndex: number; // Index of the section this field belongs to (0-3)
   isOptionTitleField: boolean;
   searchable: boolean;
+  filterableInList?: boolean; // Показывать это поле в фильтрах списка
   options?: FieldOption[];
 
   // Связи

@@ -3,8 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/roles";
 import { EntityDefinitionFormUniversal } from "@/components/entity-definition/EntityDefinitionFormUniversal";
 import { getEntityDefinitionById } from "@/lib/universal-entity/config-service";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
+import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
 
 interface EditEntityDefinitionPageProps {
   params: Promise<{ projectId: string; entityDefinitionId: string }>;
@@ -46,7 +46,7 @@ export default async function EditEntityDefinitionPage({
 
   return (
     <div className="space-y-6">
-      <Breadcrumbs
+      <BreadcrumbsSetter
         projectId={projectId}
         entityDefinitionId={entityDefinitionId}
         entityDefinitionName={entityDefinition.name}
