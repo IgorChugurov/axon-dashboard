@@ -19,7 +19,7 @@ import {
   createEntityDefinitionAction,
   updateEntityDefinitionAction,
   deleteEntityDefinitionAction,
-} from "@/app/projects/[projectId]/entity-definition/actions";
+} from "@/app/projects/[projectId]/[entityDefId]/entity-definition-actions";
 
 interface EntityDefinitionFormUniversalProps {
   projectId: string;

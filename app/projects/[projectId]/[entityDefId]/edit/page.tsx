@@ -7,13 +7,13 @@ import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface EditEntityDefinitionPageProps {
-  params: Promise<{ projectId: string; entityDefinitionId: string }>;
+  params: Promise<{ projectId: string; entityDefId: string }>;
 }
 
 export default async function EditEntityDefinitionPage({
   params,
 }: EditEntityDefinitionPageProps) {
-  const { projectId, entityDefinitionId } = await params;
+  const { projectId, entityDefId } = await params;
 
   // Проверка прав доступа
   const supabase = await createClient();
@@ -31,7 +31,7 @@ export default async function EditEntityDefinitionPage({
   }
 
   // Загружаем entityDefinition
-  const entityDefinition = await getEntityDefinitionById(entityDefinitionId);
+  const entityDefinition = await getEntityDefinitionById(entityDefId);
 
   if (!entityDefinition || entityDefinition.projectId !== projectId) {
     notFound();
@@ -47,7 +47,7 @@ export default async function EditEntityDefinitionPage({
   return (
     <div className="space-y-6">
       <BreadcrumbsCacheUpdater
-        entityDefinitionId={entityDefinitionId}
+        entityDefinitionId={entityDefId}
         entityDefinitionName={entityDefinition.name}
       />
 
@@ -55,7 +55,7 @@ export default async function EditEntityDefinitionPage({
         <EntityDefinitionFormUniversal
           projectId={projectId}
           mode="edit"
-          entityDefinitionId={entityDefinitionId}
+          entityDefinitionId={entityDefId}
           initialData={entityDefinition}
           uiConfig={uiConfig}
         />
@@ -63,3 +63,4 @@ export default async function EditEntityDefinitionPage({
     </div>
   );
 }
+

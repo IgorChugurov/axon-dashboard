@@ -15,7 +15,7 @@ export async function createProjectAction(data: Partial<Project>) {
     return { success: true, data: result };
   } catch (error) {
     return {
-      success: false,
+      success: false,ё
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }

@@ -1,7 +1,7 @@
 "use server";
 
 /**
- * Server Actions для управления Fields
+ * Server Actions для управления EntityDefinition
  * С проверкой прав доступа (только админы)
  */
 
@@ -9,26 +9,25 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/roles";
 import {
-  createField,
-  updateField,
-  deleteField,
-  type CreateFieldData,
-  type UpdateFieldData,
+  createEntityDefinition,
+  updateEntityDefinition,
+  deleteEntityDefinition,
+  type CreateEntityDefinitionData,
+  type UpdateEntityDefinitionData,
 } from "@/lib/universal-entity/entity-definition-service";
-import type { Field } from "@/lib/universal-entity/types";
+import type { EntityDefinition } from "@/lib/universal-entity/types";
 
 export type ActionResult<T = void> =
   | { success: true; data: T }
   | { success: false; error: string; details?: string };
 
 /**
- * Создать новое Field
+ * Создать новый EntityDefinition
  */
-export async function createFieldAction(
+export async function createEntityDefinitionAction(
   projectId: string,
-  entityDefinitionId: string,
-  data: Omit<CreateFieldData, "entityDefinitionId">
-): Promise<ActionResult<Field>> {
+  data: Omit<CreateEntityDefinitionData, "projectId">
+): Promise<ActionResult<EntityDefinition>> {
   try {
     // Проверка прав доступа
     const supabase = await createClient();
@@ -40,7 +39,7 @@ export async function createFieldAction(
       return {
         success: false,
         error: "Authentication required",
-        details: "You must be logged in to create fields",
+        details: "You must be logged in to create entity definitions",
       };
     }
 
@@ -49,29 +48,28 @@ export async function createFieldAction(
       return {
         success: false,
         error: "Permission denied",
-        details: "Only administrators can create fields",
+        details: "Only administrators can create entity definitions",
       };
     }
 
     // Создание
-    const field = await createField({
+    const entityDefinition = await createEntityDefinition({
       ...data,
-      entityDefinitionId,
+      projectId,
     });
 
-    // Обновляем кэш
-    revalidatePath(`/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`);
-    revalidatePath(`/projects/${projectId}/entity-instances/${entityDefinitionId}`);
+    // Обновляем кэш (новые URL)
+    revalidatePath(`/projects/${projectId}`);
 
     return {
       success: true,
-      data: field,
+      data: entityDefinition,
     };
   } catch (error) {
-    console.error("[Actions] Create field error:", error);
+    console.error("[Actions] Create entity definition error:", error);
     return {
       success: false,
-      error: "Failed to create field",
+      error: "Failed to create entity definition",
       details:
         error instanceof Error ? error.message : "Unknown error occurred",
     };
@@ -79,14 +77,13 @@ export async function createFieldAction(
 }
 
 /**
- * Обновить Field
+ * Обновить EntityDefinition
  */
-export async function updateFieldAction(
+export async function updateEntityDefinitionAction(
   projectId: string,
   entityDefinitionId: string,
-  fieldId: string,
-  data: UpdateFieldData
-): Promise<ActionResult<Field>> {
+  data: UpdateEntityDefinitionData
+): Promise<ActionResult<EntityDefinition>> {
   try {
     // Проверка прав доступа
     const supabase = await createClient();
@@ -98,7 +95,7 @@ export async function updateFieldAction(
       return {
         success: false,
         error: "Authentication required",
-        details: "You must be logged in to update fields",
+        details: "You must be logged in to update entity definitions",
       };
     }
 
@@ -107,27 +104,30 @@ export async function updateFieldAction(
       return {
         success: false,
         error: "Permission denied",
-        details: "Only administrators can update fields",
+        details: "Only administrators can update entity definitions",
       };
     }
 
     // Обновление
-    const field = await updateField(fieldId, data);
+    const entityDefinition = await updateEntityDefinition(
+      entityDefinitionId,
+      data
+    );
 
-    // Обновляем кэш
-    revalidatePath(`/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`);
-    revalidatePath(`/projects/${projectId}/entity-definition/${entityDefinitionId}/fields/${fieldId}/edit`);
-    revalidatePath(`/projects/${projectId}/entity-instances/${entityDefinitionId}`);
+    // Обновляем кэш (новые URL)
+    revalidatePath(`/projects/${projectId}`);
+    revalidatePath(`/projects/${projectId}/${entityDefinitionId}/edit`);
+    revalidatePath(`/projects/${projectId}/${entityDefinitionId}/fields`);
 
     return {
       success: true,
-      data: field,
+      data: entityDefinition,
     };
   } catch (error) {
-    console.error("[Actions] Update field error:", error);
+    console.error("[Actions] Update entity definition error:", error);
     return {
       success: false,
-      error: "Failed to update field",
+      error: "Failed to update entity definition",
       details:
         error instanceof Error ? error.message : "Unknown error occurred",
     };
@@ -135,12 +135,11 @@ export async function updateFieldAction(
 }
 
 /**
- * Удалить Field
+ * Удалить EntityDefinition
  */
-export async function deleteFieldAction(
+export async function deleteEntityDefinitionAction(
   projectId: string,
-  entityDefinitionId: string,
-  fieldId: string
+  entityDefinitionId: string
 ): Promise<ActionResult<void>> {
   try {
     // Проверка прав доступа
@@ -153,7 +152,7 @@ export async function deleteFieldAction(
       return {
         success: false,
         error: "Authentication required",
-        details: "You must be logged in to delete fields",
+        details: "You must be logged in to delete entity definitions",
       };
     }
 
@@ -162,26 +161,25 @@ export async function deleteFieldAction(
       return {
         success: false,
         error: "Permission denied",
-        details: "Only administrators can delete fields",
+        details: "Only administrators can delete entity definitions",
       };
     }
 
     // Удаление
-    await deleteField(fieldId);
+    await deleteEntityDefinition(entityDefinitionId);
 
-    // Обновляем кэш
-    revalidatePath(`/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`);
-    revalidatePath(`/projects/${projectId}/entity-instances/${entityDefinitionId}`);
+    // Обновляем кэш (новые URL)
+    revalidatePath(`/projects/${projectId}`);
 
     return {
       success: true,
       data: undefined,
     };
   } catch (error) {
-    console.error("[Actions] Delete field error:", error);
+    console.error("[Actions] Delete entity definition error:", error);
     return {
       success: false,
-      error: "Failed to delete field",
+      error: "Failed to delete entity definition",
       details:
         error instanceof Error ? error.message : "Unknown error occurred",
     };

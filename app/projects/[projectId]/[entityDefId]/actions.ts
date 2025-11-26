@@ -46,8 +46,8 @@ export async function createEntityInstance(
       relations
     );
 
-    // Обновляем кэш
-    revalidatePath(`/projects/${projectId}/entity-instances/${entityDefinitionId}`);
+    // Обновляем кэш (новые URL)
+    revalidatePath(`/projects/${projectId}/${entityDefinitionId}`);
 
     return {
       success: true,
@@ -99,10 +99,10 @@ export async function updateEntityInstance(
       keys: Object.keys(instance),
     });
 
-    // Обновляем кэш
-    revalidatePath(`/projects/${projectId}/entity-instances/${entityDefinitionId}`);
+    // Обновляем кэш (новые URL)
+    revalidatePath(`/projects/${projectId}/${entityDefinitionId}`);
     revalidatePath(
-      `/projects/${projectId}/entity-instances/${entityDefinitionId}/${instanceId}`
+      `/projects/${projectId}/${entityDefinitionId}/${instanceId}`
     );
 
     return {
@@ -142,8 +142,8 @@ export async function deleteEntityInstance(
     // Удаляем экземпляр
     await deleteInstance(instanceId);
 
-    // Обновляем кэш
-    revalidatePath(`/projects/${projectId}/entity-instances/${entityDefinitionId}`);
+    // Обновляем кэш (новые URL)
+    revalidatePath(`/projects/${projectId}/${entityDefinitionId}`);
 
     return {
       success: true,

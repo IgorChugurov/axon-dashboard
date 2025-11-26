@@ -8,11 +8,11 @@ import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types"
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface FieldsPageProps {
-  params: Promise<{ projectId: string; entityDefinitionId: string }>;
+  params: Promise<{ projectId: string; entityDefId: string }>;
 }
 
 export default async function FieldsPage({ params }: FieldsPageProps) {
-  const { projectId, entityDefinitionId } = await params;
+  const { projectId, entityDefId } = await params;
 
   // Проверка прав доступа
   const supabase = await createClient();
@@ -30,7 +30,7 @@ export default async function FieldsPage({ params }: FieldsPageProps) {
   }
 
   // Проверяем, что entityDefinition существует и принадлежит проекту
-  const entityDefinition = await getEntityDefinitionById(entityDefinitionId);
+  const entityDefinition = await getEntityDefinitionById(entityDefId);
 
   if (!entityDefinition || entityDefinition.projectId !== projectId) {
     notFound();
@@ -39,23 +39,24 @@ export default async function FieldsPage({ params }: FieldsPageProps) {
   return (
     <div className="space-y-6">
       <BreadcrumbsCacheUpdater
-        entityDefinitionId={entityDefinitionId}
+        entityDefinitionId={entityDefId}
         entityDefinitionName={entityDefinition.name}
       />
 
       <FieldsListClient
         projectId={projectId}
-        entityDefinitionId={entityDefinitionId}
+        entityDefinitionId={entityDefId}
         config={fieldsConfig as unknown as EntityConfigFile}
         routing={{
           createUrlTemplate:
-            "/projects/{projectId}/entity-definition/{entityDefinitionId}/fields/new",
+            "/projects/{projectId}/{entityDefinitionId}/fields/new",
           editUrlTemplate:
-            "/projects/{projectId}/entity-definition/{entityDefinitionId}/fields/{instanceId}/edit",
+            "/projects/{projectId}/{entityDefinitionId}/fields/{instanceId}",
           detailsUrlTemplate:
-            "/projects/{projectId}/entity-definition/{entityDefinitionId}/fields/{instanceId}",
+            "/projects/{projectId}/{entityDefinitionId}/fields/{instanceId}",
         }}
       />
     </div>
   );
 }
+

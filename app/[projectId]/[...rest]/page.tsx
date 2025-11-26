@@ -26,8 +26,12 @@ export default async function ProjectRedirect({ params }: ProjectRedirectProps) 
     return null;
   }
   
-  // Заменяем старые пути entities на entity-instances
-  const updatedRestPath = restPath.replace(/^\/entities\//, "/entity-instances/");
+  // Заменяем старые пути entities - теперь это просто /:entityDefId
+  // Также редиректим entity-instances и entity-definition на новую структуру
+  let updatedRestPath = restPath
+    .replace(/^\/entities\//, "/")
+    .replace(/^\/entity-instances\//, "/")
+    .replace(/^\/entity-definition\//, "/");
   
   redirect(`/projects/${projectId}${updatedRestPath}`);
 }

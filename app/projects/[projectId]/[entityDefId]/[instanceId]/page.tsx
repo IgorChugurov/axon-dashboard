@@ -1,5 +1,6 @@
 /**
  * Универсальная страница редактирования экземпляра сущности
+ * URL: /projects/:projectId/:entityDefId/:instanceId
  */
 
 import { notFound } from "next/navigation";
@@ -11,16 +12,16 @@ import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 interface EntityEditPageProps {
   params: Promise<{
     projectId: string;
-    entityDefinitionId: string;
+    entityDefId: string;
     instanceId: string;
   }>;
 }
 
 export default async function EntityEditPage({ params }: EntityEditPageProps) {
-  const { projectId, entityDefinitionId, instanceId } = await params;
+  const { projectId, entityDefId, instanceId } = await params;
 
   // Получаем entity definition с полями и UI конфигом
-  const config = await getEntityDefinitionWithUIConfig(entityDefinitionId);
+  const config = await getEntityDefinitionWithUIConfig(entityDefId);
 
   if (!config) {
     notFound();
@@ -45,7 +46,7 @@ export default async function EntityEditPage({ params }: EntityEditPageProps) {
     { relationsAsIds: true }
   );
 
-  if (!instance || instance.entityDefinitionId !== entityDefinitionId) {
+  if (!instance || instance.entityDefinitionId !== entityDefId) {
     notFound();
   }
 
@@ -69,7 +70,7 @@ export default async function EntityEditPage({ params }: EntityEditPageProps) {
   return (
     <div className="space-y-6">
       <BreadcrumbsCacheUpdater
-        entityDefinitionId={entityDefinitionId}
+        entityDefinitionId={entityDefId}
         entityDefinitionName={config.entityDefinition.name}
       />
 
@@ -85,3 +86,4 @@ export default async function EntityEditPage({ params }: EntityEditPageProps) {
     </div>
   );
 }
+

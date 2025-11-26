@@ -15,11 +15,11 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
         projectId={projectId}
         config={entityDefinitionConfig as unknown as EntityConfigFile}
         routing={{
-          createUrlTemplate: "/projects/{projectId}/entity-definition/new",
+          createUrlTemplate: "/projects/{projectId}/new",
           editUrlTemplate:
-            "/projects/{projectId}/entity-definition/{instanceId}",
+            "/projects/{projectId}/{instanceId}/edit",
           detailsUrlTemplate:
-            "/projects/{projectId}/entity-definition/{instanceId}",
+            "/projects/{projectId}/{instanceId}",
         }}
       />
     </>

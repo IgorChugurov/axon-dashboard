@@ -157,7 +157,7 @@ function generateColumns(fields: Field[]): ColumnConfig[] {
       flex: 1,
       type: columnType,
       sortable: true,
-      additionalUrl: index === 0 ? "/edit" : undefined,
+
       // Добавляем relationDbType для полей-связей
       ...(isRelation && {
         relationDbType: field.dbType as
@@ -181,7 +181,6 @@ function generateColumns(fields: Field[]): ColumnConfig[] {
       {
         action: "edit",
         link: true,
-        additionalUrl: "/edit",
       },
       {
         action: "delete",

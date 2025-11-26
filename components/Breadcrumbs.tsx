@@ -41,11 +41,14 @@ interface BreadcrumbsProps {
  * URL-driven Breadcrumbs component
  * 
  * Автоматически строит breadcrumbs на основе текущего URL.
- * Имена сущностей получает из:
- * - ProjectsProvider (для projectName)
- * - Breadcrumbs cache (для entityDefinitionName, fieldName, environmentName)
- * 
- * Можно также передать готовые items для полного контроля.
+ * Новая структура URL:
+ * - /projects/:projectId - список entity definitions
+ * - /projects/:projectId/new - создание entity definition
+ * - /projects/:projectId/:entityDefId - список instances
+ * - /projects/:projectId/:entityDefId/edit - редактирование entity definition
+ * - /projects/:projectId/:entityDefId/fields - поля
+ * - /projects/:projectId/:entityDefId/new - создание instance
+ * - /projects/:projectId/:entityDefId/:instanceId - редактирование instance
  */
 export function Breadcrumbs({ items }: BreadcrumbsProps) {
   const pathname = usePathname();
@@ -69,41 +72,46 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
   const projectIdMatch = pathname.match(/^\/projects\/([^/]+)/);
   const projectId = projectIdMatch ? projectIdMatch[1] : undefined;
 
-  // EntityDefinition ID (из /entity-definition/ или /entity-instances/)
-  const entityDefinitionIdMatch =
-    pathname.match(/\/entity-definition\/([^/]+)/) ||
-    pathname.match(/\/entity-instances\/([^/]+)/);
-  const entityDefinitionIdRaw = entityDefinitionIdMatch
-    ? entityDefinitionIdMatch[1]
-    : undefined;
-  const entityDefinitionId =
-    entityDefinitionIdRaw && !["new", "edit", "fields"].includes(entityDefinitionIdRaw)
-      ? entityDefinitionIdRaw
-      : undefined;
+  // Новая структура URL: /projects/:projectId/:entityDefId/...
+  // Исключаем специальные пути: new, settings
+  const pathParts = pathname.split("/").filter(Boolean);
+  
+  let entityDefinitionId: string | undefined;
+  let fieldId: string | undefined;
+  let instanceId: string | undefined;
+  let environmentId: string | undefined;
 
-  // Field ID
-  const fieldIdMatch = pathname.match(/\/fields\/([^/]+)/);
-  const fieldIdRaw = fieldIdMatch ? fieldIdMatch[1] : undefined;
-  const fieldId =
-    fieldIdRaw && !["new", "edit"].includes(fieldIdRaw)
-      ? fieldIdRaw
-      : undefined;
-
-  // Environment ID
-  const environmentIdMatch = pathname.match(/\/environments\/([^/]+)/);
-  const environmentIdRaw = environmentIdMatch ? environmentIdMatch[1] : undefined;
-  const environmentId =
-    environmentIdRaw && !["new", "edit"].includes(environmentIdRaw)
-      ? environmentIdRaw
-      : undefined;
-
-  // Instance ID (для entity-instances)
-  const instanceIdMatch = pathname.match(/\/entity-instances\/[^/]+\/([^/]+)/);
-  const instanceIdRaw = instanceIdMatch ? instanceIdMatch[1] : undefined;
-  const instanceId =
-    instanceIdRaw && !["new", "edit"].includes(instanceIdRaw)
-      ? instanceIdRaw
-      : undefined;
+  if (projectId && pathParts.length > 2) {
+    const afterProjectId = pathParts[2]; // Сегмент после projectId
+    
+    // Проверяем, не является ли это специальным путем
+    if (!["new", "settings"].includes(afterProjectId)) {
+      entityDefinitionId = afterProjectId;
+      
+      // Проверяем дальнейшие сегменты
+      if (pathParts.length > 3) {
+        const nextSegment = pathParts[3];
+        
+        if (nextSegment === "fields" && pathParts.length > 4) {
+          const fieldSegment = pathParts[4];
+          if (!["new"].includes(fieldSegment)) {
+            fieldId = fieldSegment;
+          }
+        } else if (!["edit", "fields", "new"].includes(nextSegment)) {
+          // Это instanceId
+          instanceId = nextSegment;
+        }
+      }
+    }
+    
+    // Environment ID из settings
+    if (afterProjectId === "settings" && pathParts[3] === "environments" && pathParts.length > 4) {
+      const envSegment = pathParts[4];
+      if (!["new"].includes(envSegment)) {
+        environmentId = envSegment;
+      }
+    }
+  }
 
   // Получаем имена из кеша
   const { entityDefinitionName, fieldName, environmentName } = useBreadcrumbsData({
@@ -219,10 +227,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
       }
 
       // Edit Environment
-      const environmentMatch = pathname.match(
-        /\/settings\/environments\/([^/]+)$/
-      );
-      if (environmentMatch) {
+      if (environmentId) {
         breadcrumbItems.push({
           label: "Environments",
           href: `/projects/${projectId}/settings/environments`,
@@ -232,144 +237,99 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
       }
     }
 
-    // Entity Definition routes
-    if (pathname.includes("/entity-definition/")) {
+    // New Entity Definition: /projects/:projectId/new
+    if (pathname === `/projects/${projectId}/new`) {
       breadcrumbItems.push(projectDropdown);
-
-      // New Entity Definition
-      if (pathname === `/projects/${projectId}/entity-definition/new`) {
-        breadcrumbItems.push({ label: "New Entity Definition" });
-        return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
-      }
-
-      // Entity Definition with ID
-      if (entityDefinitionId) {
-        const entityDefinitionDropdown: BreadcrumbItemData = {
-          label: entityDefinitionName || "Entity Definition",
-          dropdown: {
-            items: [
-              {
-                label: "View Instances",
-                href: `/projects/${projectId}/entity-instances/${entityDefinitionId}`,
-              },
-              {
-                label: "Edit Definition",
-                href: `/projects/${projectId}/entity-definition/${entityDefinitionId}/edit`,
-              },
-              {
-                label: "Manage Fields",
-                href: `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`,
-              },
-            ],
-          },
-        };
-
-        // Edit Entity Definition
-        if (
-          pathname ===
-          `/projects/${projectId}/entity-definition/${entityDefinitionId}/edit`
-        ) {
-          breadcrumbItems.push(entityDefinitionDropdown);
-          breadcrumbItems.push({ label: "Edit" });
-          return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
-        }
-
-        // Fields
-        if (pathname.includes("/fields")) {
-          breadcrumbItems.push(entityDefinitionDropdown);
-
-          // Fields list
-          if (
-            pathname ===
-            `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`
-          ) {
-            breadcrumbItems.push({ label: "Fields" });
-            return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
-          }
-
-          // New Field
-          if (
-            pathname ===
-            `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields/new`
-          ) {
-            breadcrumbItems.push({
-              label: "Fields",
-              href: `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`,
-            });
-            breadcrumbItems.push({ label: "New" });
-            return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
-          }
-
-          // Edit Field
-          if (fieldId && pathname.includes(`/fields/${fieldId}/edit`)) {
-            breadcrumbItems.push({
-              label: "Fields",
-              href: `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`,
-            });
-            breadcrumbItems.push({ label: fieldName || "Edit" });
-            return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
-          }
-        }
-      }
+      breadcrumbItems.push({ label: "New Entity Definition" });
+      return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
     }
 
-    // Entity Instances routes
-    if (pathname.includes("/entity-instances/") && entityDefinitionId) {
+    // Entity Definition routes: /projects/:projectId/:entityDefId/...
+    if (entityDefinitionId) {
       breadcrumbItems.push(projectDropdown);
 
       const entityDefinitionDropdown: BreadcrumbItemData = {
-        label: entityDefinitionName || "Entity Definition",
+        label: entityDefinitionName || "Entity",
         dropdown: {
           items: [
             {
-              label: "View Instances",
-              href: `/projects/${projectId}/entity-instances/${entityDefinitionId}`,
+              label: "Instances",
+              href: `/projects/${projectId}/${entityDefinitionId}`,
             },
             {
               label: "Edit Definition",
-              href: `/projects/${projectId}/entity-definition/${entityDefinitionId}/edit`,
+              href: `/projects/${projectId}/${entityDefinitionId}/edit`,
             },
             {
               label: "Manage Fields",
-              href: `/projects/${projectId}/entity-definition/${entityDefinitionId}/fields`,
+              href: `/projects/${projectId}/${entityDefinitionId}/fields`,
             },
           ],
         },
       };
 
-      // Instances list
-      if (
-        pathname === `/projects/${projectId}/entity-instances/${entityDefinitionId}`
-      ) {
+      // Instances list: /projects/:projectId/:entityDefId
+      if (pathname === `/projects/${projectId}/${entityDefinitionId}`) {
         breadcrumbItems.push(entityDefinitionDropdown);
         breadcrumbItems.push({ label: "Instances" });
         return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
       }
 
-      // New Instance
-      if (
-        pathname ===
-        `/projects/${projectId}/entity-instances/${entityDefinitionId}/new`
-      ) {
+      // Edit Entity Definition: /projects/:projectId/:entityDefId/edit
+      if (pathname === `/projects/${projectId}/${entityDefinitionId}/edit`) {
+        breadcrumbItems.push(entityDefinitionDropdown);
+        breadcrumbItems.push({ label: "Edit" });
+        return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
+      }
+
+      // Fields routes: /projects/:projectId/:entityDefId/fields/...
+      if (pathname.includes("/fields")) {
+        breadcrumbItems.push(entityDefinitionDropdown);
+
+        // Fields list
+        if (pathname === `/projects/${projectId}/${entityDefinitionId}/fields`) {
+          breadcrumbItems.push({ label: "Fields" });
+          return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
+        }
+
+        // New Field
+        if (pathname === `/projects/${projectId}/${entityDefinitionId}/fields/new`) {
+          breadcrumbItems.push({
+            label: "Fields",
+            href: `/projects/${projectId}/${entityDefinitionId}/fields`,
+          });
+          breadcrumbItems.push({ label: "New" });
+          return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
+        }
+
+        // Edit Field: /projects/:projectId/:entityDefId/fields/:fieldId
+        if (fieldId) {
+          breadcrumbItems.push({
+            label: "Fields",
+            href: `/projects/${projectId}/${entityDefinitionId}/fields`,
+          });
+          breadcrumbItems.push({ label: fieldName || "Edit" });
+          return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
+        }
+      }
+
+      // New Instance: /projects/:projectId/:entityDefId/new
+      if (pathname === `/projects/${projectId}/${entityDefinitionId}/new`) {
         breadcrumbItems.push(entityDefinitionDropdown);
         breadcrumbItems.push({
           label: "Instances",
-          href: `/projects/${projectId}/entity-instances/${entityDefinitionId}`,
+          href: `/projects/${projectId}/${entityDefinitionId}`,
         });
         breadcrumbItems.push({ label: "New" });
         return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
       }
 
-      // Edit Instance
-      if (
-        instanceId &&
-        pathname ===
-          `/projects/${projectId}/entity-instances/${entityDefinitionId}/${instanceId}/edit`
-      ) {
+      // Edit Instance: /projects/:projectId/:entityDefId/:instanceId
+      if (instanceId) {
         breadcrumbItems.push(entityDefinitionDropdown);
         breadcrumbItems.push({
           label: "Instances",
-          href: `/projects/${projectId}/entity-instances/${entityDefinitionId}`,
+          href: `/projects/${projectId}/${entityDefinitionId}`,
         });
         breadcrumbItems.push({ label: "Edit" });
         return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);

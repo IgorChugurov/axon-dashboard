@@ -63,7 +63,7 @@ export function FieldListClient({
         <h2 className="text-xl font-semibold">Fields</h2>
         <Button asChild>
           <Link
-            href={`/projects/${projectId}/entity-definition/${entityDefinitionId}/fields/new`}
+            href={`/projects/${projectId}/${entityDefinitionId}/fields/new`}
           >
             <Plus className="mr-2 h-4 w-4" />
             Create Field
@@ -78,7 +78,7 @@ export function FieldListClient({
           </p>
           <Button asChild variant="outline">
             <Link
-              href={`/projects/${projectId}/entity-definition/${entityDefinitionId}/fields/new`}
+              href={`/projects/${projectId}/${entityDefinitionId}/fields/new`}
             >
               <Plus className="mr-2 h-4 w-4" />
               Create First Field
@@ -162,7 +162,7 @@ export function FieldListClient({
                         disabled={deletingId !== null}
                       >
                         <Link
-                          href={`/projects/${projectId}/entity-definition/${entityDefinitionId}/fields/${field.id}/edit`}
+                          href={`/projects/${projectId}/${entityDefinitionId}/fields/${field.id}`}
                         >
                           <Pencil className="h-4 w-4" />
                         </Link>

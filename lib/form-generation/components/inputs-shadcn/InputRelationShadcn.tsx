@@ -14,7 +14,7 @@ import {
   FieldError,
   FieldContent,
 } from "@/components/ui/field";
-import { RelationSelect } from "@/app/projects/[projectId]/entity-instances/[entityDefinitionId]/RelationSelect";
+import { RelationSelect } from "@/app/projects/[projectId]/[entityDefId]/RelationSelect";
 import type { Field as FieldType } from "@/lib/universal-entity/types";
 import type { FormData } from "../../types";
 

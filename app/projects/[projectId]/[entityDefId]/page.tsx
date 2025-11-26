@@ -1,5 +1,6 @@
 /**
  * Универсальная страница списка экземпляров сущности
+ * URL: /projects/:projectId/:entityDefId
  */
 
 import { notFound } from "next/navigation";
@@ -11,14 +12,14 @@ import { EntityInstancesListClient } from "@/components/universal-entity-list";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface EntityListPageProps {
-  params: Promise<{ projectId: string; entityDefinitionId: string }>;
+  params: Promise<{ projectId: string; entityDefId: string }>;
 }
 
 export default async function EntityListPage({ params }: EntityListPageProps) {
-  const { projectId, entityDefinitionId } = await params;
+  const { projectId, entityDefId } = await params;
 
   // Загружаем entityDefinition
-  const entityDefinition = await getEntityDefinitionById(entityDefinitionId);
+  const entityDefinition = await getEntityDefinitionById(entityDefId);
 
   if (!entityDefinition) {
     notFound();
@@ -30,12 +31,12 @@ export default async function EntityListPage({ params }: EntityListPageProps) {
   }
 
   // Загружаем поля
-  const fields = await getFields(entityDefinitionId);
+  const fields = await getFields(entityDefId);
 
   return (
     <div className="space-y-6">
       <BreadcrumbsCacheUpdater
-        entityDefinitionId={entityDefinitionId}
+        entityDefinitionId={entityDefId}
         entityDefinitionName={entityDefinition.name}
       />
 
@@ -49,13 +50,14 @@ export default async function EntityListPage({ params }: EntityListPageProps) {
         fields={fields}
         routing={{
           createUrlTemplate:
-            "/projects/{projectId}/entity-instances/{entityDefinitionId}/new",
+            "/projects/{projectId}/{entityDefinitionId}/new",
           editUrlTemplate:
-            "/projects/{projectId}/entity-instances/{entityDefinitionId}/{instanceId}/edit",
+            "/projects/{projectId}/{entityDefinitionId}/{instanceId}",
           detailsUrlTemplate:
-            "/projects/{projectId}/entity-instances/{entityDefinitionId}/{instanceId}",
+            "/projects/{projectId}/{entityDefinitionId}/{instanceId}",
         }}
       />
     </div>
   );
 }
+

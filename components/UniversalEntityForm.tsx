@@ -20,7 +20,7 @@ import {
   createEntityInstance,
   updateEntityInstance,
   deleteEntityInstance,
-} from "@/app/projects/[projectId]/entity-instances/[entityDefinitionId]/actions";
+} from "@/app/projects/[projectId]/[entityDefId]/actions";
 import { withGlobalLoader } from "@/lib/global-loader/with-global-loader";
 
 interface UniversalEntityFormProps {
@@ -191,7 +191,7 @@ export function UniversalEntityForm({
           });
 
           router.push(
-            `/projects/${projectId}/entity-instances/${entityDefinition.id}`
+            `/projects/${projectId}/${entityDefinition.id}`
           );
           router.refresh();
         } catch (err) {

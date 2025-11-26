@@ -32,7 +32,7 @@ export function EntitiesSidebarSection() {
       <SidebarGroupContent>
         <SidebarMenu>
           {entityDefinitions.map((entity) => {
-            const href = `/projects/${projectId}/entity-instances/${entity.id}`;
+            const href = `/projects/${projectId}/${entity.id}`;
             const isActive = pathname === href || pathname.startsWith(`${href}/`);
             return (
               <SidebarMenuItem key={entity.id}>
@@ -77,7 +77,7 @@ export function EntitiesSidebarSectionWrapper({
           {entities.map((entity) => (
             <SidebarMenuItem key={entity.id}>
               <SidebarMenuButton asChild>
-                <Link href={`/entity-instances/${entity.id}`}>
+                <Link href={`/${entity.id}`}>
                   <Tag />
                   <span>{entity.name}</span>
                 </Link>

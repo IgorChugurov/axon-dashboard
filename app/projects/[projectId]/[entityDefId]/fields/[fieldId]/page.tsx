@@ -6,16 +6,21 @@ import {
   getEntityDefinitionById,
   getEntityDefinitions,
   getFields,
+  getFieldById,
 } from "@/lib/universal-entity/config-service";
-import { createFieldAction } from "../actions";
+import { updateFieldAction } from "../actions";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
-interface NewFieldPageProps {
-  params: Promise<{ projectId: string; entityDefinitionId: string }>;
+interface EditFieldPageProps {
+  params: Promise<{
+    projectId: string;
+    entityDefId: string;
+    fieldId: string;
+  }>;
 }
 
-export default async function NewFieldPage({ params }: NewFieldPageProps) {
-  const { projectId, entityDefinitionId } = await params;
+export default async function EditFieldPage({ params }: EditFieldPageProps) {
+  const { projectId, entityDefId, fieldId } = await params;
 
   // Проверка прав доступа
   const supabase = await createClient();
@@ -33,9 +38,16 @@ export default async function NewFieldPage({ params }: NewFieldPageProps) {
   }
 
   // Загружаем entityDefinition
-  const entityDefinition = await getEntityDefinitionById(entityDefinitionId);
+  const entityDefinition = await getEntityDefinitionById(entityDefId);
 
   if (!entityDefinition || entityDefinition.projectId !== projectId) {
+    notFound();
+  }
+
+  // Загружаем field
+  const field = await getFieldById(fieldId);
+
+  if (!field || field.entityDefinitionId !== entityDefId) {
     notFound();
   }
 
@@ -48,23 +60,32 @@ export default async function NewFieldPage({ params }: NewFieldPageProps) {
   return (
     <div className="space-y-6">
       <BreadcrumbsCacheUpdater
-        entityDefinitionId={entityDefinitionId}
+        entityDefinitionId={entityDefId}
         entityDefinitionName={entityDefinition.name}
+        fieldId={fieldId}
+        fieldName={field.label || field.name}
       />
 
       <div className="rounded-lg border bg-card p-6">
         <FieldForm
           projectId={projectId}
-          entityDefinitionId={entityDefinitionId}
-          mode="create"
+          entityDefinitionId={entityDefId}
+          mode="edit"
+          initialData={field}
           availableEntities={availableEntities}
           availableFields={availableFields}
           onSubmit={async (data) => {
             "use server";
-            return await createFieldAction(projectId, entityDefinitionId, data);
+            return await updateFieldAction(
+              projectId,
+              entityDefId,
+              fieldId,
+              data
+            );
           }}
         />
       </div>
     </div>
   );
 }
+

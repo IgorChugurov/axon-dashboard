@@ -24,7 +24,7 @@
         "headerName": "Name",
         "flex": 3,
         "type": "naigateToDetails",
-        "additionalUrl": "/edit"
+        "additionalUrl": ""
       },
       {
         "field": "tableName",

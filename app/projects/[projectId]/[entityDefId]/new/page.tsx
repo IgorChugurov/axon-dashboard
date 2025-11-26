@@ -1,5 +1,6 @@
 /**
  * Универсальная страница создания экземпляра сущности
+ * URL: /projects/:projectId/:entityDefId/new
  */
 
 import { notFound } from "next/navigation";
@@ -8,14 +9,14 @@ import { UniversalEntityForm } from "@/components/UniversalEntityForm";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface EntityNewPageProps {
-  params: Promise<{ projectId: string; entityDefinitionId: string }>;
+  params: Promise<{ projectId: string; entityDefId: string }>;
 }
 
 export default async function EntityNewPage({ params }: EntityNewPageProps) {
-  const { projectId, entityDefinitionId } = await params;
+  const { projectId, entityDefId } = await params;
 
   // Получаем entity definition с полями и UI конфигом
-  const config = await getEntityDefinitionWithUIConfig(entityDefinitionId);
+  const config = await getEntityDefinitionWithUIConfig(entityDefId);
 
   if (!config) {
     notFound();
@@ -24,7 +25,7 @@ export default async function EntityNewPage({ params }: EntityNewPageProps) {
   return (
     <div className="space-y-6">
       <BreadcrumbsCacheUpdater
-        entityDefinitionId={entityDefinitionId}
+        entityDefinitionId={entityDefId}
         entityDefinitionName={config.entityDefinition.name}
       />
 
@@ -38,3 +39,4 @@ export default async function EntityNewPage({ params }: EntityNewPageProps) {
     </div>
   );
 }
+
