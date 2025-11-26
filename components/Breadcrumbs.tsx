@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useProjects } from "@/components/providers/ProjectsProvider";
-import { useBreadcrumbsContextSafe } from "@/components/providers/BreadcrumbsProvider";
+import { useBreadcrumbsData } from "@/lib/breadcrumbs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import * as React from "react";
 
@@ -35,33 +35,21 @@ export interface BreadcrumbItemData {
 
 interface BreadcrumbsProps {
   items?: BreadcrumbItemData[];
-  // Автоматическое определение из pathname
-  pathname?: string;
-  // Данные для автоматического построения (fallback, если нет контекста)
-  projectId?: string;
-  projectName?: string;
-  entityDefinitionId?: string;
-  entityDefinitionName?: string;
-  instanceId?: string;
-  fieldId?: string;
-  fieldName?: string;
 }
 
-export function Breadcrumbs({
-  items,
-  pathname: pathnameProp,
-  projectId: projectIdProp,
-  projectName: projectNameProp,
-  entityDefinitionId: entityDefinitionIdProp,
-  entityDefinitionName: entityDefinitionNameProp,
-  instanceId: instanceIdProp,
-  fieldId: fieldIdProp,
-  fieldName: fieldNameProp,
-}: BreadcrumbsProps) {
-  const pathnameFromRouter = usePathname();
-  const pathname = pathnameProp || pathnameFromRouter;
+/**
+ * URL-driven Breadcrumbs component
+ * 
+ * Автоматически строит breadcrumbs на основе текущего URL.
+ * Имена сущностей получает из:
+ * - ProjectsProvider (для projectName)
+ * - Breadcrumbs cache (для entityDefinitionName, fieldName, environmentName)
+ * 
+ * Можно также передать готовые items для полного контроля.
+ */
+export function Breadcrumbs({ items }: BreadcrumbsProps) {
+  const pathname = usePathname();
   const { getProjectName } = useProjects();
-  const breadcrumbsContext = useBreadcrumbsContextSafe();
   const isMobile = useIsMobile();
 
   // Определяем, является ли экран планшетом или меньше (меньше 1024px)
@@ -77,28 +65,55 @@ export function Breadcrumbs({
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Комбинируем данные из контекста и props (контекст имеет приоритет)
-  const contextData = breadcrumbsContext?.data;
-  const projectId = contextData?.projectId || projectIdProp;
-  const entityDefinitionId = contextData?.entityDefinitionId || entityDefinitionIdProp;
-  const instanceId = contextData?.instanceId || instanceIdProp;
-  const fieldId = contextData?.fieldId || fieldIdProp;
+  // Извлекаем IDs из pathname
+  const projectIdMatch = pathname.match(/^\/projects\/([^/]+)/);
+  const projectId = projectIdMatch ? projectIdMatch[1] : undefined;
 
-  // Имена: сначала из контекста, потом из props, потом из ProjectsProvider
-  // projectName всегда доступен из ProjectsProvider
-  const projectName =
-    contextData?.projectName ||
-    projectNameProp ||
-    (projectId ? getProjectName(projectId) : undefined);
+  // EntityDefinition ID (из /entity-definition/ или /entity-instances/)
+  const entityDefinitionIdMatch =
+    pathname.match(/\/entity-definition\/([^/]+)/) ||
+    pathname.match(/\/entity-instances\/([^/]+)/);
+  const entityDefinitionIdRaw = entityDefinitionIdMatch
+    ? entityDefinitionIdMatch[1]
+    : undefined;
+  const entityDefinitionId =
+    entityDefinitionIdRaw && !["new", "edit", "fields"].includes(entityDefinitionIdRaw)
+      ? entityDefinitionIdRaw
+      : undefined;
 
-  // Для entityDefinitionName - всегда используем из контекста если есть
-  // При навигации между разными entities будет короткий момент с предыдущим именем,
-  // но это лучше чем мигание в "Entity Definition"
-  const entityDefinitionName =
-    contextData?.entityDefinitionName || entityDefinitionNameProp;
+  // Field ID
+  const fieldIdMatch = pathname.match(/\/fields\/([^/]+)/);
+  const fieldIdRaw = fieldIdMatch ? fieldIdMatch[1] : undefined;
+  const fieldId =
+    fieldIdRaw && !["new", "edit"].includes(fieldIdRaw)
+      ? fieldIdRaw
+      : undefined;
 
-  // Аналогично для fieldName
-  const fieldName = contextData?.fieldName || fieldNameProp;
+  // Environment ID
+  const environmentIdMatch = pathname.match(/\/environments\/([^/]+)/);
+  const environmentIdRaw = environmentIdMatch ? environmentIdMatch[1] : undefined;
+  const environmentId =
+    environmentIdRaw && !["new", "edit"].includes(environmentIdRaw)
+      ? environmentIdRaw
+      : undefined;
+
+  // Instance ID (для entity-instances)
+  const instanceIdMatch = pathname.match(/\/entity-instances\/[^/]+\/([^/]+)/);
+  const instanceIdRaw = instanceIdMatch ? instanceIdMatch[1] : undefined;
+  const instanceId =
+    instanceIdRaw && !["new", "edit"].includes(instanceIdRaw)
+      ? instanceIdRaw
+      : undefined;
+
+  // Получаем имена из кеша
+  const { entityDefinitionName, fieldName, environmentName } = useBreadcrumbsData({
+    entityDefinitionId,
+    fieldId,
+    environmentId,
+  });
+
+  // Имя проекта из ProjectsProvider (всегда доступно)
+  const projectName = projectId ? getProjectName(projectId) : undefined;
 
   // Если переданы items, используем их
   if (items) {
@@ -212,7 +227,7 @@ export function Breadcrumbs({
           label: "Environments",
           href: `/projects/${projectId}/settings/environments`,
         });
-        breadcrumbItems.push({ label: "Edit" });
+        breadcrumbItems.push({ label: environmentName || "Edit" });
         return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
       }
     }

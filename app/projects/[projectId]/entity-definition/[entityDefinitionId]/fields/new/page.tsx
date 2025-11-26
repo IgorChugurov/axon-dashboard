@@ -8,7 +8,7 @@ import {
   getFields,
 } from "@/lib/universal-entity/config-service";
 import { createFieldAction } from "../actions";
-import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
+import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface NewFieldPageProps {
   params: Promise<{ projectId: string; entityDefinitionId: string }>;
@@ -47,8 +47,7 @@ export default async function NewFieldPage({ params }: NewFieldPageProps) {
 
   return (
     <div className="space-y-6">
-      <BreadcrumbsSetter
-        projectId={projectId}
+      <BreadcrumbsCacheUpdater
         entityDefinitionId={entityDefinitionId}
         entityDefinitionName={entityDefinition.name}
       />
@@ -69,4 +68,3 @@ export default async function NewFieldPage({ params }: NewFieldPageProps) {
     </div>
   );
 }
-

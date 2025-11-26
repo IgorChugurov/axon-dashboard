@@ -4,7 +4,7 @@ import { isAdmin } from "@/lib/auth/roles";
 import { EntityDefinitionFormUniversal } from "@/components/entity-definition/EntityDefinitionFormUniversal";
 import { getEntityDefinitionById } from "@/lib/universal-entity/config-service";
 import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
-import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
+import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface EditEntityDefinitionPageProps {
   params: Promise<{ projectId: string; entityDefinitionId: string }>;
@@ -46,8 +46,7 @@ export default async function EditEntityDefinitionPage({
 
   return (
     <div className="space-y-6">
-      <BreadcrumbsSetter
-        projectId={projectId}
+      <BreadcrumbsCacheUpdater
         entityDefinitionId={entityDefinitionId}
         entityDefinitionName={entityDefinition.name}
       />

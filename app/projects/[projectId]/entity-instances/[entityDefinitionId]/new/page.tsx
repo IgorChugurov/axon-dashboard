@@ -5,7 +5,7 @@
 import { notFound } from "next/navigation";
 import { getEntityDefinitionWithUIConfig } from "@/lib/universal-entity/config-service";
 import { UniversalEntityForm } from "@/components/UniversalEntityForm";
-import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
+import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface EntityNewPageProps {
   params: Promise<{ projectId: string; entityDefinitionId: string }>;
@@ -23,8 +23,7 @@ export default async function EntityNewPage({ params }: EntityNewPageProps) {
 
   return (
     <div className="space-y-6">
-      <BreadcrumbsSetter
-        projectId={projectId}
+      <BreadcrumbsCacheUpdater
         entityDefinitionId={entityDefinitionId}
         entityDefinitionName={config.entityDefinition.name}
       />

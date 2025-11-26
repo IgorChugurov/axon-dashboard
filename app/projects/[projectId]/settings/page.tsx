@@ -2,7 +2,6 @@ import { ProjectSettingsTab } from "./ProjectSettingsTab";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
-import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
 
 interface ProjectSettingsPageProps {
   params: Promise<{ projectId: string }>;
@@ -15,8 +14,6 @@ export default async function ProjectSettingsPage({
 
   return (
     <div className="space-y-6">
-      <BreadcrumbsSetter projectId={projectId} />
-      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Project Settings</h1>

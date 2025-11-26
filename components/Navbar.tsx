@@ -1,7 +1,6 @@
 "use client";
 import { LogOut, Moon, Settings, Sun, User } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -20,32 +19,6 @@ import { Breadcrumbs } from "@/components/Breadcrumbs";
 const Navbar = () => {
   const { setTheme } = useTheme();
   const { user, logout, isLoading } = useAuth();
-  const pathname = usePathname();
-
-  // Извлекаем projectId из pathname
-  const projectIdMatch = pathname.match(/^\/projects\/([^/]+)/);
-  const projectId = projectIdMatch ? projectIdMatch[1] : undefined;
-
-  // Извлекаем entityDefinitionId из pathname (работает для /entity-definition/ и /entity-instances/)
-  const entityDefinitionIdMatch =
-    pathname.match(/\/entity-definition\/([^/]+)/) ||
-    pathname.match(/\/entity-instances\/([^/]+)/);
-  const entityDefinitionIdRaw = entityDefinitionIdMatch
-    ? entityDefinitionIdMatch[1]
-    : undefined;
-  const entityDefinitionId =
-    entityDefinitionIdRaw &&
-    !["new", "edit", "fields"].includes(entityDefinitionIdRaw)
-      ? entityDefinitionIdRaw
-      : undefined;
-
-  // Извлекаем instanceId из pathname (для entity-instances, исключая new/edit)
-  const instanceIdMatch = pathname.match(/\/entity-instances\/[^/]+\/([^/]+)/);
-  const instanceIdRaw = instanceIdMatch ? instanceIdMatch[1] : undefined;
-  const instanceId =
-    instanceIdRaw && !["new", "edit"].includes(instanceIdRaw)
-      ? instanceIdRaw
-      : undefined;
 
   const handleLogout = async () => {
     try {
@@ -81,11 +54,7 @@ const Navbar = () => {
       <div className="p-2 py-4 flex items-center justify-between">
         <SidebarTrigger />
         <div className="flex-1 min-w-0 px-4">
-          <Breadcrumbs
-            projectId={projectId}
-            entityDefinitionId={entityDefinitionId}
-            instanceId={instanceId}
-          />
+          <Breadcrumbs />
         </div>
         <div className="flex items-center gap-4">
           <Link href="/">Dashboard</Link>

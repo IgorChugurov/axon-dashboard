@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Plus } from "lucide-react";
 import { DataTableHeader } from "./DataTableHeader";
 import { DataTableToolbar } from "./DataTableToolbar";
 import { DataTablePagination } from "./DataTablePagination";
@@ -254,6 +255,12 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
                 {msg}
               </p>
             ))}
+            {list.showCreateButton && (
+              <Button onClick={handleCreate} className="mt-4">
+                <Plus className="mr-2 h-4 w-4" />
+                {list.createButtonText}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

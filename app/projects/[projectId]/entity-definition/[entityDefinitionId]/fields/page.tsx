@@ -5,7 +5,7 @@ import { getEntityDefinitionById } from "@/lib/universal-entity/config-service";
 import { FieldsListClient } from "@/components/universal-entity-list";
 import fieldsConfig from "@/config/fields.json";
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
-import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
+import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface FieldsPageProps {
   params: Promise<{ projectId: string; entityDefinitionId: string }>;
@@ -38,8 +38,7 @@ export default async function FieldsPage({ params }: FieldsPageProps) {
 
   return (
     <div className="space-y-6">
-      <BreadcrumbsSetter
-        projectId={projectId}
+      <BreadcrumbsCacheUpdater
         entityDefinitionId={entityDefinitionId}
         entityDefinitionName={entityDefinition.name}
       />

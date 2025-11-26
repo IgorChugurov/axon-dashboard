@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/roles";
 import { EntityDefinitionFormUniversal } from "@/components/entity-definition/EntityDefinitionFormUniversal";
 import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
-import { BreadcrumbsSetter } from "@/components/BreadcrumbsSetter";
 
 interface NewEntityDefinitionPageProps {
   params: Promise<{ projectId: string }>;
@@ -38,8 +37,6 @@ export default async function NewEntityDefinitionPage({
 
   return (
     <div className="space-y-6">
-      <BreadcrumbsSetter projectId={projectId} />
-
       <div className="rounded-lg border bg-card p-6">
         <EntityDefinitionFormUniversal
           projectId={projectId}
