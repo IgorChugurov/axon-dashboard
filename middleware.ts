@@ -47,9 +47,16 @@ export async function middleware(request: NextRequest) {
   // ============================================================================
   // ШАГ 2: Публичные маршруты
   // ============================================================================
-  // Для публичных маршрутов просто пропускаем запрос дальше
-  // без проверки авторизации
+  // Для публичных маршрутов проверяем особые случаи
   if (isPublicRoute) {
+    // Редирект авторизованных пользователей с login/signup на главную
+    if (user && (pathname === "/login" || pathname === "/signup")) {
+      const homeUrl = new URL("/", request.url);
+      const redirectResponse = NextResponse.redirect(homeUrl);
+      redirectResponse.headers.set("x-pathname", pathname);
+      return redirectResponse;
+    }
+    
     response.headers.set("x-pathname", pathname);
     return response;
   }

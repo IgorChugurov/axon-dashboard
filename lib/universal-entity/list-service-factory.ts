@@ -19,6 +19,11 @@ import {
 } from "@/lib/projects/client-service";
 import type { Project } from "@/lib/projects/types";
 import {
+  getAdminsFromClient,
+  deleteAdminFromClient,
+} from "@/lib/admins/client-service";
+import type { Admin } from "@/lib/admins/types";
+import {
   getEntityInstancesFromClient,
   deleteEntityInstanceFromClient,
   type RelationFilterInfo,
@@ -258,6 +263,43 @@ export function createProjectListService(): ListService<Project> {
 
   const onDelete = async (id: string) => {
     await deleteProjectFromClient(id);
+  };
+
+  return {
+    onLoadData,
+    onDelete,
+  };
+}
+
+/**
+ * Создает сервис для работы со списком Admins
+ * Примечание: Admins - глобальная сущность, не привязаны к projectId
+ * Доступ контролируется RLS политиками (только superAdmin может видеть/управлять)
+ */
+export function createAdminListService(): ListService<Admin> {
+  const onLoadData: LoadDataFn<Admin> = async (params, _signal) => {
+    const result = await getAdminsFromClient({
+      page: params.page,
+      limit: params.limit,
+      search: params.search,
+      filters: params.filters,
+    });
+
+    return {
+      data: result.data || [],
+      pagination: result.pagination || {
+        page: params.page,
+        limit: params.limit,
+        total: 0,
+        totalPages: 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      },
+    };
+  };
+
+  const onDelete = async (id: string) => {
+    await deleteAdminFromClient(id);
   };
 
   return {

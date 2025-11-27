@@ -1,0 +1,178 @@
+{
+  "comment": "UI Configuration for Admins entity (hardcoded, not from DB)",
+  "entityName": "Admin",
+  "tableName": "admins",
+  "url": "admins",
+  "description": "System administrators with roles",
+  "type": "secondary",
+  "createPermission": "Admin",
+  "readPermission": "Admin",
+  "updatePermission": "Admin",
+  "deletePermission": "Admin",
+  "collectionName": "admins",
+  "apiUrl": "/api/admins",
+  "apiUrlAll": "/api/admins/all",
+  "list": {
+    "pageTitle": "Administrators",
+    "searchPlaceholder": "Search by email or name...",
+    "emptyStateTitle": "No administrators found",
+    "emptyStateMessages": [
+      "Administrators that you add will appear here.",
+      "Add an administrator to get started."
+    ],
+    "showCreateButton": true,
+    "createButtonText": "New administrator",
+    "showSearch": true,
+    "enablePagination": true,
+    "pageSize": 20,
+    "enableFilters": true,
+
+    "searchableFields": ["email", "firstName", "lastName"],
+    "columns": [
+      {
+        "field": "email",
+        "headerName": "Email",
+        "flex": 2,
+        "type": "text"
+      },
+      {
+        "field": "name",
+        "headerName": "Name",
+        "flex": 2,
+        "type": "computed",
+        "computedFrom": ["firstName", "lastName"],
+        "computedTemplate": "{firstName} {lastName}"
+      },
+      {
+        "field": "roleName",
+        "headerName": "Role",
+        "flex": 1,
+        "type": "badge"
+      },
+      {
+        "field": "createdAt",
+        "headerName": "Added",
+        "width": 180,
+        "type": "date"
+      },
+      {
+        "field": "actions",
+        "headerName": "",
+        "type": "actions",
+        "width": 80,
+        "actions": [
+          {
+            "action": "delete",
+            "icon": "trash",
+            "hideIf": {
+              "field": "roleName",
+              "value": "superAdmin"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "form": {
+    "createPageTitle": "Add new administrator",
+    "editPageTitle": "Edit administrator",
+    "pageHeader": "Administrator details",
+    "createButtonLabel": "Add",
+    "updateButtonLabel": "Save",
+    "cancelButtonLabel": "Cancel",
+    "sectionTitles": {
+      "0": "Administrator Information"
+    }
+  },
+  "messages": {
+    "afterCreate": "Administrator added successfully!",
+    "afterUpdate": "Administrator updated successfully!",
+    "afterDelete": "Administrator removed successfully!",
+    "deleteModalTitle": "Remove administrator",
+    "deleteModalText": "Are you sure you want to remove administrator \"{itemName}\"? This action cannot be undone.",
+    "deleteModalButtonText": "Remove",
+    "reloadEvents": {
+      "create": "reloadAdmins",
+      "update": "reloadAdmins",
+      "delete": "reloadAdmins"
+    }
+  },
+  "fields": [
+    {
+      "id": "admin-email",
+      "entityDefinitionId": "admin-config",
+      "name": "email",
+      "dbType": "varchar",
+      "type": "email",
+      "label": "Email",
+      "placeholder": "Enter email address",
+      "description": "Email address of the administrator",
+      "forEditPage": false,
+      "forCreatePage": true,
+      "required": true,
+      "requiredText": "Email is required",
+      "forEditPageDisabled": true,
+      "displayIndex": 0,
+      "displayInTable": true,
+      "sectionIndex": 0,
+      "isOptionTitleField": true,
+      "searchable": true,
+      "relatedEntityDefinitionId": null,
+      "relationFieldId": null,
+      "isRelationSource": false,
+      "selectorRelationId": null,
+      "defaultStringValue": "",
+      "defaultNumberValue": null,
+      "defaultBooleanValue": null,
+      "defaultDateValue": null,
+      "autoPopulate": false,
+      "includeInSinglePma": true,
+      "includeInListPma": true,
+      "includeInSingleSa": true,
+      "includeInListSa": true,
+      "foreignKey": null,
+      "foreignKeyValue": null
+    },
+    {
+      "id": "admin-role",
+      "entityDefinitionId": "admin-config",
+      "name": "roleName",
+      "dbType": "varchar",
+      "type": "select",
+      "label": "Role",
+      "placeholder": "Select role",
+      "description": "Administrator role",
+      "filterableInList": true,
+      "forEditPage": true,
+      "forCreatePage": true,
+      "required": true,
+      "requiredText": "Role is required",
+      "forEditPageDisabled": false,
+      "displayIndex": 1,
+      "displayInTable": true,
+      "sectionIndex": 0,
+      "isOptionTitleField": false,
+      "searchable": false,
+      "relatedEntityDefinitionId": null,
+      "relationFieldId": null,
+      "isRelationSource": false,
+      "selectorRelationId": null,
+      "defaultStringValue": "admin",
+      "defaultNumberValue": null,
+      "defaultBooleanValue": null,
+      "defaultDateValue": null,
+      "autoPopulate": false,
+      "includeInSinglePma": true,
+      "includeInListPma": true,
+      "includeInSingleSa": true,
+      "includeInListSa": true,
+      "foreignKey": null,
+      "foreignKeyValue": null,
+      "options": [
+        { "id": "admin", "name": "Admin" },
+        { "id": "superAdmin", "name": "Super Admin" }
+      ]
+    }
+  ]
+}
+

@@ -106,17 +106,27 @@ export function generateColumnsFromConfig<TData extends { id: string }>(
           header: col.headerName || "",
           enableHiding: false,
           cell: ({ row }) => {
-            const instance = row.original;
+            const instance = row.original as Record<string, unknown>;
 
             // Фильтруем действия, которые должны быть отображены
             const availableActions = col.actions?.filter((action) => {
+              // Проверяем наличие обработчиков
               if (action.action === "edit" && !onEdit) return false;
               if (action.action === "delete" && !onDelete) return false;
               if (action.action === "link" && !onLink) return false;
+              
+              // Проверяем условие hideIf
+              if (action.hideIf) {
+                const fieldValue = instance[action.hideIf.field];
+                if (fieldValue === action.hideIf.value) {
+                  return false; // Скрываем action
+                }
+              }
+              
               return true;
             });
 
-            // Если нет доступных действий, не показываем dropdown
+            // Если нет доступных действий, не показываем dropdown (троеточие)
             if (!availableActions || availableActions.length === 0) {
               return null;
             }

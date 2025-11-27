@@ -85,7 +85,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
     const afterProjectId = pathParts[2]; // Сегмент после projectId
     
     // Проверяем, не является ли это специальным путем
-    if (!["new", "settings"].includes(afterProjectId)) {
+    if (!["new", "settings", "admins"].includes(afterProjectId)) {
       entityDefinitionId = afterProjectId;
       
       // Проверяем дальнейшие сегменты
@@ -193,6 +193,10 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
             label: "Environments",
             href: `/projects/${projectId}/settings/environments`,
           },
+          {
+            label: "Administrators",
+            href: `/projects/${projectId}/admins`,
+          },
         ],
       },
     };
@@ -235,6 +239,26 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         breadcrumbItems.push({ label: environmentName || "Edit" });
         return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
       }
+    }
+
+    // Admins page: /projects/:projectId/admins
+    if (pathname === `/projects/${projectId}/admins`) {
+      breadcrumbItems.push(projectDropdown);
+      breadcrumbItems.push(settingsDropdown);
+      breadcrumbItems.push({ label: "Administrators" });
+      return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
+    }
+
+    // New Admin page: /projects/:projectId/admins/new
+    if (pathname === `/projects/${projectId}/admins/new`) {
+      breadcrumbItems.push(projectDropdown);
+      breadcrumbItems.push(settingsDropdown);
+      breadcrumbItems.push({
+        label: "Administrators",
+        href: `/projects/${projectId}/admins`,
+      });
+      breadcrumbItems.push({ label: "New" });
+      return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
     }
 
     // New Entity Definition: /projects/:projectId/new

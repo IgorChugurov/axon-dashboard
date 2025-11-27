@@ -44,7 +44,7 @@ export default async function RootLayout({
   const pathname = headersList.get("x-pathname") || "";
 
   // Маршруты, для которых не нужна проверка авторизации
-  const publicRoutes = ["/login", "/logout"];
+  const publicRoutes = ["/login", "/logout", "/signup"];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
   );

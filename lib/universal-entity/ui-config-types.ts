@@ -70,6 +70,15 @@ export interface ActionConfig {
   link?: boolean; // Использовать Link вместо модалки
   additionalUrl?: string; // Дополнительный URL (/fields)
   label?: string; // Label for the action
+  
+  /**
+   * Условие для скрытия action на основе данных строки
+   * Если значение поля `field` равно `value`, action скрывается
+   */
+  hideIf?: {
+    field: string; // Имя поля в данных строки
+    value: string | number | boolean; // Значение при котором action скрывается
+  };
 }
 
 // =====================================================
