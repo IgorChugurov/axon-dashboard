@@ -32,6 +32,10 @@ async function loadOptionsForRelation(
   const supabase = createClient();
 
   // 1. Загружаем entity definition и поля
+  type EntityDefRow = {
+    id: string;
+    project_id: string;
+  };
   const { data: entityDef, error: entityDefError } = await supabase
     .from("entity_definition")
     .select("id, project_id")
@@ -45,6 +49,7 @@ async function loadOptionsForRelation(
     );
     return { options: [], titleFieldName: "id" };
   }
+  const typedEntityDef = entityDef as EntityDefRow;
 
   // 2. Загружаем поля для определения title field
   const { data: fields, error: fieldsError } = await supabase
@@ -62,16 +67,27 @@ async function loadOptionsForRelation(
   }
 
   // Находим поле для отображения названия (isOptionTitleField или первое поле)
+  type FieldRow = {
+    id: string;
+    name: string;
+    is_option_title_field: boolean;
+    display_index: number;
+  };
+  const typedFields = (fields || []) as FieldRow[];
   const titleField =
-    fields?.find((f) => f.is_option_title_field) || fields?.[0];
+    typedFields.find((f) => f.is_option_title_field) || typedFields[0];
   const titleFieldName = titleField?.name || "id";
 
   // 3. Загружаем экземпляры
+  type InstanceRow = {
+    id: string;
+    data: Record<string, unknown>;
+  };
   const { data: instances, error: instancesError } = await supabase
     .from("entity_instance")
     .select("id, data")
     .eq("entity_definition_id", relatedEntityDefinitionId)
-    .eq("project_id", entityDef.project_id)
+    .eq("project_id", typedEntityDef.project_id)
     .limit(1000); // TODO: добавить пагинацию если нужно
 
   if (instancesError) {
@@ -83,7 +99,8 @@ async function loadOptionsForRelation(
   }
 
   // 4. Формируем options
-  const options: FieldOption[] = (instances || []).map((instance) => {
+  const typedInstances = (instances || []) as InstanceRow[];
+  const options: FieldOption[] = typedInstances.map((instance) => {
     const data = instance.data as Record<string, unknown>;
     const title = data?.[titleFieldName] || instance.id;
 

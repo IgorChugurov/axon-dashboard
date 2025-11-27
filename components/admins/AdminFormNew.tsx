@@ -1,6 +1,6 @@
 /**
  * Форма создания нового администратора
- * 
+ *
  * Особенности:
  * - Одно поле email для поиска существующего пользователя
  * - Выбор роли (admin/superAdmin)
@@ -40,7 +40,15 @@ interface AdminFormNewProps {
   projectId: string;
 }
 
-type FormState = "idle" | "checking" | "found" | "not_found" | "already_admin" | "creating" | "success" | "error";
+type FormState =
+  | "idle"
+  | "checking"
+  | "found"
+  | "not_found"
+  | "already_admin"
+  | "creating"
+  | "success"
+  | "error";
 
 export function AdminFormNew({ projectId }: AdminFormNewProps) {
   const router = useRouter();
@@ -69,7 +77,7 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
       // Инвалидируем кэш списка админов
       queryClient.invalidateQueries({ queryKey: ["list", projectId, "admin"] });
       setFormState("success");
-      
+
       // Редирект после небольшой задержки
       setTimeout(() => {
         router.push(redirectUrl);
@@ -77,7 +85,11 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
     },
     onError: (error) => {
       setFormState("error");
-      setErrorMessage(error instanceof Error ? error.message : "Failed to create administrator");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to create administrator"
+      );
     },
   });
 
@@ -98,7 +110,9 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
 
       if (!user) {
         setFormState("not_found");
-        setErrorMessage("User not found. The user must register first before being added as an administrator.");
+        setErrorMessage(
+          "User not found. The user must register first before being added as an administrator."
+        );
         return;
       }
 
@@ -116,7 +130,11 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
       setFormState("found");
     } catch (error) {
       setFormState("error");
-      setErrorMessage(error instanceof Error ? error.message : "An error occurred while checking the user");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while checking the user"
+      );
     }
   };
 
@@ -149,7 +167,8 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
             Add New Administrator
           </CardTitle>
           <CardDescription>
-            Enter the email address of an existing user to add them as an administrator.
+            Enter the email address of an existing user to add them as an
+            administrator.
           </CardDescription>
         </CardHeader>
 
@@ -171,14 +190,23 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
                     setErrorMessage(null);
                   }
                 }}
-                disabled={formState === "checking" || formState === "creating" || formState === "success"}
+                disabled={
+                  formState === "checking" ||
+                  formState === "creating" ||
+                  formState === "success"
+                }
                 className="flex-1"
               />
               <Button
                 type="button"
                 variant="secondary"
                 onClick={handleCheckUser}
-                disabled={formState === "checking" || formState === "creating" || formState === "success" || !email.trim()}
+                disabled={
+                  formState === "checking" ||
+                  formState === "creating" ||
+                  formState === "success" ||
+                  !email.trim()
+                }
               >
                 {formState === "checking" ? (
                   <>
@@ -228,7 +256,9 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
               <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0" />
               <div>
                 <p className="font-medium">Administrator Added!</p>
-                <p className="text-sm opacity-90">Redirecting to administrators list...</p>
+                <p className="text-sm opacity-90">
+                  Redirecting to administrators list...
+                </p>
               </div>
             </div>
           )}
@@ -242,7 +272,9 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
                   <p className="font-medium">User Found</p>
                   <p className="text-sm opacity-90">
                     {foundUser.firstName || foundUser.lastName
-                      ? `${foundUser.firstName || ""} ${foundUser.lastName || ""}`.trim()
+                      ? `${foundUser.firstName || ""} ${
+                          foundUser.lastName || ""
+                        }`.trim()
                       : foundUser.email}
                   </p>
                 </div>
@@ -251,7 +283,12 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
               {/* Role Selection */}
               <div className="space-y-2">
                 <Label htmlFor="role">Administrator Role</Label>
-                <Select value={role} onValueChange={(value) => setRole(value as "admin" | "superAdmin")}>
+                <Select
+                  value={role}
+                  onValueChange={(value) =>
+                    setRole(value as "admin" | "superAdmin")
+                  }
+                >
                   <SelectTrigger id="role">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
@@ -279,9 +316,9 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
                 <Button
                   type="button"
                   onClick={handleCreateAdmin}
-                  disabled={formState === "creating"}
+                  disabled={createMutation.isPending}
                 >
-                  {formState === "creating" ? (
+                  {createMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Adding...
@@ -305,4 +342,3 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
     </div>
   );
 }
-

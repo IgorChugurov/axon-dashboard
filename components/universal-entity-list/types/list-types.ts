@@ -39,6 +39,7 @@ export type LoadDataFn<TData> = (
 ) => Promise<LoadDataResult<TData>>;
 
 export type ServiceType =
+  | "admin"
   | "environment"
   | "entity-definition"
   | "entity-instance"

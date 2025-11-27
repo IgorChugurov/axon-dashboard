@@ -107,6 +107,7 @@ export function generateColumnsFromConfig<TData extends { id: string }>(
           enableHiding: false,
           cell: ({ row }) => {
             const instance = row.original as Record<string, unknown>;
+            const instanceId = row.original.id;
 
             // Фильтруем действия, которые должны быть отображены
             const availableActions = col.actions?.filter((action) => {
@@ -114,7 +115,7 @@ export function generateColumnsFromConfig<TData extends { id: string }>(
               if (action.action === "edit" && !onEdit) return false;
               if (action.action === "delete" && !onDelete) return false;
               if (action.action === "link" && !onLink) return false;
-              
+
               // Проверяем условие hideIf
               if (action.hideIf) {
                 const fieldValue = instance[action.hideIf.field];
@@ -122,7 +123,7 @@ export function generateColumnsFromConfig<TData extends { id: string }>(
                   return false; // Скрываем action
                 }
               }
-              
+
               return true;
             });
 
@@ -158,7 +159,7 @@ export function generateColumnsFromConfig<TData extends { id: string }>(
                         return (
                           <DropdownMenuItem
                             key={actionKey}
-                            onClick={() => onEdit?.(instance.id)}
+                            onClick={() => onEdit?.(instanceId)}
                           >
                             <Edit className="h-4 w-4" />
                             Edit
@@ -171,7 +172,7 @@ export function generateColumnsFromConfig<TData extends { id: string }>(
                           <DropdownMenuItem
                             key={actionKey}
                             onClick={() =>
-                              onLink?.(instance.id, action.additionalUrl)
+                              onLink?.(instanceId, action.additionalUrl)
                             }
                           >
                             <List className="h-4 w-4" />
@@ -192,7 +193,7 @@ export function generateColumnsFromConfig<TData extends { id: string }>(
                     {deleteAction && (
                       <DropdownMenuItem
                         variant="destructive"
-                        onClick={() => onDelete?.(instance.id)}
+                        onClick={() => onDelete?.(instanceId)}
                       >
                         <Trash2 className="h-4 w-4" />
                         Delete

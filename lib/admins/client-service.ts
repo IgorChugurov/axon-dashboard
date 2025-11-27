@@ -8,20 +8,22 @@ import type { Admin, AdminsResponse } from "./types";
 
 /**
  * Получение списка администраторов с пагинацией и поиском
- * 
+ *
  * Делает два запроса:
  * 1. Загружает admins с admin_roles
  * 2. Загружает profiles для полученных user_id
- * 
+ *
  * Это необходимо потому что нет прямого FK между admins и profiles
  * (admins.user_id → auth.users.id, а profiles.id = auth.users.id)
  */
-export async function getAdminsFromClient(params: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  filters?: Record<string, string[]>;
-} = {}): Promise<AdminsResponse> {
+export async function getAdminsFromClient(
+  params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    filters?: Record<string, string[]>;
+  } = {}
+): Promise<AdminsResponse> {
   const supabase = createClient();
 
   const page = params.page || 1;
@@ -29,10 +31,8 @@ export async function getAdminsFromClient(params: {
   const offset = (page - 1) * limit;
 
   // Шаг 1: Загружаем admins с admin_roles
-  let query = supabase
-    .from("admins")
-    .select(
-      `
+  let query = supabase.from("admins").select(
+    `
       id,
       user_id,
       role_id,
@@ -43,19 +43,21 @@ export async function getAdminsFromClient(params: {
         description
       )
     `,
-      { count: "exact" }
-    );
+    { count: "exact" }
+  );
 
   // Фильтр по роли (если указан)
   if (params.filters?.roleName && params.filters.roleName.length > 0) {
     // Получаем role_ids для указанных имен ролей
+    type RoleRow = { id: string };
     const { data: roles } = await supabase
       .from("admin_roles")
       .select("id")
       .in("name", params.filters.roleName);
 
     if (roles && roles.length > 0) {
-      const roleIds = roles.map((r) => r.id);
+      const typedRoles = roles as RoleRow[];
+      const roleIds = typedRoles.map((r) => r.id);
       query = query.in("role_id", roleIds);
     }
   }
@@ -67,6 +69,14 @@ export async function getAdminsFromClient(params: {
   query = query.range(offset, offset + limit - 1);
 
   // Выполняем запрос
+  type AdminRow = {
+    id: string;
+    user_id: string;
+    role_id: string;
+    created_at: string;
+    updated_at: string;
+    admin_roles: { name: string; description: string | null } | null;
+  };
   const { data: adminsData, error: adminsError, count } = await query;
 
   if (adminsError) {
@@ -88,29 +98,45 @@ export async function getAdminsFromClient(params: {
     };
   }
 
+  const typedAdminsData = adminsData as AdminRow[];
+
   // Шаг 2: Загружаем profiles для полученных user_id
-  const userIds = adminsData.map((admin) => admin.user_id);
-  
+  const userIds = typedAdminsData.map((admin) => admin.user_id);
+
+  type ProfileRow = {
+    id: string;
+    email: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    avatar_url: string | null;
+  };
   const { data: profilesData, error: profilesError } = await supabase
     .from("profiles")
     .select("id, email, first_name, last_name, avatar_url")
     .in("id", userIds);
 
   if (profilesError) {
-    console.error("[Admins Client Service] Error loading profiles:", profilesError);
+    console.error(
+      "[Admins Client Service] Error loading profiles:",
+      profilesError
+    );
     // Продолжаем без profiles, покажем то что есть
   }
 
   // Создаем map profiles по id для быстрого доступа
-  const profilesMap = new Map<string, {
-    email: string | null;
-    first_name: string | null;
-    last_name: string | null;
-    avatar_url: string | null;
-  }>();
+  const profilesMap = new Map<
+    string,
+    {
+      email: string | null;
+      first_name: string | null;
+      last_name: string | null;
+      avatar_url: string | null;
+    }
+  >();
 
   if (profilesData) {
-    profilesData.forEach((profile) => {
+    const typedProfilesData = profilesData as ProfileRow[];
+    typedProfilesData.forEach((profile) => {
       profilesMap.set(profile.id, {
         email: profile.email,
         first_name: profile.first_name,
@@ -121,9 +147,12 @@ export async function getAdminsFromClient(params: {
   }
 
   // Шаг 3: Объединяем данные
-  let admins: Admin[] = adminsData.map((row) => {
+  let admins: Admin[] = typedAdminsData.map((row) => {
     const profile = profilesMap.get(row.user_id);
-    const adminRole = row.admin_roles as { name: string; description: string | null } | null;
+    const adminRole = row.admin_roles as {
+      name: string;
+      description: string | null;
+    } | null;
 
     return {
       id: row.id,
@@ -220,11 +249,20 @@ export async function getAdminRolesFromClient(): Promise<
  * Поиск пользователя по email в таблице profiles
  * Возвращает профиль пользователя если найден, null если не найден
  */
-export async function findUserByEmail(
-  email: string
-): Promise<{ id: string; email: string; firstName: string | null; lastName: string | null } | null> {
+export async function findUserByEmail(email: string): Promise<{
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+} | null> {
   const supabase = createClient();
 
+  type ProfileRow = {
+    id: string;
+    email: string | null;
+    first_name: string | null;
+    last_name: string | null;
+  };
   const { data, error } = await supabase
     .from("profiles")
     .select("id, email, first_name, last_name")
@@ -240,11 +278,12 @@ export async function findUserByEmail(
     return null;
   }
 
+  const typedData = data as ProfileRow;
   return {
-    id: data.id,
-    email: data.email || email,
-    firstName: data.first_name,
-    lastName: data.last_name,
+    id: typedData.id,
+    email: typedData.email || email,
+    firstName: typedData.first_name,
+    lastName: typedData.last_name,
   };
 }
 
@@ -270,7 +309,7 @@ export async function isUserAlreadyAdmin(userId: string): Promise<boolean> {
 
 /**
  * Создание администратора
- * 
+ *
  * @param userId - ID пользователя из profiles/auth.users
  * @param roleName - Имя роли ('admin' или 'superAdmin')
  * @returns Созданный админ
@@ -282,6 +321,7 @@ export async function createAdminFromClient(
   const supabase = createClient();
 
   // Шаг 1: Получаем role_id по имени роли
+  type RoleRow = { id: string };
   const { data: roleData, error: roleError } = await supabase
     .from("admin_roles")
     .select("id")
@@ -290,53 +330,78 @@ export async function createAdminFromClient(
 
   if (roleError || !roleData) {
     console.error("[Admins Client Service] Get role error:", roleError);
-    throw new Error(`Failed to find role '${roleName}': ${roleError?.message || "Role not found"}`);
+    throw new Error(
+      `Failed to find role '${roleName}': ${
+        roleError?.message || "Role not found"
+      }`
+    );
   }
 
+  const typedRoleData = roleData as RoleRow;
+
   // Шаг 2: Создаем запись в admins
+  type AdminRow = {
+    id: string;
+    user_id: string;
+    role_id: string;
+    created_at: string;
+    updated_at: string;
+  };
   const { data: adminData, error: adminError } = await supabase
     .from("admins")
     .insert({
       user_id: userId,
-      role_id: roleData.id,
-    })
-    .select(`
+      role_id: typedRoleData.id,
+    } as any)
+    .select(
+      `
       id,
       user_id,
       role_id,
       created_at,
       updated_at
-    `)
+    `
+    )
     .single();
 
   if (adminError) {
     console.error("[Admins Client Service] Create admin error:", adminError);
-    
+
     // Проверяем на дубликат
     if (adminError.code === "23505") {
       throw new Error("This user is already an administrator");
     }
-    
+
     throw new Error(`Failed to create admin: ${adminError.message}`);
   }
 
+  const typedAdminData = adminData as AdminRow;
+
   // Шаг 3: Загружаем profile для возврата полных данных
+  type ProfileRow = {
+    email: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    avatar_url: string | null;
+  };
   const { data: profileData } = await supabase
     .from("profiles")
     .select("email, first_name, last_name, avatar_url")
     .eq("id", userId)
     .single();
 
+  const typedProfileData = profileData as ProfileRow | null;
+
   return {
-    id: adminData.id,
-    userId: adminData.user_id,
-    roleId: adminData.role_id,
-    createdAt: adminData.created_at,
-    updatedAt: adminData.updated_at,
-    email: profileData?.email || null,
-    firstName: profileData?.first_name || null,
-    lastName: profileData?.last_name || null,
-    avatarUrl: profileData?.avatar_url || null,
+    id: typedAdminData.id,
+    userId: typedAdminData.user_id,
+    roleId: typedAdminData.role_id,
+    createdAt: typedAdminData.created_at,
+    updatedAt: typedAdminData.updated_at,
+    email: typedProfileData?.email || null,
+    firstName: typedProfileData?.first_name || null,
+    lastName: typedProfileData?.last_name || null,
+    avatarUrl: typedProfileData?.avatar_url || null,
     roleName: roleName,
     roleDescription: null,
   };

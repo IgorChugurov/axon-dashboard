@@ -96,6 +96,8 @@
 | Документ | Описание |
 |----------|----------|
 | [QUICK_START.md](guides/QUICK_START.md) | Быстрый старт с проектом |
+| **[UNIVERSAL_LISTS_GUIDE.md](guides/UNIVERSAL_LISTS_GUIDE.md)** | ⭐ Руководство по универсальным спискам |
+| **[UNIVERSAL_FORMS_GUIDE.md](guides/UNIVERSAL_FORMS_GUIDE.md)** | ⭐ Руководство по универсальным формам |
 | [TESTING_GUIDE.md](guides/TESTING_GUIDE.md) | Руководство по тестированию |
 | [DEBUG_TIPS.md](guides/DEBUG_TIPS.md) | Советы по отладке |
 | [BACKEND_DATA_FORMAT.md](guides/BACKEND_DATA_FORMAT.md) | Формат данных backend |
@@ -128,6 +130,7 @@
 
 | Документ | Описание |
 |----------|----------|
+| **[ROUTES_ANALYSIS.md](reports/ROUTES_ANALYSIS.md)** | ⭐ Анализ использования универсальных компонентов |
 | [AUTH_CLEANUP_REPORT.md](reports/AUTH_CLEANUP_REPORT.md) | Отчет о чистке авторизации |
 | [CLEANUP_RECOMMENDATIONS.md](reports/CLEANUP_RECOMMENDATIONS.md) | Рекомендации по чистке |
 | [ORGANIZATION_REPORT.md](reports/ORGANIZATION_REPORT.md) | Отчет об организации |
@@ -253,6 +256,12 @@ docs/
 
 ### Как показать подтверждение действия пользователю?
 → **[CONFIRMATION_DIALOG.md](components/CONFIRMATION_DIALOG.md)** - используйте `ConfirmationDialog` компонент
+
+### Как создать универсальный список?
+→ **[UNIVERSAL_LISTS_GUIDE.md](guides/UNIVERSAL_LISTS_GUIDE.md)** - полное руководство по спискам
+
+### Как создать универсальную форму?
+→ **[UNIVERSAL_FORMS_GUIDE.md](guides/UNIVERSAL_FORMS_GUIDE.md)** - полное руководство по формам
 
 ---
 
