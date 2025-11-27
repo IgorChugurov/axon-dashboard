@@ -14,6 +14,11 @@ import {
 } from "@/lib/environments/client-service";
 import type { Environment } from "@/lib/environments/types";
 import {
+  getProjectsFromClient,
+  deleteProjectFromClient,
+} from "@/lib/projects/client-service";
+import type { Project } from "@/lib/projects/types";
+import {
   getEntityInstancesFromClient,
   deleteEntityInstanceFromClient,
   type RelationFilterInfo,
@@ -217,6 +222,42 @@ export function createFieldListService(
 
   const onDelete = async (id: string) => {
     await deleteFieldFromClient(id);
+  };
+
+  return {
+    onLoadData,
+    onDelete,
+  };
+}
+
+/**
+ * Создает сервис для работы со списком Projects
+ * Примечание: Projects не привязаны к projectId, поэтому загружаем все проекты
+ */
+export function createProjectListService(): ListService<Project> {
+  const onLoadData: LoadDataFn<Project> = async (params, _signal) => {
+    const result = await getProjectsFromClient({
+      page: params.page,
+      limit: params.limit,
+      search: params.search,
+      filters: params.filters,
+    });
+
+    return {
+      data: result.data || [],
+      pagination: result.pagination || {
+        page: params.page,
+        limit: params.limit,
+        total: 0,
+        totalPages: 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      },
+    };
+  };
+
+  const onDelete = async (id: string) => {
+    await deleteProjectFromClient(id);
   };
 
   return {

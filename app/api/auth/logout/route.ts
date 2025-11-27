@@ -5,6 +5,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { PROJECT_COOKIE_NAME } from "@/lib/projects/cookies";
 
 export async function POST() {
   try {
@@ -22,7 +23,16 @@ export async function POST() {
 
     console.log("[Logout API] Logout successful");
 
-    return NextResponse.json({ success: true });
+    // Создаем ответ и удаляем куку проекта
+    const response = NextResponse.json({ success: true });
+    
+    // Удаляем куку текущего проекта
+    response.cookies.set(PROJECT_COOKIE_NAME, "", {
+      path: "/",
+      maxAge: 0,
+    });
+
+    return response;
   } catch (error: unknown) {
     console.error("[Logout API] Error:", error);
 

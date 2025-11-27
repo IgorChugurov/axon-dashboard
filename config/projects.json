@@ -70,12 +70,50 @@
     "afterUpdate": "Project updated successfully!",
     "afterDelete": "Project deleted successfully!",
     "deleteModalTitle": "Confirm deleting project",
-    "deleteModalText": "Are you sure you want to delete project \"{itemName}\"? This action cannot be undone.",
+    "deleteModalText": "Are you sure you want to delete project \"{itemName}\"? This will also delete all related data (entity definitions, instances, environments). This action cannot be undone.",
     "deleteModalButtonText": "Delete",
+    "deleteConfirmWord": true,
     "reloadEvents": {
       "create": "reloadProjects",
       "update": "reloadProjects",
       "delete": "reloadProjects"
     }
-  }
+  },
+  "fields": [
+    {
+      "id": "project-name",
+      "entityDefinitionId": "project-config",
+      "name": "name",
+      "dbType": "varchar",
+      "type": "text",
+      "label": "Name",
+      "placeholder": "Enter project name",
+      "description": "Name of the project",
+      "forEditPage": true,
+      "forCreatePage": true,
+      "required": true,
+      "requiredText": "Name is required",
+      "forEditPageDisabled": false,
+      "displayIndex": 0,
+      "displayInTable": true,
+      "sectionIndex": 0,
+      "isOptionTitleField": true,
+      "searchable": true,
+      "relatedEntityDefinitionId": null,
+      "relationFieldId": null,
+      "isRelationSource": false,
+      "selectorRelationId": null,
+      "defaultStringValue": "",
+      "defaultNumberValue": null,
+      "defaultBooleanValue": null,
+      "defaultDateValue": null,
+      "autoPopulate": false,
+      "includeInSinglePma": true,
+      "includeInListPma": true,
+      "includeInSingleSa": true,
+      "includeInListSa": true,
+      "foreignKey": null,
+      "foreignKeyValue": null
+    }
+  ]
 }

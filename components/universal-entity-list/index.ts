@@ -8,6 +8,7 @@ export { EnvironmentsListClient } from "./EnvironmentsListClient";
 export { EntityDefinitionsListClient } from "./EntityDefinitionsListClient";
 export { FieldsListClient } from "./FieldsListClient";
 export { EntityInstancesListClient } from "./EntityInstancesListClient";
+export { ProjectsListClient } from "./ProjectsListClient";
 export { DataTablePagination } from "./DataTablePagination";
 export { DataTableHeader } from "./DataTableHeader";
 export { DataTableToolbar } from "./DataTableToolbar";

@@ -6,14 +6,21 @@ export interface Project {
   name: string;
   description: string | null;
   status: string;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateProjectData {
   name: string;
-  description?: string;
+  description?: string | null;
+  status?: string;
+}
+
+export interface UpdateProjectData {
+  name?: string;
+  description?: string | null;
+  status?: string;
 }
 
 export interface ProjectsResponse {

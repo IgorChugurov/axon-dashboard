@@ -1,4 +1,11 @@
-import { ProjectSettingsTab } from "./ProjectSettingsTab";
+/**
+ * Страница настроек проекта
+ * Использует UniversalEntityFormNew для редактирования данных проекта
+ */
+
+import { notFound } from "next/navigation";
+import { ProjectFormNew } from "@/components/projects/ProjectFormNew";
+import { projectsService } from "@/lib/entities/projects/service";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Settings } from "lucide-react";
@@ -11,6 +18,13 @@ export default async function ProjectSettingsPage({
   params,
 }: ProjectSettingsPageProps) {
   const { projectId } = await params;
+
+  // Получаем данные проекта
+  const project = await projectsService.getById(projectId);
+
+  if (!project) {
+    notFound();
+  }
 
   return (
     <div className="space-y-6">
@@ -29,7 +43,15 @@ export default async function ProjectSettingsPage({
         </Button>
       </div>
 
-      <ProjectSettingsTab projectId={projectId} />
+      <ProjectFormNew
+        mode="edit"
+        projectId={projectId}
+        initialData={{
+          name: project.name,
+          description: project.description,
+          status: project.status,
+        }}
+      />
     </div>
   );
 }

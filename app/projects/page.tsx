@@ -1,62 +1,24 @@
-import { projectsService } from "@/lib/entities/projects/service";
-import { ProjectsList } from "@/components/ProjectsList";
-import { Suspense } from "react";
+import { ProjectsListClient } from "@/components/universal-entity-list/ProjectsListClient";
+import projectsConfig from "@/config/projects.json";
+import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 
 /**
- * Projects Page - SSR для первой загрузки
+ * Projects Page - Список проектов
  *
- * Эта страница:
- * 1. Рендерится на сервере (SSR) при первом заходе
- * 2. Поддерживает URL параметры: ?page=2&search=test
- * 3. После hydration работает как SPA (без перезагрузки)
- * 4. Использует универсальную систему entity-service
+ * Использует универсальный компонент списка ProjectsListClient
+ * для отображения и управления проектами.
  */
-
-interface ProjectsPageProps {
-  searchParams: Promise<{
-    page?: string;
-    search?: string;
-  }>;
-}
-
-export default async function ProjectsPage({
-  searchParams,
-}: ProjectsPageProps) {
-  // Парсим параметры из URL (await для Next.js 15)
-  const params = await searchParams;
-  const page = parseInt(params.page || "1", 10);
-  const search = params.search || "";
-
-  // SSR: Получаем проекты на сервере через универсальный сервис
-  const { data: projects, pagination } = await projectsService.getAll({
-    page,
-    search,
-    limit: 10,
-  });
-
+export default function ProjectsPage() {
   return (
     <div className="space-y-6">
-      <p className="text-muted-foreground">
-        Manage your projects and track their progress
-      </p>
-
-      <Suspense fallback={<ProjectsListSkeleton />}>
-        <ProjectsList
-          initialData={projects}
-          initialPagination={pagination || undefined}
-          initialSearch={search}
-        />
-      </Suspense>
-    </div>
-  );
-}
-
-// Skeleton loader для Suspense
-function ProjectsListSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="h-10 bg-muted animate-pulse rounded" />
-      <div className="h-64 bg-muted animate-pulse rounded" />
+      <ProjectsListClient
+        config={projectsConfig as unknown as EntityConfigFile}
+        routing={{
+          createUrlTemplate: "/projects/new",
+          editUrlTemplate: "/projects/{instanceId}/settings",
+          detailsUrlTemplate: "/projects/{instanceId}",
+        }}
+      />
     </div>
   );
 }

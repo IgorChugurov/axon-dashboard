@@ -42,7 +42,8 @@ export type ServiceType =
   | "environment"
   | "entity-definition"
   | "entity-instance"
-  | "field";
+  | "field"
+  | "project";
 
 export interface RoutingConfig {
   createUrlTemplate: string;

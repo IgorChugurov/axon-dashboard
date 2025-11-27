@@ -2,6 +2,7 @@ import React, { type ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getFullConfig } from "@/lib/universal-entity/config-service";
 import { EntityDefinitionsProvider } from "@/components/providers/EntityDefinitionsProvider";
+import { ProjectCookieSetter } from "@/components/providers/ProjectCookieSetter";
 import { createClient } from "@/lib/supabase/server";
 
 interface ProjectLayoutProps {
@@ -42,6 +43,8 @@ export default async function ProjectLayout({
       fields={fields}
       projectId={projectId}
     >
+      {/* Устанавливаем куку текущего проекта */}
+      <ProjectCookieSetter projectId={projectId} />
       {children}
     </EntityDefinitionsProvider>
   );

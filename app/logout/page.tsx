@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { clearCurrentProjectCookie } from "@/lib/projects/cookies";
 
 export default function LogoutPage() {
   const router = useRouter();
@@ -9,6 +10,9 @@ export default function LogoutPage() {
   useEffect(() => {
     const handleLogout = async () => {
       try {
+        // Очищаем куку проекта на клиенте
+        clearCurrentProjectCookie();
+        
         // Выход через Next.js API Route
         await fetch("/api/auth/logout", {
           method: "POST",
