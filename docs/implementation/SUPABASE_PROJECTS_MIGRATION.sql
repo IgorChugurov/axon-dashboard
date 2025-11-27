@@ -31,16 +31,11 @@ ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 -- ============================================
 
 -- Политика: Админы (admin и superAdmin) могут видеть все проекты
+-- Используем функцию is_admin() с SECURITY DEFINER для обхода RLS
 CREATE POLICY "Admins can view all projects"
   ON public.projects
   FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1
-      FROM public.admins
-      WHERE user_id = auth.uid()
-    )
-  );
+  USING (public.is_admin(auth.uid()));
 
 -- Политика: Обычные пользователи могут видеть только свои проекты
 CREATE POLICY "Users can view own projects"
@@ -49,16 +44,11 @@ CREATE POLICY "Users can view own projects"
   USING (created_by = auth.uid());
 
 -- Политика: Админы могут создавать проекты
+-- Используем функцию is_admin() с SECURITY DEFINER для обхода RLS
 CREATE POLICY "Admins can create projects"
   ON public.projects
   FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1
-      FROM public.admins
-      WHERE user_id = auth.uid()
-    )
-  );
+  WITH CHECK (public.is_admin(auth.uid()));
 
 -- Политика: Пользователи могут создавать свои проекты
 CREATE POLICY "Users can create own projects"
@@ -67,16 +57,11 @@ CREATE POLICY "Users can create own projects"
   WITH CHECK (created_by = auth.uid());
 
 -- Политика: Админы могут обновлять все проекты
+-- Используем функцию is_admin() с SECURITY DEFINER для обхода RLS
 CREATE POLICY "Admins can update all projects"
   ON public.projects
   FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1
-      FROM public.admins
-      WHERE user_id = auth.uid()
-    )
-  );
+  USING (public.is_admin(auth.uid()));
 
 -- Политика: Пользователи могут обновлять только свои проекты
 CREATE POLICY "Users can update own projects"
@@ -85,16 +70,11 @@ CREATE POLICY "Users can update own projects"
   USING (created_by = auth.uid());
 
 -- Политика: Админы могут удалять все проекты
+-- Используем функцию is_admin() с SECURITY DEFINER для обхода RLS
 CREATE POLICY "Admins can delete all projects"
   ON public.projects
   FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1
-      FROM public.admins
-      WHERE user_id = auth.uid()
-    )
-  );
+  USING (public.is_admin(auth.uid()));
 
 -- Политика: Пользователи могут удалять только свои проекты
 CREATE POLICY "Users can delete own projects"

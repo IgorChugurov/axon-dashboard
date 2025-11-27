@@ -114,6 +114,13 @@ CREATE POLICY "Only super admins can delete admins"
     )
   );
 
+-- Политика: пользователь может видеть свою собственную запись в admins
+-- (необходимо для работы функции get_user_role, чтобы пользователь мог проверить свою роль)
+CREATE POLICY "Users can view own admin record"
+  ON public.admins
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
 -- ============================================
 -- 5. ФУНКЦИЯ ДЛЯ АВТОМАТИЧЕСКОГО ОБНОВЛЕНИЯ updated_at
 -- ============================================
