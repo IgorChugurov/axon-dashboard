@@ -16,6 +16,7 @@ import type { Environment } from "@/lib/environments/types";
 import {
   getEntityInstancesFromClient,
   deleteEntityInstanceFromClient,
+  type RelationFilterInfo,
 } from "./instance-client-service";
 import {
   getEntityDefinitionsFromClient,
@@ -83,10 +84,10 @@ export function createEnvironmentListService(
  *
  * @param entityDefinitionId - ID определения сущности
  * @param projectId - ID проекта
- * @param includeRelations - Опциональный массив имен полей-связей для загрузки
- *                          Если не указан, связи не загружаются
- *                          Если указан, загружаются только указанные связи
- * @param relationsAsIds - Если true, связи возвращаются как массивы ID, иначе как полные объекты
+ * @param options.includeRelations - Массив имен полей-связей для загрузки
+ * @param options.relationsAsIds - Если true, связи возвращаются как массивы ID
+ * @param options.relationFilters - Информация о relation-полях для фильтрации
+ * @param options.searchableFields - Поля для поиска в JSONB
  */
 export function createEntityInstanceListService(
   entityDefinitionId: string,
@@ -94,12 +95,23 @@ export function createEntityInstanceListService(
   options?: {
     includeRelations?: string[]; // имена полей для загрузки связей
     relationsAsIds?: boolean; // если true, связи как ID, иначе как объекты
+    relationFilters?: RelationFilterInfo[]; // информация о relation-полях для фильтрации
+    searchableFields?: string[]; // поля для поиска в JSONB
   }
 ): ListService<EntityInstanceWithFields> {
   const onLoadData: LoadDataFn<EntityInstanceWithFields> = async (
     params,
     _signal
   ) => {
+    // Определяем режим фильтрации для relation-полей
+    // По умолчанию используем 'any', но можно переопределить через filterModes
+    const relationFilterMode =
+      params.filterModes && Object.keys(params.filterModes).length > 0
+        ? // Если есть filterModes, берем режим первого relation-фильтра
+          // (предполагаем, что все relation-фильтры используют один режим)
+          (Object.values(params.filterModes)[0] as "any" | "all")
+        : "any";
+
     const result = await getEntityInstancesFromClient(
       entityDefinitionId,
       projectId,
@@ -107,7 +119,10 @@ export function createEntityInstanceListService(
         page: params.page,
         limit: params.limit,
         search: params.search,
+        searchableFields: options?.searchableFields,
         filters: params.filters,
+        relationFilters: options?.relationFilters,
+        relationFilterMode,
         includeRelations: options?.includeRelations,
         relationsAsIds: options?.relationsAsIds,
       }

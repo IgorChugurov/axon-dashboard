@@ -2,6 +2,7 @@
  * Компонент фильтра с множественным выбором (faceted filter)
  * Адаптирован для серверной фильтрации
  * Использует кастомный список вместо Command
+ * Поддерживает переключение режима фильтрации: ANY (хотя бы один) / ALL (все)
  */
 
 import * as React from "react";
@@ -16,6 +17,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import type { FilterMode } from "./types/list-types";
 
 interface DataTableFacetedFilterProps {
   title?: string;
@@ -26,6 +30,12 @@ interface DataTableFacetedFilterProps {
   }[];
   value?: string[]; // Массив выбранных значений
   onChange?: (value: string[]) => void;
+  /** Показывать toggle для режима фильтрации */
+  showModeToggle?: boolean;
+  /** Текущий режим фильтрации: 'any' (по умолчанию) или 'all' */
+  filterMode?: FilterMode;
+  /** Callback при изменении режима фильтрации */
+  onFilterModeChange?: (mode: FilterMode) => void;
 }
 
 export function DataTableFacetedFilter({
@@ -33,9 +43,20 @@ export function DataTableFacetedFilter({
   options,
   value = [],
   onChange,
+  showModeToggle = false,
+  filterMode = "any",
+  onFilterModeChange,
 }: DataTableFacetedFilterProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+
+  // Обработчик переключения режима фильтрации
+  const handleModeToggle = React.useCallback(
+    (checked: boolean) => {
+      onFilterModeChange?.(checked ? "all" : "any");
+    },
+    [onFilterModeChange]
+  );
 
   // Используем useMemo для создания Set из value, чтобы он обновлялся при изменении value
   const selectedValues = React.useMemo(() => new Set(value), [value]);
@@ -174,10 +195,31 @@ export function DataTableFacetedFilter({
           )}
         </div>
 
-        {/* Кнопка очистки фильтров */}
+        {/* Toggle режима фильтрации и кнопка очистки */}
         {selectedValues.size > 0 && (
           <>
             <Separator />
+            {/* Toggle режима фильтрации: ANY / ALL */}
+            {showModeToggle && selectedValues.size > 1 && (
+              <div className="flex items-center justify-between px-3 py-2 border-b">
+                <Label
+                  htmlFor="filter-mode-toggle"
+                  className="text-xs text-muted-foreground cursor-pointer"
+                >
+                  {filterMode === "any" ? "Any of" : "All of"}
+                </Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Any</span>
+                  <Switch
+                    id="filter-mode-toggle"
+                    checked={filterMode === "all"}
+                    onCheckedChange={handleModeToggle}
+                    className="h-4 w-7 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input"
+                  />
+                  <span className="text-xs text-muted-foreground">All</span>
+                </div>
+              </div>
+            )}
             <div className="p-1">
               <button
                 type="button"

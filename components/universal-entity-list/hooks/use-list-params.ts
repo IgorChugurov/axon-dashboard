@@ -54,16 +54,26 @@ export function useListParams({
   const urlLimit = searchParams.get("limit");
   // URLSearchParams автоматически декодирует кириллические символы при get()
   const urlSearch = searchParams.get("search");
-  
+
   // Читаем фильтры из URL (формат: ?type=string,number)
+  // и режимы фильтрации (формат: ?filterMode_fieldName=all)
   const urlFilters: Record<string, string[]> = {};
+  const urlFilterModes: Record<string, "any" | "all"> = {};
   searchParams.forEach((value, key) => {
     // Пропускаем стандартные параметры
     if (key !== "page" && key !== "limit" && key !== "search") {
-      // Разделяем значения через запятую
-      const values = value.split(",").filter(Boolean);
-      if (values.length > 0) {
-        urlFilters[key] = values;
+      // Проверяем, это режим фильтрации?
+      if (key.startsWith("filterMode_")) {
+        const fieldName = key.replace("filterMode_", "");
+        if (value === "all" || value === "any") {
+          urlFilterModes[fieldName] = value;
+        }
+      } else {
+        // Это обычный фильтр
+        const values = value.split(",").filter(Boolean);
+        if (values.length > 0) {
+          urlFilters[key] = values;
+        }
       }
     }
   });
@@ -92,6 +102,8 @@ export function useListParams({
     limit: urlLimitParsed,
     search: urlSearchParsed || undefined,
     filters: Object.keys(urlFilters).length > 0 ? urlFilters : undefined,
+    filterModes:
+      Object.keys(urlFilterModes).length > 0 ? urlFilterModes : undefined,
   }));
 
   // Состояние для поиска в UI (отдельно для debounce)
@@ -100,11 +112,12 @@ export function useListParams({
 
   // Функция для обновления URL без SSR (через window.history.pushState)
   const updateURL = useCallback(
-    (updates: { 
-      page?: number; 
-      limit?: number; 
+    (updates: {
+      page?: number;
+      limit?: number;
       search?: string;
       filters?: Record<string, string[]>;
+      filterModes?: Record<string, "any" | "all">;
     }) => {
       // Используем window.location.search для получения актуальных параметров из URL
       // Это гарантирует, что мы всегда работаем с актуальными данными, а не с устаревшим searchParams
@@ -144,10 +157,15 @@ export function useListParams({
 
       // Обновляем фильтры
       if (updates.filters !== undefined) {
-        // Удаляем все существующие фильтры (кроме стандартных параметров)
+        // Удаляем все существующие фильтры (кроме стандартных параметров и filterMode_*)
         const keysToDelete: string[] = [];
         currentParams.forEach((_, key) => {
-          if (key !== "page" && key !== "limit" && key !== "search") {
+          if (
+            key !== "page" &&
+            key !== "limit" &&
+            key !== "search" &&
+            !key.startsWith("filterMode_")
+          ) {
             keysToDelete.push(key);
           }
         });
@@ -159,6 +177,30 @@ export function useListParams({
             if (values && values.length > 0) {
               // Объединяем значения через запятую
               currentParams.set(key, values.join(","));
+            }
+          });
+        }
+      }
+
+      // Обновляем режимы фильтрации
+      if (updates.filterModes !== undefined) {
+        // Удаляем все существующие filterMode_* параметры
+        const keysToDelete: string[] = [];
+        currentParams.forEach((_, key) => {
+          if (key.startsWith("filterMode_")) {
+            keysToDelete.push(key);
+          }
+        });
+        keysToDelete.forEach((key) => currentParams.delete(key));
+
+        // Добавляем новые режимы (только если != 'any', т.к. 'any' - дефолт)
+        if (
+          updates.filterModes &&
+          Object.keys(updates.filterModes).length > 0
+        ) {
+          Object.entries(updates.filterModes).forEach(([fieldName, mode]) => {
+            if (mode === "all") {
+              currentParams.set(`filterMode_${fieldName}`, mode);
             }
           });
         }
@@ -189,11 +231,12 @@ export function useListParams({
       }));
 
       // Подготавливаем обновления для URL (односторонняя синхронизация)
-      const urlUpdates: { 
-        page?: number; 
-        limit?: number; 
+      const urlUpdates: {
+        page?: number;
+        limit?: number;
         search?: string;
         filters?: Record<string, string[]>;
+        filterModes?: Record<string, "any" | "all">;
       } = {};
 
       if (updates.page !== undefined) {
@@ -210,6 +253,10 @@ export function useListParams({
 
       if (updates.filters !== undefined) {
         urlUpdates.filters = updates.filters;
+      }
+
+      if (updates.filterModes !== undefined) {
+        urlUpdates.filterModes = updates.filterModes;
       }
 
       // Обновляем URL для синхронизации (асинхронно, не блокирует)
@@ -286,13 +333,23 @@ export function useListParams({
 
       const urlSearchParsed = urlSearch || "";
 
-      // Читаем фильтры из URL
+      // Читаем фильтры и режимы фильтрации из URL
       const urlFiltersParsed: Record<string, string[]> = {};
+      const urlFilterModesParsed: Record<string, "any" | "all"> = {};
       urlParams.forEach((value, key) => {
         if (key !== "page" && key !== "limit" && key !== "search") {
-          const values = value.split(",").filter(Boolean);
-          if (values.length > 0) {
-            urlFiltersParsed[key] = values;
+          // Проверяем, это режим фильтрации?
+          if (key.startsWith("filterMode_")) {
+            const fieldName = key.replace("filterMode_", "");
+            if (value === "all" || value === "any") {
+              urlFilterModesParsed[fieldName] = value;
+            }
+          } else {
+            // Это обычный фильтр
+            const values = value.split(",").filter(Boolean);
+            if (values.length > 0) {
+              urlFiltersParsed[key] = values;
+            }
           }
         }
       });
@@ -301,7 +358,14 @@ export function useListParams({
         page: urlPageParsed,
         limit: urlLimitParsed,
         search: urlSearchParsed || undefined,
-        filters: Object.keys(urlFiltersParsed).length > 0 ? urlFiltersParsed : undefined,
+        filters:
+          Object.keys(urlFiltersParsed).length > 0
+            ? urlFiltersParsed
+            : undefined,
+        filterModes:
+          Object.keys(urlFilterModesParsed).length > 0
+            ? urlFilterModesParsed
+            : undefined,
       });
 
       setSearchInputState(urlSearchParsed);

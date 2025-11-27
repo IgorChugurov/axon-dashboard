@@ -60,7 +60,7 @@ export default async function RootLayout({
     // Загружаем все проекты для отображения в сайдбаре
     try {
       projects = await getAllProjectsFromSupabase();
-      console.log("[Layout] Loaded projects:", projects.length);
+      //console.log("[Layout] Loaded projects:", projects.length);
     } catch (error) {
       console.error("[Layout] Error loading projects:", error);
       // Не блокируем рендер, если не удалось загрузить проекты

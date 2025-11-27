@@ -149,10 +149,37 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
   // Не показываем empty состояние во время загрузки (если данные уже были загружены)
   const isInitialLoading =
     isLoading && data.length === 0 && !hasLoadedOnceRef.current;
-  // Не показываем empty во время загрузки (даже если данные уже были загружены)
-  const isEmpty = !isLoading && !hasError && data.length === 0 && !searchInput;
-  const isSearchEmpty =
-    !isLoading && !hasError && data.length === 0 && !!searchInput;
+
+  // Проверяем наличие активных фильтров или поиска
+  const hasActiveFilters =
+    params.filters && Object.keys(params.filters).length > 0;
+  const hasSearchOrFilters = !!searchInput || hasActiveFilters;
+
+  // Проверяем, есть ли поиск в params (уже отправлен на сервер)
+  // Это нужно чтобы не мигать empty state при очистке поиска
+  const hasServerSearch = !!params.search;
+
+  // isEmpty: список пуст И нет поиска И нет активных фильтров И не загружается
+  // Показываем компонент с кнопкой "создать"
+  // Добавляем проверку isFetching чтобы не мигать при переходе между состояниями
+  const isEmpty =
+    !isLoading &&
+    !isFetching &&
+    !hasError &&
+    data.length === 0 &&
+    !hasSearchOrFilters &&
+    !hasServerSearch;
+
+  // isFilteredEmpty: список пуст при наличии поиска ИЛИ фильтров
+  // Показываем таблицу с фильтрами и сообщение "нет элементов"
+  // Не показываем если идёт загрузка (isFetching)
+  const isFilteredEmpty =
+    !isLoading &&
+    !isFetching &&
+    !hasError &&
+    data.length === 0 &&
+    (hasSearchOrFilters || hasServerSearch);
+
   const hasData =
     (!isLoading || hasLoadedOnceRef.current) && !hasError && data.length > 0;
 
@@ -199,6 +226,11 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
 
   const handleClearSearch = () => {
     setSearchInput("");
+  };
+
+  const handleClearFilters = () => {
+    setSearchInput("");
+    setParams({ filters: undefined, filterModes: undefined, page: 1 });
   };
 
   // =====================================================
@@ -301,19 +333,33 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
           onFiltersChange={(newFilters) => {
             setParams({ filters: newFilters, page: 1 }); // Сбрасываем на первую страницу при изменении фильтров
           }}
+          filterModes={params.filterModes}
+          onFilterModesChange={(newModes) => {
+            setParams({ filterModes: newModes, page: 1 }); // Сбрасываем на первую страницу при изменении режима
+          }}
           showCreateButton={list.showCreateButton}
           createButtonText={list.createButtonText}
           onCreate={handleCreate}
         />
 
-        {/* SEARCH_EMPTY - Поиск выполнен, но результатов нет */}
-        {isSearchEmpty && (
+        {/* FILTERED_EMPTY - Поиск/фильтры применены, но результатов нет */}
+        {isFilteredEmpty && (
           <div className="text-center py-8 border rounded-lg">
             <p className="text-muted-foreground">
-              No results found for &quot;{searchInput}&quot;
+              {searchInput
+                ? `No results found for "${searchInput}"`
+                : "No items match the selected filters"}
             </p>
-            <Button variant="link" onClick={handleClearSearch} className="mt-2">
-              Clear search
+            <Button
+              variant="link"
+              onClick={handleClearFilters}
+              className="mt-2"
+            >
+              {searchInput && hasActiveFilters
+                ? "Clear search and filters"
+                : searchInput
+                ? "Clear search"
+                : "Clear filters"}
             </Button>
           </div>
         )}

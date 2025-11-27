@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Plus } from "lucide-react";
 import { DataTableFacetedFilter } from "./DataTableFacetedFilter";
 import type { Field } from "@/lib/universal-entity/types";
+import type { FilterMode } from "./types/list-types";
 
 interface DataTableToolbarProps {
   searchValue: string;
@@ -19,6 +20,9 @@ interface DataTableToolbarProps {
   fields?: Field[]; // Поля для генерации фильтров
   filters?: Record<string, string[]>; // Текущие значения фильтров
   onFiltersChange?: (filters: Record<string, string[]>) => void;
+  // Режимы фильтрации для каждого поля
+  filterModes?: Record<string, FilterMode>;
+  onFilterModesChange?: (modes: Record<string, FilterMode>) => void;
   // Кнопка создания
   showCreateButton?: boolean;
   createButtonText?: string;
@@ -34,6 +38,8 @@ export function DataTableToolbar({
   fields = [],
   filters = {},
   onFiltersChange,
+  filterModes = {},
+  onFilterModesChange,
   showCreateButton = false,
   createButtonText = "Create",
   onCreate,
@@ -44,9 +50,18 @@ export function DataTableToolbar({
       field.filterableInList && field.options && field.options.length > 0
   );
 
+  // Проверяем, является ли поле relation-полем (для показа toggle режима)
+  const isRelationField = (field: Field): boolean => {
+    return (
+      field.dbType === "manyToOne" ||
+      field.dbType === "oneToOne" ||
+      field.dbType === "manyToMany" ||
+      field.dbType === "oneToMany"
+    );
+  };
+
   // Обработчик изменения фильтра для конкретного поля
   const handleFilterChange = (fieldName: string, value: string[]) => {
-    console.log("handleFilterChange", fieldName, value);
     const newFilters = { ...filters };
     if (value.length === 0) {
       delete newFilters[fieldName];
@@ -54,6 +69,12 @@ export function DataTableToolbar({
       newFilters[fieldName] = value;
     }
     onFiltersChange?.(newFilters);
+  };
+
+  // Обработчик изменения режима фильтрации для конкретного поля
+  const handleFilterModeChange = (fieldName: string, mode: FilterMode) => {
+    const newModes = { ...filterModes, [fieldName]: mode };
+    onFilterModesChange?.(newModes);
   };
 
   const hasFilters = enableFilters && filterableFields.length > 0;
@@ -88,6 +109,9 @@ export function DataTableToolbar({
                   value: opt.id,
                 })) || [];
 
+              // Для relation-полей показываем toggle режима фильтрации
+              const showModeToggle = isRelationField(field);
+
               return (
                 <DataTableFacetedFilter
                   key={field.name}
@@ -95,6 +119,11 @@ export function DataTableToolbar({
                   options={options}
                   value={filters[field.name] || []}
                   onChange={(value) => handleFilterChange(field.name, value)}
+                  showModeToggle={showModeToggle}
+                  filterMode={filterModes[field.name] || "any"}
+                  onFilterModeChange={(mode) =>
+                    handleFilterModeChange(field.name, mode)
+                  }
                 />
               );
             })}

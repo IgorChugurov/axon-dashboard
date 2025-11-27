@@ -32,9 +32,9 @@ export default async function ProjectLayout({
     projectId
   );
 
-  console.log(
-    `[ProjectLayout] Loaded ${entityDefinitions.length} entity definitions with ${fields.length} fields for project ${projectId}`
-  );
+  // console.log(
+  //   `[ProjectLayout] Loaded ${entityDefinitions.length} entity definitions with ${fields.length} fields for project ${projectId}`
+  // );
 
   return (
     <EntityDefinitionsProvider

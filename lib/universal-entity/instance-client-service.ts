@@ -121,6 +121,21 @@ export interface EntityInstancesResponse {
 }
 
 /**
+ * Информация о фильтре для relation-поля
+ */
+export interface RelationFilterInfo {
+  fieldName: string;
+  fieldId: string; // ID поля в таблице field
+}
+
+/**
+ * Режим фильтрации для relation полей
+ * - 'any': хотя бы одно из выбранных значений (OR) - по умолчанию
+ * - 'all': все выбранные значения (AND)
+ */
+export type RelationFilterMode = "any" | "all";
+
+/**
  * Получение списка entity instances для проекта с пагинацией, поиском и фильтрами
  * Используется в Client Components для SPA навигации
  */
@@ -131,7 +146,10 @@ export async function getEntityInstancesFromClient(
     page?: number;
     limit?: number;
     search?: string;
+    searchableFields?: string[]; // поля для поиска в JSONB (по умолчанию ["name"])
     filters?: Record<string, string[]>;
+    relationFilters?: RelationFilterInfo[]; // информация о relation-полях для фильтрации
+    relationFilterMode?: RelationFilterMode; // режим фильтрации: 'any' (по умолчанию) или 'all'
     includeRelations?: string[]; // имена полей для загрузки связей
     relationsAsIds?: boolean; // если true, связи как ID, иначе как объекты
   } = {}
@@ -142,41 +160,242 @@ export async function getEntityInstancesFromClient(
   const limit = params.limit || 20;
   const offset = (page - 1) * limit;
 
-  // Начинаем запрос
-  let query = supabase
-    .from("entity_instance")
-    .select("*", { count: "exact" })
-    .eq("entity_definition_id", entityDefinitionId)
-    .eq("project_id", projectId);
+  // Разделяем фильтры на обычные (JSONB) и relation-фильтры
+  const relationFilterFieldNames = new Set(
+    (params.relationFilters || []).map((rf) => rf.fieldName)
+  );
 
-  // Поиск по полям в JSONB (если указан)
-  if (params.search) {
-    // Поиск по всем текстовым полям в data JSONB
-    // Используем ilike для поиска в JSONB
-    query = query.or(`data.ilike.%${params.search}%`);
-  }
+  const jsonbFilters: Record<string, string[]> = {};
+  const relationFiltersToApply: Array<{
+    fieldName: string;
+    fieldId: string;
+    values: string[];
+  }> = [];
 
-  // Применяем фильтры
   if (params.filters) {
     Object.entries(params.filters).forEach(([fieldName, values]) => {
       if (values && values.length > 0) {
-        // Для множественного выбора используем .in() на JSONB поле
-        // Формат: data->>'fieldName' IN (values)
-        query = query.or(
-          values.map((v) => `data->>${fieldName}.eq.${v}`).join(",")
-        );
+        if (relationFilterFieldNames.has(fieldName)) {
+          // Это relation-фильтр
+          const relationInfo = params.relationFilters?.find(
+            (rf) => rf.fieldName === fieldName
+          );
+          if (relationInfo) {
+            relationFiltersToApply.push({
+              fieldName,
+              fieldId: relationInfo.fieldId,
+              values,
+            });
+          }
+        } else {
+          // Это обычный JSONB-фильтр
+          jsonbFilters[fieldName] = values;
+        }
       }
     });
   }
 
-  // Сортировка по created_at
-  query = query.order("created_at", { ascending: false });
+  // Если есть relation-фильтры, сначала получаем ID экземпляров из entity_relation
+  let allowedInstanceIds: string[] | null = null;
 
-  // Применяем пагинацию
-  query = query.range(offset, offset + limit - 1);
+  if (relationFiltersToApply.length > 0) {
+    const filterMode = params.relationFilterMode || "any";
 
-  // Выполняем запрос
-  const { data, error, count } = await query;
+    if (filterMode === "any") {
+      // ANY: хотя бы одна из связей должна совпадать
+      // Собираем все target_instance_id и field_id для одного запроса
+      const orConditions = relationFiltersToApply.flatMap((rf) =>
+        rf.values.map(
+          (targetId) =>
+            `and(relation_field_id.eq.${rf.fieldId},target_instance_id.eq.${targetId})`
+        )
+      );
+
+      const { data: relations, error: relError } = (await supabase
+        .from("entity_relation")
+        .select("source_instance_id")
+        .or(orConditions.join(","))) as {
+        data: { source_instance_id: string }[] | null;
+        error: Error | null;
+      };
+
+      if (relError) {
+        console.error(
+          "[Entity Instances Client Service] Relation filter error:",
+          relError
+        );
+      } else if (relations) {
+        // Уникальные source_instance_id
+        allowedInstanceIds = [
+          ...new Set(relations.map((r) => r.source_instance_id)),
+        ];
+      }
+    } else {
+      // ALL: все выбранные связи должны присутствовать
+      // Для каждого relation-фильтра получаем source_instance_id
+      const instanceIdSets: Set<string>[] = [];
+
+      for (const rf of relationFiltersToApply) {
+        // Для ALL режима: source должен иметь связь с КАЖДЫМ из выбранных target
+        // Получаем source_instance_id которые связаны с ЛЮБЫМ из выбранных target для этого поля
+        const { data: relations, error: relError } = (await supabase
+          .from("entity_relation")
+          .select("source_instance_id, target_instance_id")
+          .eq("relation_field_id", rf.fieldId)
+          .in("target_instance_id", rf.values)) as {
+          data:
+            | { source_instance_id: string; target_instance_id: string }[]
+            | null;
+          error: Error | null;
+        };
+
+        if (relError) {
+          console.error(
+            "[Entity Instances Client Service] Relation filter error:",
+            relError
+          );
+          continue;
+        }
+
+        if (relations) {
+          // Группируем по source_instance_id и проверяем что есть все target
+          const sourceTargetMap = new Map<string, Set<string>>();
+          relations.forEach((r) => {
+            if (!sourceTargetMap.has(r.source_instance_id)) {
+              sourceTargetMap.set(r.source_instance_id, new Set());
+            }
+            sourceTargetMap
+              .get(r.source_instance_id)!
+              .add(r.target_instance_id);
+          });
+
+          // Только те source, у которых есть ВСЕ выбранные target
+          const validSources = new Set<string>();
+          const requiredTargets = new Set(rf.values);
+
+          sourceTargetMap.forEach((targets, sourceId) => {
+            const hasAll = [...requiredTargets].every((t) => targets.has(t));
+            if (hasAll) {
+              validSources.add(sourceId);
+            }
+          });
+
+          instanceIdSets.push(validSources);
+        }
+      }
+
+      // Пересечение всех множеств (AND между разными relation-полями)
+      if (instanceIdSets.length > 0) {
+        allowedInstanceIds = [...instanceIdSets[0]];
+        for (let i = 1; i < instanceIdSets.length; i++) {
+          allowedInstanceIds = allowedInstanceIds.filter((id) =>
+            instanceIdSets[i].has(id)
+          );
+        }
+      }
+    }
+
+    // Если фильтрация по relations не нашла ни одного экземпляра, возвращаем пустой результат
+    if (allowedInstanceIds !== null && allowedInstanceIds.length === 0) {
+      return {
+        data: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+          hasPreviousPage: false,
+          hasNextPage: false,
+        },
+      };
+    }
+  }
+
+  // Определяем поля для поиска
+  const searchFields = params.searchableFields?.length
+    ? params.searchableFields
+    : ["name"];
+  const searchTerm = params.search?.trim() || null;
+
+  let data: any[] | null = null;
+  let error: Error | null = null;
+  let count: number | null = null;
+
+  // Тип для результата RPC
+  interface SearchResult {
+    id: string;
+    entity_definition_id: string;
+    project_id: string;
+    data: Record<string, unknown>;
+    created_at: string;
+    updated_at: string;
+    total_count: number;
+  }
+
+  // Если есть поиск - используем RPC функцию
+  if (searchTerm) {
+    const rpcParams = {
+      p_entity_definition_id: entityDefinitionId,
+      p_project_id: projectId,
+      p_search_term: searchTerm,
+      p_search_fields: searchFields,
+      p_limit: limit,
+      p_offset: offset,
+    };
+
+    const { data: rpcData, error: rpcError } = (await supabase.rpc(
+      "search_entity_instances" as any,
+      rpcParams as any
+    )) as { data: SearchResult[] | null; error: Error | null };
+
+    if (rpcError) {
+      error = rpcError;
+    } else if (rpcData && rpcData.length > 0) {
+      // RPC возвращает total_count в каждой строке
+      count = rpcData[0].total_count;
+      data = rpcData;
+    } else {
+      data = [];
+      count = 0;
+    }
+  } else {
+    // Обычный запрос без поиска
+    let query = supabase
+      .from("entity_instance")
+      .select("*", { count: "exact" })
+      .eq("entity_definition_id", entityDefinitionId)
+      .eq("project_id", projectId);
+
+    // Если есть фильтрация по relations, ограничиваем по ID
+    if (allowedInstanceIds !== null && allowedInstanceIds.length > 0) {
+      query = query.in("id", allowedInstanceIds);
+    }
+
+    // Применяем JSONB фильтры (не relation)
+    if (Object.keys(jsonbFilters).length > 0) {
+      Object.entries(jsonbFilters).forEach(([fieldName, values]) => {
+        if (values && values.length > 0) {
+          // Для множественного выбора используем .in() на JSONB поле
+          // Формат: data->>'fieldName' IN (values)
+          query = query.or(
+            values.map((v) => `data->>${fieldName}.eq.${v}`).join(",")
+          );
+        }
+      });
+    }
+
+    // Сортировка по created_at
+    query = query.order("created_at", { ascending: false });
+
+    // Применяем пагинацию
+    query = query.range(offset, offset + limit - 1);
+
+    // Выполняем запрос
+    const result = await query;
+    data = result.data;
+    error = result.error as Error | null;
+    count = result.count;
+  }
 
   if (error) {
     console.error("[Entity Instances Client Service] Error:", error);
