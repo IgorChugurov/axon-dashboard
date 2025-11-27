@@ -21,8 +21,9 @@ export function getListQueryKey(
     params.search || "",
     // Фильтры (если есть)
     ...(params.filters ? [JSON.stringify(params.filters)] : []),
+    // Режимы фильтрации (если есть)
+    ...(params.filterModes ? [JSON.stringify(params.filterModes)] : []),
     // Сортировка (если есть)
     ...(params.sortBy ? [params.sortBy, params.sortOrder || "asc"] : []),
   ] as const;
 }
-

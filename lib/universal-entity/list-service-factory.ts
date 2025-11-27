@@ -113,14 +113,9 @@ export function createEntityInstanceListService(
     params,
     _signal
   ) => {
-    // Определяем режим фильтрации для relation-полей
-    // По умолчанию используем 'any', но можно переопределить через filterModes
-    const relationFilterMode =
-      params.filterModes && Object.keys(params.filterModes).length > 0
-        ? // Если есть filterModes, берем режим первого relation-фильтра
-          // (предполагаем, что все relation-фильтры используют один режим)
-          (Object.values(params.filterModes)[0] as "any" | "all")
-        : "any";
+    // Передаем режимы фильтрации для каждого relation-поля отдельно
+    // filterModes - это объект вида { fieldName: "any" | "all" }
+    const relationFilterModes = params.filterModes || {};
 
     const result = await getEntityInstancesFromClient(
       entityDefinitionId,
@@ -132,7 +127,7 @@ export function createEntityInstanceListService(
         searchableFields: options?.searchableFields,
         filters: params.filters,
         relationFilters: options?.relationFilters,
-        relationFilterMode,
+        relationFilterModes,
         includeRelations: options?.includeRelations,
         relationsAsIds: options?.relationsAsIds,
       }

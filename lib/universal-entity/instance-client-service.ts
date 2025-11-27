@@ -149,7 +149,7 @@ export async function getEntityInstancesFromClient(
     searchableFields?: string[]; // поля для поиска в JSONB (по умолчанию ["name"])
     filters?: Record<string, string[]>;
     relationFilters?: RelationFilterInfo[]; // информация о relation-полях для фильтрации
-    relationFilterMode?: RelationFilterMode; // режим фильтрации: 'any' (по умолчанию) или 'all'
+    relationFilterModes?: Record<string, RelationFilterMode>; // режимы фильтрации для каждого поля: 'any' (по умолчанию) или 'all'
     includeRelations?: string[]; // имена полей для загрузки связей
     relationsAsIds?: boolean; // если true, связи как ID, иначе как объекты
   } = {}
@@ -199,12 +199,30 @@ export async function getEntityInstancesFromClient(
   let allowedInstanceIds: string[] | null = null;
 
   if (relationFiltersToApply.length > 0) {
-    const filterMode = params.relationFilterMode || "any";
+    // Получаем режимы фильтрации для каждого поля (по умолчанию "any")
+    const filterModes = params.relationFilterModes || {};
 
-    if (filterMode === "any") {
+    // Группируем фильтры по режиму
+    const anyModeFilters: typeof relationFiltersToApply = [];
+    const allModeFilters: typeof relationFiltersToApply = [];
+
+    relationFiltersToApply.forEach((rf) => {
+      const mode = filterModes[rf.fieldName] || "any";
+      if (mode === "all") {
+        allModeFilters.push(rf);
+      } else {
+        anyModeFilters.push(rf);
+      }
+    });
+
+    // Обрабатываем фильтры с режимом "any"
+    const anyModeInstanceIds: Set<string> | null =
+      anyModeFilters.length > 0 ? new Set() : null;
+
+    if (anyModeInstanceIds !== null && anyModeFilters.length > 0) {
       // ANY: хотя бы одна из связей должна совпадать
       // Собираем все target_instance_id и field_id для одного запроса
-      const orConditions = relationFiltersToApply.flatMap((rf) =>
+      const orConditions = anyModeFilters.flatMap((rf) =>
         rf.values.map(
           (targetId) =>
             `and(relation_field_id.eq.${rf.fieldId},target_instance_id.eq.${targetId})`
@@ -221,76 +239,79 @@ export async function getEntityInstancesFromClient(
 
       if (relError) {
         console.error(
-          "[Entity Instances Client Service] Relation filter error:",
+          "[Entity Instances Client Service] Relation filter error (any mode):",
           relError
         );
       } else if (relations) {
         // Уникальные source_instance_id
-        allowedInstanceIds = [
-          ...new Set(relations.map((r) => r.source_instance_id)),
-        ];
+        relations.forEach((r) => anyModeInstanceIds.add(r.source_instance_id));
       }
-    } else {
-      // ALL: все выбранные связи должны присутствовать
-      // Для каждого relation-фильтра получаем source_instance_id
-      const instanceIdSets: Set<string>[] = [];
+    }
 
-      for (const rf of relationFiltersToApply) {
-        // Для ALL режима: source должен иметь связь с КАЖДЫМ из выбранных target
-        // Получаем source_instance_id которые связаны с ЛЮБЫМ из выбранных target для этого поля
-        const { data: relations, error: relError } = (await supabase
-          .from("entity_relation")
-          .select("source_instance_id, target_instance_id")
-          .eq("relation_field_id", rf.fieldId)
-          .in("target_instance_id", rf.values)) as {
-          data:
-            | { source_instance_id: string; target_instance_id: string }[]
-            | null;
-          error: Error | null;
-        };
+    // Обрабатываем фильтры с режимом "all"
+    const allModeInstanceIdSets: Set<string>[] = [];
 
-        if (relError) {
-          console.error(
-            "[Entity Instances Client Service] Relation filter error:",
-            relError
-          );
-          continue;
-        }
+    for (const rf of allModeFilters) {
+      // Для ALL режима: source должен иметь связь с КАЖДЫМ из выбранных target
+      // Получаем source_instance_id которые связаны с ЛЮБЫМ из выбранных target для этого поля
+      const { data: relations, error: relError } = (await supabase
+        .from("entity_relation")
+        .select("source_instance_id, target_instance_id")
+        .eq("relation_field_id", rf.fieldId)
+        .in("target_instance_id", rf.values)) as {
+        data:
+          | { source_instance_id: string; target_instance_id: string }[]
+          | null;
+        error: Error | null;
+      };
 
-        if (relations) {
-          // Группируем по source_instance_id и проверяем что есть все target
-          const sourceTargetMap = new Map<string, Set<string>>();
-          relations.forEach((r) => {
-            if (!sourceTargetMap.has(r.source_instance_id)) {
-              sourceTargetMap.set(r.source_instance_id, new Set());
-            }
-            sourceTargetMap
-              .get(r.source_instance_id)!
-              .add(r.target_instance_id);
-          });
-
-          // Только те source, у которых есть ВСЕ выбранные target
-          const validSources = new Set<string>();
-          const requiredTargets = new Set(rf.values);
-
-          sourceTargetMap.forEach((targets, sourceId) => {
-            const hasAll = [...requiredTargets].every((t) => targets.has(t));
-            if (hasAll) {
-              validSources.add(sourceId);
-            }
-          });
-
-          instanceIdSets.push(validSources);
-        }
+      if (relError) {
+        console.error(
+          "[Entity Instances Client Service] Relation filter error (all mode):",
+          relError
+        );
+        continue;
       }
 
-      // Пересечение всех множеств (AND между разными relation-полями)
-      if (instanceIdSets.length > 0) {
-        allowedInstanceIds = [...instanceIdSets[0]];
-        for (let i = 1; i < instanceIdSets.length; i++) {
-          allowedInstanceIds = allowedInstanceIds.filter((id) =>
-            instanceIdSets[i].has(id)
-          );
+      if (relations) {
+        // Группируем по source_instance_id и проверяем что есть все target
+        const sourceTargetMap = new Map<string, Set<string>>();
+        relations.forEach((r) => {
+          if (!sourceTargetMap.has(r.source_instance_id)) {
+            sourceTargetMap.set(r.source_instance_id, new Set());
+          }
+          sourceTargetMap.get(r.source_instance_id)!.add(r.target_instance_id);
+        });
+
+        // Только те source, у которых есть ВСЕ выбранные target
+        const validSources = new Set<string>();
+        const requiredTargets = new Set(rf.values);
+
+        sourceTargetMap.forEach((targets, sourceId) => {
+          const hasAll = [...requiredTargets].every((t) => targets.has(t));
+          if (hasAll) {
+            validSources.add(sourceId);
+          }
+        });
+
+        allModeInstanceIdSets.push(validSources);
+      }
+    }
+
+    // Объединяем результаты: пересечение между группами (AND), объединение внутри группы "any" (OR)
+    if (anyModeInstanceIds !== null || allModeInstanceIdSets.length > 0) {
+      // Начинаем с группы "any" (если есть)
+      if (anyModeInstanceIds !== null && anyModeInstanceIds.size > 0) {
+        allowedInstanceIds = [...anyModeInstanceIds];
+      } else if (allModeInstanceIdSets.length > 0) {
+        // Если нет "any", начинаем с первого "all"
+        allowedInstanceIds = [...allModeInstanceIdSets[0]];
+      }
+
+      // Применяем пересечение с остальными группами "all"
+      if (allowedInstanceIds !== null && allModeInstanceIdSets.length > 0) {
+        for (const idSet of allModeInstanceIdSets) {
+          allowedInstanceIds = allowedInstanceIds.filter((id) => idSet.has(id));
         }
       }
     }
