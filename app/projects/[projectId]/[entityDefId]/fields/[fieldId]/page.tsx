@@ -1,14 +1,13 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/roles";
-import { FieldForm } from "@/components/entity-definition/FieldForm";
+import { FieldFormNew } from "@/components/entity-definition/FieldFormNew";
 import {
   getEntityDefinitionById,
   getEntityDefinitions,
   getFields,
   getFieldById,
 } from "@/lib/universal-entity/config-service";
-import { updateFieldAction } from "../actions";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface EditFieldPageProps {
@@ -67,25 +66,16 @@ export default async function EditFieldPage({ params }: EditFieldPageProps) {
       />
 
       <div className="rounded-lg border bg-card p-6">
-        <FieldForm
+        <FieldFormNew
           projectId={projectId}
           entityDefinitionId={entityDefId}
           mode="edit"
+          fieldId={fieldId}
           initialData={field}
           availableEntities={availableEntities}
           availableFields={availableFields}
-          onSubmit={async (data) => {
-            "use server";
-            return await updateFieldAction(
-              projectId,
-              entityDefId,
-              fieldId,
-              data
-            );
-          }}
         />
       </div>
     </div>
   );
 }
-

@@ -59,7 +59,6 @@ const listPageConfigSchema = Yup.object({
   enablePagination: Yup.boolean().required(),
   pageSize: Yup.number().min(1).max(100).optional(),
   enableFilters: Yup.boolean().required(),
-  filterEntityDefinitionIds: Yup.array().of(Yup.string()).optional(),
   searchableFields: Yup.array().of(Yup.string()).optional(),
   columns: Yup.array().of(columnConfigSchema).min(1).required(),
 });
@@ -124,7 +123,6 @@ export const partialUIConfigSchema = Yup.object({
     enablePagination: Yup.boolean().optional(),
     pageSize: Yup.number().min(1).max(100).optional(),
     enableFilters: Yup.boolean().optional(),
-    filterEntityDefinitionIds: Yup.array().of(Yup.string()).optional(),
     searchableFields: Yup.array().of(Yup.string()).optional(),
     columns: Yup.array().of(columnConfigSchema).optional(),
   }).optional(),

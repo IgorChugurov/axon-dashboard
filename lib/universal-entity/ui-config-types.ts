@@ -30,7 +30,6 @@ export interface ListPageConfig {
 
   // Фильтры (структура для будущей реализации)
   enableFilters: boolean; // Показывать фильтры
-  filterEntityDefinitionIds?: string[]; // ID сущностей для фильтрации
 
   // Поиск
   searchableFields?: string[]; // Поля для поиска (автоматически генерируется из полей с searchable: true)

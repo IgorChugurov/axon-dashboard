@@ -1,12 +1,13 @@
 /**
  * Универсальная страница редактирования экземпляра сущности
  * URL: /projects/:projectId/:entityDefId/:instanceId
+ * Использует UniversalEntityFormNew с React Query мутациями
  */
 
 import { notFound } from "next/navigation";
 import { getInstanceById } from "@/lib/universal-entity/instance-service";
 import { getEntityDefinitionWithUIConfig } from "@/lib/universal-entity/config-service";
-import { UniversalEntityForm } from "@/components/UniversalEntityForm";
+import { EntityInstanceFormNew } from "@/components/entity-instances/EntityInstanceFormNew";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface EntityEditPageProps {
@@ -74,16 +75,15 @@ export default async function EntityEditPage({ params }: EntityEditPageProps) {
         entityDefinitionName={config.entityDefinition.name}
       />
 
-      <UniversalEntityForm
+      <EntityInstanceFormNew
+        projectId={projectId}
         entityDefinition={config.entityDefinition}
         fields={config.fields}
         uiConfig={config.uiConfig}
         mode="edit"
-        initialData={formData}
         instanceId={instanceId}
-        projectId={projectId}
+        initialData={formData}
       />
     </div>
   );
 }
-

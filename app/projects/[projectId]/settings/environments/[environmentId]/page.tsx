@@ -1,11 +1,11 @@
 /**
  * Страница редактирования environment
+ * Использует UniversalEntityFormNew с React Query мутациями
  */
 
 import { notFound } from "next/navigation";
-import { EnvironmentForm } from "../EnvironmentForm";
+import { EnvironmentFormNew } from "@/components/environments/EnvironmentFormNew";
 import { getEnvironmentById } from "@/lib/environments/service";
-import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface EnvironmentEditPageProps {
@@ -29,12 +29,6 @@ export default async function EnvironmentEditPage({
     notFound();
   }
 
-  const uiConfig = loadUIConfigFromFile("environments");
-
-  if (!uiConfig) {
-    throw new Error("Failed to load config for environments");
-  }
-
   return (
     <div className="space-y-6">
       <BreadcrumbsCacheUpdater
@@ -42,7 +36,7 @@ export default async function EnvironmentEditPage({
         environmentName={environment.key}
       />
 
-      <EnvironmentForm
+      <EnvironmentFormNew
         projectId={projectId}
         mode="edit"
         environmentId={environmentId}
@@ -52,7 +46,6 @@ export default async function EnvironmentEditPage({
           value: environment.value,
           options: environment.options,
         }}
-        uiConfig={uiConfig}
       />
     </div>
   );

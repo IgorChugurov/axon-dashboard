@@ -78,7 +78,6 @@ function generateDefaults(
     enablePagination: entityDefinition.enablePagination ?? true,
     pageSize: entityDefinition.pageSize ?? 20,
     enableFilters: entityDefinition.enableFilters ?? false,
-    filterEntityDefinitionIds: entityDefinition.filterEntityDefinitionIds ?? [],
     searchableFields: finalSearchableFields,
     columns: generateColumns(fields),
   };
@@ -145,7 +144,6 @@ function generateColumns(fields: Field[]): ColumnConfig[] {
   const displayFields = fields
     .filter((f) => f.displayInTable)
     .sort((a, b) => a.displayIndex - b.displayIndex);
-
   // Генерируем колонки из полей
   const columns: ColumnConfig[] = displayFields.map((field, index) => {
     const columnType = index === 0 ? "naigateToDetails" : getColumnType(field);

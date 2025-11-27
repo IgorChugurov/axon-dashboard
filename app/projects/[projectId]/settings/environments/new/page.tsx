@@ -1,9 +1,9 @@
 /**
  * Страница создания нового environment
+ * Использует UniversalEntityFormNew с React Query мутациями
  */
 
-import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
-import { EnvironmentForm } from "../EnvironmentForm";
+import { EnvironmentFormNew } from "@/components/environments/EnvironmentFormNew";
 
 interface EnvironmentNewPageProps {
   params: Promise<{ projectId: string }>;
@@ -14,16 +14,9 @@ export default async function EnvironmentNewPage({
 }: EnvironmentNewPageProps) {
   const { projectId } = await params;
 
-  // Загружаем UI конфиг
-  const uiConfig = loadUIConfigFromFile("environments");
-
-  if (!uiConfig) {
-    throw new Error("Failed to load config for environments");
-  }
-
   return (
     <div className="space-y-6">
-      <EnvironmentForm projectId={projectId} mode="create" uiConfig={uiConfig} />
+      <EnvironmentFormNew projectId={projectId} mode="create" />
     </div>
   );
 }

@@ -99,9 +99,9 @@ export default async function RootLayout({
                   <ProjectsEventListener />
                   <SidebarProvider defaultOpen={defaultOpen}>
                     <AppSidebar projects={projects} />
-                    <main className="w-full pb-8">
+                    <main className="w-full pb-8 ">
                       <Navbar />
-                      <div className="px-4">{children}</div>
+                      <div className="px-4 pt-4">{children}</div>
                     </main>
                   </SidebarProvider>
                 </ProjectsProvider>

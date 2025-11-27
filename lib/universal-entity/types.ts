@@ -37,7 +37,6 @@ export interface EntityDefinition {
 
   // Filter settings
   enableFilters?: boolean | null; // default: false
-  filterEntityDefinitionIds?: string[] | null; // ID сущностей для фильтрации
 
   createdAt: string;
   updatedAt: string;

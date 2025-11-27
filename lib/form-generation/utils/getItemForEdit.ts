@@ -37,6 +37,7 @@ export function getItemForEdit(
  * Normalize a value from server based on field type
  */
 function normalizeValue(value: any, field: Field): any {
+  console.log("normalizeValue", value, field);
   switch (field.type) {
     case "select":
       // If null or "none", return appropriate default
@@ -63,6 +64,10 @@ function normalizeValue(value: any, field: Field): any {
 
     case "date":
       if (value === null) return null;
+      return value;
+
+    case "dynamicValue":
+      // Для dynamicValue возвращаем значение как есть - тип определяется динамически
       return value;
 
     case "text":
@@ -149,4 +154,3 @@ export function cleanFormDataForSubmit(
 
   return cleaned;
 }
-

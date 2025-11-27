@@ -1,9 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/roles";
-import { EntityDefinitionFormUniversal } from "@/components/entity-definition/EntityDefinitionFormUniversal";
+import { EntityDefinitionFormNew } from "@/components/entity-definitions/EntityDefinitionFormNew";
 import { getEntityDefinitionById } from "@/lib/universal-entity/config-service";
-import { loadUIConfigFromFile } from "@/lib/universal-entity/config-loader";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface EditEntityDefinitionPageProps {
@@ -37,13 +36,6 @@ export default async function EditEntityDefinitionPage({
     notFound();
   }
 
-  // Загружаем UI конфиг
-  const uiConfig = loadUIConfigFromFile("entity-definition");
-
-  if (!uiConfig) {
-    throw new Error("Failed to load config for entity-definition");
-  }
-
   return (
     <div className="space-y-6">
       <BreadcrumbsCacheUpdater
@@ -52,15 +44,13 @@ export default async function EditEntityDefinitionPage({
       />
 
       <div className="rounded-lg border bg-card p-6">
-        <EntityDefinitionFormUniversal
+        <EntityDefinitionFormNew
           projectId={projectId}
           mode="edit"
           entityDefinitionId={entityDefId}
           initialData={entityDefinition}
-          uiConfig={uiConfig}
         />
       </div>
     </div>
   );
 }
-

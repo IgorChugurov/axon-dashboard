@@ -35,6 +35,9 @@ interface FieldFormProps {
   onSubmit: (
     data: any
   ) => Promise<{ success: boolean; error?: string; data?: any }>;
+  onDelete?: () => void;
+  onCancel?: () => void;
+  isLoading?: boolean;
 }
 
 const DB_TYPE_OPTIONS: { value: DbType; label: string }[] = [
@@ -68,9 +71,15 @@ export function FieldForm({
   availableEntities,
   availableFields,
   onSubmit,
+  onDelete,
+  onCancel,
+  isLoading = false,
 }: FieldFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  // Используем isLoading от обёртки или isPending от useTransition
+  const isSubmitting = isLoading || isPending;
   const [error, setError] = useState<string | null>(null);
   const [uiConfigOpen, setUiConfigOpen] = useState(false);
   const [relationsOpen, setRelationsOpen] = useState(false);
@@ -94,6 +103,7 @@ export function FieldForm({
     sectionIndex: initialData?.sectionIndex ?? 0,
     isOptionTitleField: initialData?.isOptionTitleField ?? false,
     searchable: initialData?.searchable ?? false,
+    filterableInList: initialData?.filterableInList ?? false,
     relatedEntityDefinitionId: initialData?.relatedEntityDefinitionId || "",
     relationFieldId: initialData?.relationFieldId || "",
     isRelationSource: initialData?.isRelationSource ?? false,
@@ -141,6 +151,7 @@ export function FieldForm({
           sectionIndex: formData.sectionIndex,
           isOptionTitleField: formData.isOptionTitleField,
           searchable: formData.searchable,
+          filterableInList: formData.filterableInList,
           autoPopulate: formData.autoPopulate,
           includeInSinglePma: formData.includeInSinglePma,
           includeInListPma: formData.includeInListPma,
@@ -170,13 +181,9 @@ export function FieldForm({
 
         const result = await onSubmit(submitData);
 
-        if (result.success) {
-          router.push(
-            `/projects/${projectId}/${entityDefinitionId}/fields`
-          );
-          router.refresh();
-        } else {
-          setError(result.error || "An error occurred");
+        // Навигация управляется обёрткой (FieldFormNew)
+        if (!result.success && result.error) {
+          setError(result.error);
         }
       } catch (err) {
         console.error("Error saving field:", err);
@@ -404,6 +411,19 @@ export function FieldForm({
                 className="h-4 w-4 rounded border-gray-300"
               />
               <Label htmlFor="searchable">Searchable</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="filterableInList"
+                checked={formData.filterableInList}
+                onChange={(e) =>
+                  handleChange("filterableInList", e.target.checked)
+                }
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor="filterableInList">Filterable in List</Label>
             </div>
           </div>
 
@@ -695,17 +715,27 @@ export function FieldForm({
       )}
 
       <div className="flex items-center gap-4">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving..." : mode === "create" ? "Create" : "Save"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : mode === "create" ? "Create" : "Save"}
         </Button>
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.back()}
-          disabled={isPending}
+          onClick={() => (onCancel ? onCancel() : router.back())}
+          disabled={isSubmitting}
         >
           Cancel
         </Button>
+        {mode === "edit" && onDelete && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={onDelete}
+            disabled={isSubmitting}
+          >
+            Delete
+          </Button>
+        )}
       </div>
     </form>
   );

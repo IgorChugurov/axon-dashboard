@@ -32,6 +32,7 @@ export default async function EntityListPage({ params }: EntityListPageProps) {
 
   // Загружаем поля
   const fields = await getFields(entityDefId);
+  //console.log("fields", fields);
 
   return (
     <div className="space-y-6">
@@ -49,8 +50,7 @@ export default async function EntityListPage({ params }: EntityListPageProps) {
         entityDefinition={entityDefinition}
         fields={fields}
         routing={{
-          createUrlTemplate:
-            "/projects/{projectId}/{entityDefinitionId}/new",
+          createUrlTemplate: "/projects/{projectId}/{entityDefinitionId}/new",
           editUrlTemplate:
             "/projects/{projectId}/{entityDefinitionId}/{instanceId}",
           detailsUrlTemplate:
@@ -60,4 +60,3 @@ export default async function EntityListPage({ params }: EntityListPageProps) {
     </div>
   );
 }
-

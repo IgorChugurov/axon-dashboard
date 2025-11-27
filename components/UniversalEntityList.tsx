@@ -341,16 +341,14 @@ export function UniversalEntityList({
           )}
 
           {/* Место для будущих фильтров */}
-          {list.enableFilters &&
-            list.filterEntityDefinitionIds &&
-            list.filterEntityDefinitionIds.length > 0 && (
-              <div className="flex gap-2 items-center">
-                <span className="text-sm text-muted-foreground">
-                  Filters configured: {list.filterEntityDefinitionIds.length}
-                </span>
-                {/* TODO: Компонент фильтров */}
-              </div>
-            )}
+          {list.enableFilters && (
+            <div className="flex gap-2 items-center">
+              <span className="text-sm text-muted-foreground">
+                Filters enabled
+              </span>
+              {/* TODO: Компонент фильтров */}
+            </div>
+          )}
         </div>
       )}
 
@@ -422,9 +420,12 @@ export function UniversalEntityList({
                                 if (
                                   field.isRelationSource === false &&
                                   field.relatedEntityDefinitionId &&
-                                  ["manyToOne", "oneToMany", "manyToMany", "oneToOne"].includes(
-                                    field.dbType
-                                  )
+                                  [
+                                    "manyToOne",
+                                    "oneToMany",
+                                    "manyToMany",
+                                    "oneToOne",
+                                  ].includes(field.dbType)
                                 ) {
                                   return null;
                                 }
@@ -453,7 +454,10 @@ export function UniversalEntityList({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() =>
-                                      handleLink(instance.id, action.additionalUrl)
+                                      handleLink(
+                                        instance.id,
+                                        action.additionalUrl
+                                      )
                                     }
                                   >
                                     <IconComponent className="h-4 w-4" />
@@ -520,7 +524,8 @@ export function UniversalEntityList({
             Previous
           </Button>
           <span className="text-sm text-muted-foreground px-4">
-            Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
+            Page {pagination.page} of {pagination.totalPages} (
+            {pagination.total} total)
           </span>
           <Button
             variant="outline"

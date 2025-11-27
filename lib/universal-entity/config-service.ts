@@ -40,7 +40,6 @@ function transformEntityDefinition(row: any): EntityDefinition {
     enablePagination: row.enable_pagination,
     pageSize: row.page_size,
     enableFilters: row.enable_filters,
-    filterEntityDefinitionIds: row.filter_entity_definition_ids,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -66,6 +65,7 @@ function transformField(row: any): Field {
     sectionIndex: row.section_index ?? 0,
     isOptionTitleField: row.is_option_title_field,
     searchable: row.searchable,
+    filterableInList: row.filterable_in_list,
     relatedEntityDefinitionId: row.related_entity_definition_id,
     relationFieldId: row.relation_field_id,
     isRelationSource: row.is_relation_source,
@@ -141,7 +141,7 @@ export async function getEntityDefinitions(
  */
 export async function getFields(
   entityDefinitionId?: string,
-  forceRefresh = false
+  forceRefresh = true
 ): Promise<Field[]> {
   // Проверяем кэш
   if (!forceRefresh && cachedConfig?.fields.length) {
@@ -239,6 +239,14 @@ export async function getFullConfig(
 export async function getEntityDefinitionWithFields(
   entityDefinitionId: string
 ): Promise<{ entityDefinition: EntityDefinition; fields: Field[] } | null> {
+  // Проверка на валидный UUID формат
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(entityDefinitionId)) {
+    // Невалидный UUID - возвращаем null (будет 404)
+    return null;
+  }
+
   // Сначала проверяем кэш
   if (cachedConfig) {
     const age = Date.now() - cachedConfig.loadedAt;
@@ -269,8 +277,8 @@ export async function getEntityDefinitionWithFields(
     .single();
 
   if (error) {
-    if (error.code === "PGRST116") {
-      // Not found
+    // PGRST116 = Row not found, 22P02 = Invalid UUID format
+    if (error.code === "PGRST116" || error.code === "22P02") {
       return null;
     }
     console.error(
@@ -325,6 +333,14 @@ export async function getEntityDefinitionWithFields(
 export async function getEntityDefinitionById(
   id: string
 ): Promise<EntityDefinition | null> {
+  // Проверка на валидный UUID формат
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(id)) {
+    // Невалидный UUID - возвращаем null (будет 404)
+    return null;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("entity_definition")
@@ -333,8 +349,8 @@ export async function getEntityDefinitionById(
     .single();
 
   if (error) {
-    if (error.code === "PGRST116") {
-      // Not found
+    // PGRST116 = Row not found, 22P02 = Invalid UUID format
+    if (error.code === "PGRST116" || error.code === "22P02") {
       return null;
     }
     console.error("[Config Service] Error loading entity definition:", error);
@@ -348,6 +364,14 @@ export async function getEntityDefinitionById(
  * Получить поле по ID
  */
 export async function getFieldById(id: string): Promise<Field | null> {
+  // Проверка на валидный UUID формат
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(id)) {
+    // Невалидный UUID - возвращаем null (будет 404)
+    return null;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("field")
@@ -356,8 +380,8 @@ export async function getFieldById(id: string): Promise<Field | null> {
     .single();
 
   if (error) {
-    if (error.code === "PGRST116") {
-      // Not found
+    // PGRST116 = Row not found, 22P02 = Invalid UUID format
+    if (error.code === "PGRST116" || error.code === "22P02") {
       return null;
     }
     console.error("[Config Service] Error loading field:", error);

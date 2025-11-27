@@ -355,6 +355,257 @@ export async function getEntityInstancesFromClient(
 }
 
 /**
+ * Типы данных для создания/обновления
+ */
+export interface InstanceData {
+  [key: string]: unknown;
+}
+
+export interface RelationsData {
+  [fieldName: string]: string[]; // массив ID связанных экземпляров
+}
+
+/**
+ * Создание связей для экземпляра (клиентская версия)
+ */
+async function createRelationsFromClient(
+  supabase: ReturnType<typeof createClient>,
+  sourceInstanceId: string,
+  entityDefinitionId: string,
+  relations: RelationsData
+): Promise<void> {
+  if (Object.keys(relations).length === 0) return;
+
+  // Получаем поля для определения field_id и типов связей
+  const fields = await getFieldsFromClient(entityDefinitionId);
+
+  const relationInserts: Array<{
+    source_instance_id: string;
+    target_instance_id: string;
+    relation_field_id: string;
+    relation_type: string;
+  }> = [];
+
+  for (const [fieldName, targetInstanceIds] of Object.entries(relations)) {
+    const field = fields.find(
+      (f) =>
+        f.name === fieldName &&
+        (f.dbType === "manyToMany" ||
+          f.dbType === "manyToOne" ||
+          f.dbType === "oneToMany" ||
+          f.dbType === "oneToOne")
+    );
+
+    if (!field) {
+      console.warn(
+        `[Entity Instances Client Service] Field ${fieldName} not found or not a relation field`
+      );
+      continue;
+    }
+
+    for (const targetInstanceId of targetInstanceIds) {
+      if (targetInstanceId) {
+        relationInserts.push({
+          source_instance_id: sourceInstanceId,
+          target_instance_id: targetInstanceId,
+          relation_field_id: field.id,
+          relation_type: field.dbType,
+        });
+      }
+    }
+  }
+
+  if (relationInserts.length > 0) {
+    const { error } = await supabase
+      .from("entity_relation")
+      .insert(relationInserts as any);
+
+    if (error) {
+      console.error(
+        "[Entity Instances Client Service] Create relations error:",
+        error
+      );
+      throw new Error(`Failed to create relations: ${error.message}`);
+    }
+  }
+}
+
+/**
+ * Обновление связей для экземпляра (удаление старых + создание новых)
+ */
+async function updateRelationsFromClient(
+  supabase: ReturnType<typeof createClient>,
+  sourceInstanceId: string,
+  entityDefinitionId: string,
+  relations: RelationsData
+): Promise<void> {
+  // Получаем поля для определения field_id
+  const fields = await getFieldsFromClient(entityDefinitionId);
+  const fieldIds = Object.keys(relations)
+    .map((fieldName) => {
+      const field = fields.find(
+        (f) =>
+          f.name === fieldName &&
+          (f.dbType === "manyToMany" ||
+            f.dbType === "manyToOne" ||
+            f.dbType === "oneToMany" ||
+            f.dbType === "oneToOne")
+      );
+      return field?.id;
+    })
+    .filter(Boolean) as string[];
+
+  // Удаляем старые связи для указанных полей
+  if (fieldIds.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("entity_relation")
+      .delete()
+      .eq("source_instance_id", sourceInstanceId)
+      .in("relation_field_id", fieldIds);
+
+    if (deleteError) {
+      console.error(
+        "[Entity Instances Client Service] Delete old relations error:",
+        deleteError
+      );
+      throw new Error(`Failed to delete old relations: ${deleteError.message}`);
+    }
+  }
+
+  // Создаем новые связи
+  await createRelationsFromClient(
+    supabase,
+    sourceInstanceId,
+    entityDefinitionId,
+    relations
+  );
+}
+
+/**
+ * Создание entity instance
+ * Используется в Client Components для мутаций
+ */
+export async function createEntityInstanceFromClient(
+  entityDefinitionId: string,
+  projectId: string,
+  data: InstanceData,
+  relations?: RelationsData
+): Promise<EntityInstanceWithFields> {
+  const supabase = createClient();
+
+  // 1. Создаем экземпляр
+  const { data: instance, error: instanceError } = await supabase
+    .from("entity_instance")
+    .insert({
+      entity_definition_id: entityDefinitionId,
+      project_id: projectId,
+      data: data,
+    } as any)
+    .select()
+    .single();
+
+  if (instanceError) {
+    console.error(
+      "[Entity Instances Client Service] Create error:",
+      instanceError
+    );
+    throw new Error(
+      `Failed to create entity instance: ${instanceError.message}`
+    );
+  }
+
+  const transformedInstance = transformEntityInstance(instance);
+
+  // 2. Создаем связи если есть
+  if (relations && Object.keys(relations).length > 0) {
+    await createRelationsFromClient(
+      supabase,
+      transformedInstance.id,
+      entityDefinitionId,
+      relations
+    );
+  }
+
+  // 3. Возвращаем созданный экземпляр
+  const fields = await getFieldsFromClient(entityDefinitionId);
+  return flattenInstance(transformedInstance, fields, false);
+}
+
+/**
+ * Обновление entity instance
+ * Используется в Client Components для мутаций
+ */
+export async function updateEntityInstanceFromClient(
+  instanceId: string,
+  data: InstanceData,
+  relations?: RelationsData
+): Promise<EntityInstanceWithFields> {
+  const supabase = createClient();
+
+  // 1. Получаем текущий экземпляр для merge данных
+  const { data: currentInstance, error: getError } = await supabase
+    .from("entity_instance")
+    .select("data, entity_definition_id, project_id")
+    .eq("id", instanceId)
+    .single();
+
+  if (getError) {
+    console.error(
+      "[Entity Instances Client Service] Get current instance error:",
+      getError
+    );
+    throw new Error(`Failed to get current instance: ${getError.message}`);
+  }
+
+  const typedInstance = currentInstance as {
+    data: Record<string, unknown>;
+    entity_definition_id: string;
+    project_id: string;
+  };
+
+  // 2. Объединяем данные (новые перезаписывают старые)
+  const updatedData = {
+    ...(typedInstance.data || {}),
+    ...data,
+  };
+
+  // 3. Обновляем экземпляр
+  const { data: updated, error: updateError } = await supabase
+    .from("entity_instance")
+    // @ts-expect-error - Dynamic JSONB update payload
+    .update({
+      data: updatedData,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", instanceId)
+    .select()
+    .single();
+
+  if (updateError) {
+    console.error(
+      "[Entity Instances Client Service] Update error:",
+      updateError
+    );
+    throw new Error(`Failed to update entity instance: ${updateError.message}`);
+  }
+
+  // 4. Обновляем связи если есть
+  if (relations && Object.keys(relations).length > 0) {
+    await updateRelationsFromClient(
+      supabase,
+      instanceId,
+      typedInstance.entity_definition_id,
+      relations
+    );
+  }
+
+  // 5. Возвращаем обновленный экземпляр
+  const transformedInstance = transformEntityInstance(updated);
+  const fields = await getFieldsFromClient(typedInstance.entity_definition_id);
+  return flattenInstance(transformedInstance, fields, false);
+}
+
+/**
  * Удаление entity instance
  * Используется в Client Components для мутаций
  */

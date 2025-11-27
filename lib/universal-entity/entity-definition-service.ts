@@ -28,7 +28,6 @@ export interface CreateEntityDefinitionData {
   enablePagination?: boolean | null;
   pageSize?: number | null;
   enableFilters?: boolean | null;
-  filterEntityDefinitionIds?: string[] | null;
 }
 
 export interface UpdateEntityDefinitionData {
@@ -46,7 +45,6 @@ export interface UpdateEntityDefinitionData {
   enablePagination?: boolean | null;
   pageSize?: number | null;
   enableFilters?: boolean | null;
-  filterEntityDefinitionIds?: string[] | null;
   // tableName нельзя изменить после создания
 }
 
@@ -124,7 +122,6 @@ export async function createEntityDefinition(
       enable_pagination: data.enablePagination ?? true,
       page_size: data.pageSize ?? 20,
       enable_filters: data.enableFilters ?? false,
-      filter_entity_definition_ids: data.filterEntityDefinitionIds || null,
     } as any)
     .select()
     .single();
@@ -218,8 +215,6 @@ export async function updateEntityDefinition(
   if (data.pageSize !== undefined) updatePayload.page_size = data.pageSize;
   if (data.enableFilters !== undefined)
     updatePayload.enable_filters = data.enableFilters;
-  if (data.filterEntityDefinitionIds !== undefined)
-    updatePayload.filter_entity_definition_ids = data.filterEntityDefinitionIds;
 
   const { data: updated, error } = await supabase
     .from("entity_definition")
@@ -305,6 +300,7 @@ export interface CreateFieldData {
   sectionIndex?: number;
   isOptionTitleField?: boolean;
   searchable?: boolean;
+  filterableInList?: boolean;
   relatedEntityDefinitionId?: string | null;
   relationFieldId?: string | null;
   isRelationSource?: boolean;
@@ -489,6 +485,7 @@ export async function createField(data: CreateFieldData): Promise<Field> {
       section_index: data.sectionIndex ?? 0,
       is_option_title_field: data.isOptionTitleField ?? false,
       searchable: data.searchable ?? false,
+      filterable_in_list: data.filterableInList ?? false,
       related_entity_definition_id: data.relatedEntityDefinitionId || null,
       relation_field_id: reverseFieldId || data.relationFieldId || null,
       is_relation_source:
@@ -633,6 +630,8 @@ export async function updateField(
   if (data.isOptionTitleField !== undefined)
     updatePayload.is_option_title_field = data.isOptionTitleField;
   if (data.searchable !== undefined) updatePayload.searchable = data.searchable;
+  if (data.filterableInList !== undefined)
+    updatePayload.filterable_in_list = data.filterableInList;
   if (data.relatedEntityDefinitionId !== undefined)
     updatePayload.related_entity_definition_id = data.relatedEntityDefinitionId;
   if (data.relationFieldId !== undefined)
@@ -843,7 +842,6 @@ function transformEntityDefinition(row: any): EntityDefinition {
     enablePagination: row.enable_pagination,
     pageSize: row.page_size,
     enableFilters: row.enable_filters,
-    filterEntityDefinitionIds: row.filter_entity_definition_ids,
     uiConfig: row.ui_config,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -870,6 +868,7 @@ function transformField(row: any): Field {
     sectionIndex: row.section_index ?? 0,
     isOptionTitleField: row.is_option_title_field,
     searchable: row.searchable,
+    filterableInList: row.filterable_in_list,
     relatedEntityDefinitionId: row.related_entity_definition_id,
     relationFieldId: row.relation_field_id,
     isRelationSource: row.is_relation_source,

@@ -42,6 +42,7 @@ import type {
 } from "./types/list-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
+import { useRouter } from "next/navigation";
 
 interface UniversalEntityListDataTableProps<TData extends { id: string }> {
   columns: ColumnDef<TData>[];
@@ -78,6 +79,7 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onLink,
 }: UniversalEntityListDataTableProps<TData>) {
+  const router = useRouter();
   const { list } = uiConfig;
   const pageSize = list.pageSize || 20;
 
@@ -183,7 +185,10 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
 
   const handleCreate = () => {
     const url = routing.createUrlTemplate.replace("{projectId}", projectId);
-    window.location.href = url;
+    // Передаём текущий limit для сохранения размера страницы после создания
+    const urlWithParams =
+      params.limit !== pageSize ? `${url}?returnLimit=${params.limit}` : url;
+    router.push(urlWithParams);
   };
 
   const handleRetry = () => {

@@ -222,16 +222,7 @@ export function generateColumnsFromConfig<TData extends { id: string }>(
 
             return (
               <button
-                onClick={() => {
-                  const url = routing.detailsUrlTemplate
-                    .replace("{projectId}", projectId)
-                    .replace("{instanceId}", instance.id);
-                  if (col.additionalUrl) {
-                    window.location.href = `${url}${col.additionalUrl}`;
-                  } else {
-                    window.location.href = url;
-                  }
-                }}
+                onClick={() => onLink?.(instance.id, col.additionalUrl)}
                 className="text-left hover:underline font-medium text-primary"
               >
                 {displayValue}

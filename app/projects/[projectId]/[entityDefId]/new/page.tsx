@@ -1,11 +1,12 @@
 /**
  * Универсальная страница создания экземпляра сущности
  * URL: /projects/:projectId/:entityDefId/new
+ * Использует UniversalEntityFormNew с React Query мутациями
  */
 
 import { notFound } from "next/navigation";
 import { getEntityDefinitionWithUIConfig } from "@/lib/universal-entity/config-service";
-import { UniversalEntityForm } from "@/components/UniversalEntityForm";
+import { EntityInstanceFormNew } from "@/components/entity-instances/EntityInstanceFormNew";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface EntityNewPageProps {
@@ -29,14 +30,13 @@ export default async function EntityNewPage({ params }: EntityNewPageProps) {
         entityDefinitionName={config.entityDefinition.name}
       />
 
-      <UniversalEntityForm
+      <EntityInstanceFormNew
+        projectId={projectId}
         entityDefinition={config.entityDefinition}
         fields={config.fields}
         uiConfig={config.uiConfig}
         mode="create"
-        projectId={projectId}
       />
     </div>
   );
 }
-
