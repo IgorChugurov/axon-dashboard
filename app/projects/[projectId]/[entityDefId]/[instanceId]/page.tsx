@@ -28,24 +28,11 @@ export default async function EntityEditPage({ params }: EntityEditPageProps) {
     notFound();
   }
 
-  // Определяем поля со связями для загрузки
-  const relationFields = config.fields.filter(
-    (f) =>
-      f.relatedEntityDefinitionId &&
-      (f.dbType === "manyToMany" ||
-        f.dbType === "manyToOne" ||
-        f.dbType === "oneToMany" ||
-        f.dbType === "oneToOne")
-  );
-
-  const relationFieldNames = relationFields.map((f) => f.name);
-
   // Загружаем экземпляр с связями как ID (для редактирования)
-  const instance = await getInstanceById(
-    instanceId,
-    relationFieldNames.length > 0 ? relationFieldNames : undefined,
-    { relationsAsIds: true }
-  );
+  // getInstanceById автоматически определит все relations из fields
+  const instance = await getInstanceById(instanceId, {
+    relationsAsIds: true,
+  });
 
   if (!instance || instance.entityDefinitionId !== entityDefId) {
     notFound();

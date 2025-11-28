@@ -101,7 +101,7 @@ export class ClientPublicAPIClient extends BasePublicAPIClient {
   async getInstance(
     entityDefinitionId: string,
     id: string,
-    params?: { includeRelations?: string[]; relationsAsIds?: boolean }
+    params?: { relationsAsIds?: boolean }
   ): Promise<EntityInstanceWithFields> {
     try {
       // Загружаем экземпляр напрямую из Supabase
@@ -147,67 +147,61 @@ export class ClientPublicAPIClient extends BasePublicAPIClient {
       // Загружаем fields для уплощения (один раз, с кэшем)
       const fields = await this.getFields(entityDefinitionId);
 
-      // Загружаем relations если нужно
+      // Автоматически определяем все relation fields из fields
+      const relationFields = fields.filter(
+        (f) =>
+          f.relatedEntityDefinitionId &&
+          (f.dbType === "manyToMany" ||
+            f.dbType === "manyToOne" ||
+            f.dbType === "oneToMany" ||
+            f.dbType === "oneToOne") &&
+          f.relationFieldId
+      );
+
+      // Загружаем все relations
       const relations: Record<string, EntityInstanceWithFields[]> = {};
-      if (params?.includeRelations && params.includeRelations.length > 0) {
-        for (const relationFieldName of params.includeRelations) {
-          const relationField = fields.find(
-            (f) =>
-              f.name === relationFieldName &&
-              (f.dbType === "manyToMany" ||
-                f.dbType === "manyToOne" ||
-                f.dbType === "oneToMany" ||
-                f.dbType === "oneToOne")
-          );
+      for (const relationField of relationFields) {
+        // Загружаем связанные экземпляры
+        const { data: relationData } = (await this.supabase
+          .from("entity_relation")
+          .select("target_instance_id")
+          .eq("source_instance_id", id)
+          .eq("relation_field_id", relationField.relationFieldId!)) as {
+          data: Array<{ target_instance_id: string }> | null;
+          error: any;
+        };
 
-          if (relationField && relationField.relationFieldId) {
-            // Загружаем связанные экземпляры
-            const { data: relationData } = (await this.supabase
-              .from("entity_relation")
-              .select("target_instance_id")
-              .eq("source_instance_id", id)
-              .eq("relation_field_id", relationField.relationFieldId)) as {
-              data: Array<{ target_instance_id: string }> | null;
-              error: any;
-            };
+        if (relationData && relationData.length > 0) {
+          const targetIds = relationData.map((r) => r.target_instance_id);
 
-            if (relationData && relationData.length > 0) {
-              const targetIds = relationData.map((r) => r.target_instance_id);
+          // Загружаем связанные экземпляры
+          const { data: relatedInstances } = (await this.supabase
+            .from("entity_instance")
+            .select("*")
+            .in("id", targetIds)) as {
+            data: Array<{
+              id: string;
+              entity_definition_id: string;
+              project_id: string;
+              data: Record<string, unknown>;
+              created_at: string;
+              updated_at: string;
+            }> | null;
+            error: any;
+          };
 
-              // Загружаем связанные экземпляры
-              const { data: relatedInstances } = (await this.supabase
-                .from("entity_instance")
-                .select("*")
-                .in("id", targetIds)) as {
-                data: Array<{
-                  id: string;
-                  entity_definition_id: string;
-                  project_id: string;
-                  data: Record<string, unknown>;
-                  created_at: string;
-                  updated_at: string;
-                }> | null;
-                error: any;
+          if (relatedInstances) {
+            relations[relationField.name] = relatedInstances.map((inst) => {
+              const flat: EntityInstanceWithFields = {
+                id: inst.id,
+                entityDefinitionId: inst.entity_definition_id,
+                projectId: inst.project_id,
+                createdAt: inst.created_at,
+                updatedAt: inst.updated_at,
+                ...(inst.data || {}),
               };
-
-              if (relatedInstances) {
-                const relatedFields = await this.getFields(
-                  relationField.relatedEntityDefinitionId || ""
-                );
-
-                relations[relationFieldName] = relatedInstances.map((inst) => {
-                  const flat: EntityInstanceWithFields = {
-                    id: inst.id,
-                    entityDefinitionId: inst.entity_definition_id,
-                    projectId: inst.project_id,
-                    createdAt: inst.created_at,
-                    updatedAt: inst.updated_at,
-                    ...(inst.data || {}),
-                  };
-                  return flat;
-                });
-              }
-            }
+              return flat;
+            });
           }
         }
       }

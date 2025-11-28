@@ -245,11 +245,15 @@ export async function createInstance(
 
 /**
  * Получить экземпляр по ID
+ * Автоматически загружает все relations из fields
  */
 export async function getInstanceById(
   instanceId: string,
-  includeRelations?: string[],
-  options?: { relationsAsIds?: boolean }
+  options?: {
+    relationsAsIds?: boolean;
+    fields?: Field[];
+    entityDefinitionId?: string;
+  }
 ): Promise<EntityInstanceWithFields> {
   const supabase = await createClient();
 
@@ -269,13 +273,17 @@ export async function getInstanceById(
     throw new Error(`Failed to get entity instance: ${instanceError.message}`);
   }
 
-  // Логирование полученного экземпляра
-  // console.log("[Instance Service] getInstanceById:");
-  // console.log("  - instanceId:", instanceId);
-  // console.log("  - includeRelations:", includeRelations);
-  // console.log("  - raw instance from DB:", instance);
-
   const transformedInstance = transformEntityInstance(instance);
+
+  // Проверяем принадлежность к entityDefinition (если указана)
+  if (
+    options?.entityDefinitionId &&
+    transformedInstance.entityDefinitionId !== options.entityDefinitionId
+  ) {
+    throw new Error(
+      `Instance ${instanceId} does not belong to entityDefinition ${options.entityDefinitionId}`
+    );
+  }
 
   console.log("  - transformed instance:", {
     id: transformedInstance.id,
@@ -284,65 +292,40 @@ export async function getInstanceById(
     data: transformedInstance.data,
   });
 
-  // 2. Загружаем связи если нужно
+  // 2. Загружаем fields (если не переданы, загружаем из БД)
+  let fields: Field[] = options?.fields || [];
+  if (fields.length === 0) {
+    fields = await getFields(transformedInstance.entityDefinitionId);
+  }
+
+  // 3. Автоматически определяем все relation fields из fields
+  const relationFields = fields.filter(
+    (f) =>
+      f.relatedEntityDefinitionId &&
+      (f.dbType === "manyToMany" ||
+        f.dbType === "manyToOne" ||
+        f.dbType === "oneToMany" ||
+        f.dbType === "oneToOne")
+  );
+
+  // 4. Загружаем все relations
   const relations: Record<string, EntityInstanceWithFields[]> = {};
-  if (includeRelations && includeRelations.length > 0) {
-    const fields = await getFields(transformedInstance.entityDefinitionId);
-
-    // console.log(`[Instance Service] getInstanceById - loading relations:`);
-    // console.log(`  - includeRelations:`, includeRelations);
-    // console.log(
-    //   `  - entityDefinitionId:`,
-    //   transformedInstance.entityDefinitionId
-    // );
-    // console.log(`  - total fields:`, fields.length);
-    // console.log(
-    //   `  - relation fields in entity:`,
-    //   fields
-    //     .filter(
-    //       (f) =>
-    //         f.dbType === "manyToMany" ||
-    //         f.dbType === "manyToOne" ||
-    //         f.dbType === "oneToMany" ||
-    //         f.dbType === "oneToOne"
-    //     )
-    //     .map((f) => ({ name: f.name, dbType: f.dbType }))
-    // );
-
-    for (const relationFieldName of includeRelations) {
-      const relationField = fields.find(
-        (f) =>
-          f.name === relationFieldName &&
-          (f.dbType === "manyToMany" ||
-            f.dbType === "manyToOne" ||
-            f.dbType === "oneToMany" ||
-            f.dbType === "oneToOne")
+  for (const relationField of relationFields) {
+    if (relationField.id) {
+      console.log(`  - loading relation field "${relationField.name}":`, {
+        id: relationField.id,
+        dbType: relationField.dbType,
+      });
+      const relatedInstances = await relationService.getRelatedInstances(
+        instanceId,
+        relationField.id
       );
-
-      if (relationField) {
-        console.log(`  - found relation field "${relationFieldName}":`, {
-          id: relationField.id,
-          dbType: relationField.dbType,
-        });
-        const relatedInstances = await relationService.getRelatedInstances(
-          instanceId,
-          relationField.id
-        );
-        relations[relationFieldName] = relatedInstances;
-        console.log(
-          `  - loaded relation "${relationFieldName}":`,
-          relatedInstances.length,
-          "instances"
-        );
-      } else {
-        console.warn(
-          `  - relation field "${relationFieldName}" not found in entity fields`
-        );
-        console.warn(
-          `  - available field names:`,
-          fields.map((f) => f.name)
-        );
-      }
+      relations[relationField.name] = relatedInstances;
+      console.log(
+        `  - loaded relation "${relationField.name}":`,
+        relatedInstances.length,
+        "instances"
+      );
     }
   }
 
@@ -352,8 +335,7 @@ export async function getInstanceById(
     relations: Object.keys(relations).length > 0 ? relations : undefined,
   };
 
-  // Получаем поля для нормализации
-  const fields = await getFields(transformedInstance.entityDefinitionId);
+  // Fields уже загружены выше (используем те же)
 
   // Загружаем файлы для полей типа files/images
   const fileFields = fields.filter(

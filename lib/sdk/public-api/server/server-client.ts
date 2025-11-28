@@ -115,20 +115,22 @@ export class ServerPublicAPIClient extends BasePublicAPIClient {
   async getInstance(
     entityDefinitionId: string,
     id: string,
-    params?: { includeRelations?: string[]; relationsAsIds?: boolean }
+    params?: { relationsAsIds?: boolean }
   ): Promise<EntityInstanceWithFields> {
     try {
-      // Используем существующий сервис
-      const instance = await getInstanceById(id, params?.includeRelations, {
-        relationsAsIds: params?.relationsAsIds ?? false,
-      });
+      // Загружаем полные Field из config-service (они могут быть в кэше)
+      const { getFields } = await import(
+        "@/lib/universal-entity/config-service"
+      );
+      const fullFields = await getFields(entityDefinitionId);
 
-      // Проверяем, что экземпляр принадлежит правильной entityDefinition
-      if (instance.entityDefinitionId !== entityDefinitionId) {
-        throw new Error(
-          `Instance ${id} does not belong to entityDefinition ${entityDefinitionId}`
-        );
-      }
+      // Используем существующий сервис
+      // getInstanceById автоматически определит все relations из fields
+      const instance = await getInstanceById(id, {
+        relationsAsIds: params?.relationsAsIds ?? false,
+        fields: fullFields,
+        entityDefinitionId, // для проверки принадлежности
+      });
 
       return instance;
     } catch (error: any) {
