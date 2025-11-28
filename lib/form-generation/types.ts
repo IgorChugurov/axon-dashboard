@@ -95,6 +95,7 @@ export const FIELD_TYPE_BY_DB_TYPE: Record<DbType, FieldType[]> = {
   oneToMany: ["multipleSelect"],
   manyToMany: ["multipleSelect"],
   oneToOne: ["select"],
+  files: ["files"],
 };
 
 /**

@@ -34,16 +34,16 @@ export interface EntityDefinitionConfig {
   type?: "primary" | "secondary" | "tertiary";
 
   /** Права доступа для создания */
-  createPermission?: "Admin" | "ALL" | "User" | "Admin|User";
+  createPermission?: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
 
   /** Права доступа для чтения */
-  readPermission?: "Admin" | "ALL" | "User" | "Admin|User";
+  readPermission?: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
 
   /** Права доступа для обновления */
-  updatePermission?: "Admin" | "ALL" | "User" | "Admin|User";
+  updatePermission?: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
 
   /** Права доступа для удаления */
-  deletePermission?: "Admin" | "ALL" | "User" | "Admin|User";
+  deletePermission?: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
 }
 
 /**
