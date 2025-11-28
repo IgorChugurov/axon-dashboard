@@ -56,38 +56,46 @@ GET    /api/public/[projectId]/auth/me                       - текущий п
 **Функционал:**
 
 ```typescript
-import { createClient } from '@/lib/supabase/server';
-import type { Project, EntityDefinition, Field } from '@/lib/universal-entity/types';
+import { createClient } from "@/lib/supabase/server";
+import type {
+  Project,
+  EntityDefinition,
+  Field,
+} from "@/lib/universal-entity/types";
 
 export interface ProjectWithConfig {
   project: Project & {
     enableSignIn: boolean;
     enableSignUp: boolean;
   };
-  entityDefinitions: Array<EntityDefinition & {
-    fields: Field[];
-  }>;
+  entityDefinitions: Array<
+    EntityDefinition & {
+      fields: Field[];
+    }
+  >;
 }
 
 /**
  * Получить проект со всеми entityDefinitions и fields одним запросом
  * Используется в публичном API для быстрого доступа к конфигурации
- * 
+ *
  * @param projectId - ID проекта
  * @returns Проект с конфигурацией или null если не найден
  */
 export async function getProjectWithConfig(
   projectId: string
-): Promise<ProjectWithConfig | null>
+): Promise<ProjectWithConfig | null>;
 ```
 
 **Особенности:**
+
 - Один оптимизированный запрос с вложенными данными через Supabase
 - Трансформация данных из snake_case в camelCase
 - Обработка всех полей entityDefinition и field
 - Возврат null если проект не найден
 
 **Зависимости:**
+
 - `lib/supabase/server` - для создания клиента
 - `lib/universal-entity/types` - для типов
 
@@ -102,42 +110,52 @@ export async function getProjectWithConfig(
 **Функционал:**
 
 ```typescript
-import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { NextRequest } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { getUserRole } from "@/lib/auth/roles";
 
 export interface AuthResult {
   user: { id: string; email: string } | null;
-  role: 'admin' | 'user' | null;
+  role: "admin" | "user" | null;
+  accessToken: string | null;
+  refreshToken: string | null;
 }
 
 /**
- * Извлечь и проверить JWT токен из запроса
- * 
+ * Извлечь и проверить авторизацию из запроса
+ * Поддерживает два способа:
+ * 1. Bearer token в заголовке Authorization (для внешних клиентов)
+ * 2. Cookies (для клиентов, использующих ту же систему авторизации)
+ *
  * @param request - Next.js request объект
- * @returns Результат авторизации с пользователем и ролью
+ * @returns Результат авторизации с пользователем, ролью и токенами
  */
 export async function getAuthFromRequest(
   request: NextRequest
-): Promise<AuthResult>
-
-/**
- * Получить роль пользователя из базы данных
- * 
- * @param userId - ID пользователя
- * @returns Роль пользователя ('admin' | 'user' | null)
- */
-async function getUserRole(userId: string): Promise<'admin' | 'user' | null>
+): Promise<AuthResult>;
 ```
 
 **Особенности:**
-- Извлечение Bearer token из заголовка Authorization
+
+- **Поддержка Bearer token**: Извлечение из заголовка `Authorization: Bearer <token>`
+- **Поддержка Cookies**: Использование Supabase SSR cookies (автоматически через `createClient()`)
 - Проверка токена через Supabase Auth
-- Получение роли пользователя из базы данных
-- Возврат null если пользователь не авторизован
+- Получение роли пользователя из базы данных через `getUserRole()`
+- Извлечение access_token и refresh_token из сессии
+- Возврат `{ user: null, role: null, accessToken: null, refreshToken: null }` если не авторизован
+
+**Логика работы:**
+
+1. Сначала проверяем Bearer token в заголовке (для внешних клиентов)
+2. Если нет Bearer token, используем Supabase SSR клиент (читает cookies автоматически)
+3. Получаем пользователя через `supabase.auth.getUser()`
+4. Получаем сессию через `supabase.auth.getSession()` для токенов
+5. Получаем роль через `getUserRole(userId)`
 
 **Зависимости:**
+
 - `lib/supabase/server` - для создания клиента
-- `lib/auth/roles` - для получения роли (если есть)
+- `lib/auth/roles` - для получения роли
 
 ---
 
@@ -150,11 +168,11 @@ async function getUserRole(userId: string): Promise<'admin' | 'user' | null>
 **Функционал:**
 
 ```typescript
-import type { EntityDefinition } from '@/lib/universal-entity/types';
-import { getAuthFromRequest, type AuthResult } from './auth-middleware';
-import { NextRequest } from 'next/server';
+import type { EntityDefinition } from "@/lib/universal-entity/types";
+import { getAuthFromRequest, type AuthResult } from "./auth-middleware";
+import { NextRequest } from "next/server";
 
-export type PermissionType = 'create' | 'read' | 'update' | 'delete';
+export type PermissionType = "create" | "read" | "update" | "delete";
 
 export interface PermissionCheckResult {
   allowed: boolean;
@@ -163,7 +181,7 @@ export interface PermissionCheckResult {
 
 /**
  * Проверить разрешение для entityDefinition
- * 
+ *
  * @param request - Next.js request объект
  * @param entityDefinition - Конфигурация сущности
  * @param permission - Тип разрешения (create, read, update, delete)
@@ -175,7 +193,7 @@ export async function checkPermission(
   entityDefinition: EntityDefinition,
   permission: PermissionType,
   ownerId?: string | null
-): Promise<PermissionCheckResult>
+): Promise<PermissionCheckResult>;
 ```
 
 **Логика проверки:**
@@ -189,11 +207,13 @@ export async function checkPermission(
 7. **Owner|User** - требуется быть владельцем или любым пользователем
 
 **Особенности:**
+
 - Проверка всех типов разрешений
 - Поддержка Owner проверки через ownerId
 - Возврат понятного сообщения об ошибке
 
 **Зависимости:**
+
 - `lib/api/public/auth-middleware` - для получения авторизации
 - `lib/universal-entity/types` - для типов
 
@@ -208,6 +228,7 @@ export async function checkPermission(
 **Метод:** GET
 
 **Query параметры:**
+
 - `page` (number, optional) - номер страницы (по умолчанию 1)
 - `limit` (number, optional) - количество элементов на странице (по умолчанию 20)
 - `search` (string, optional) - поисковый запрос
@@ -256,6 +277,7 @@ export async function checkPermission(
 ```
 
 **Ошибки:**
+
 - 404 - проект или entityDefinition не найден
 - 403 - нет доступа (readPermission не позволяет)
 - 401 - требуется авторизация
@@ -269,6 +291,7 @@ export async function checkPermission(
 **Метод:** GET
 
 **Query параметры:**
+
 - `includeRelations` (string[], optional) - список полей для загрузки связей
 
 **Функционал:**
@@ -298,6 +321,7 @@ export async function checkPermission(
 ```
 
 **Ошибки:**
+
 - 404 - проект, entityDefinition или экземпляр не найден
 - 403 - нет доступа
 - 401 - требуется авторизация
@@ -310,7 +334,9 @@ export async function checkPermission(
 
 **Метод:** POST
 
-**Body (JSON):**
+**Body (JSON или multipart/form-data):**
+
+**Вариант 1: JSON (без файлов):**
 
 ```json
 {
@@ -320,11 +346,16 @@ export async function checkPermission(
   },
   "relations": {
     "fieldName": ["instanceId1", "instanceId2"]
-  },
-  "files": {
-    "fieldName": [File]
   }
 }
+```
+
+**Вариант 2: multipart/form-data (с файлами):**
+
+```
+data: JSON.stringify({ field1: "value1", field2: "value2" })
+relations: JSON.stringify({ fieldName: ["instanceId1"] })
+files[fieldName]: File1, File2, ...
 ```
 
 **Функционал:**
@@ -332,19 +363,27 @@ export async function checkPermission(
 1. Загрузка проекта с конфигурацией
 2. Поиск entityDefinition по ID
 3. Проверка `createPermission`
-4. Валидация данных на основе fields конфигурации
-5. Обработка файлов (если есть file поля) через `file-service`
-6. Создание экземпляра через `createInstance` из `instance-service`
-7. Создание связей (если есть relations)
-8. Возврат созданного экземпляра
+4. Определение типа запроса (JSON или multipart/form-data)
+5. Валидация данных на основе fields конфигурации
+6. **Обработка файлов:**
+   - Если multipart/form-data: загружаем файлы через `file-service` (требует `entityInstanceId`)
+   - **Проблема:** `file-service.uploadFiles()` требует `entityInstanceId`, которого еще нет
+   - **Решение:** Сначала создаем экземпляр, затем загружаем файлы, затем обновляем данные экземпляра с ID файлов
+7. Создание экземпляра через `createInstance` из `instance-service` (автоматически устанавливает `created_by`)
+8. Если есть файлы: загружаем через `file-service`, обновляем данные экземпляра
+9. Создание связей (если есть relations)
+10. Возврат созданного экземпляра
 
 **Особенности:**
+
 - Валидация всех required полей
 - Проверка типов данных
-- Обработка файлов через multipart/form-data
-- Автоматическая установка `created_by` из токена
+- **Обработка файлов:** Двухэтапный процесс (создание → загрузка файлов → обновление)
+- Автоматическая установка `created_by` из токена (через `createInstance`)
+- **Важно:** Использовать существующий `createInstance` из `instance-service`, не создавать новый метод
 
 **Ошибки:**
+
 - 404 - проект или entityDefinition не найден
 - 403 - нет доступа (createPermission не позволяет)
 - 401 - требуется авторизация
@@ -358,7 +397,9 @@ export async function checkPermission(
 
 **Метод:** PUT
 
-**Body (JSON):**
+**Body (JSON или multipart/form-data):**
+
+**Вариант 1: JSON (без файлов):**
 
 ```json
 {
@@ -368,32 +409,42 @@ export async function checkPermission(
   },
   "relations": {
     "fieldName": ["instanceId1", "instanceId2"]
-  },
-  "files": {
-    "fieldName": [File]
   }
 }
+```
+
+**Вариант 2: multipart/form-data (с файлами):**
+
+```
+data: JSON.stringify({ field1: "newValue1" })
+relations: JSON.stringify({ fieldName: ["instanceId1"] })
+files[fieldName]: File1, File2, ...
 ```
 
 **Функционал:**
 
 1. Загрузка проекта с конфигурацией
 2. Поиск entityDefinition по ID
-3. Получение текущего экземпляра
+3. Получение текущего экземпляра через `getInstanceById`
 4. Проверка `updatePermission`
-5. Проверка Owner (если `updatePermission` содержит Owner)
+5. **Проверка Owner:** Сравнение `authResult.user.id === instance.createdBy` (если `updatePermission` содержит Owner)
 6. Валидация данных
-7. Обработка файлов (удаление старых, загрузка новых)
+7. **Обработка файлов:**
+   - Если multipart/form-data: удаляем старые файлы через `file-service.deleteFiles()`, загружаем новые
+   - Обновляем данные экземпляра с новыми ID файлов
 8. Обновление через `updateInstance` из `instance-service`
-9. Обновление связей
+9. Обновление связей через `relation-service.updateRelations()`
 10. Возврат обновленного экземпляра
 
 **Особенности:**
+
 - Проверка Owner через `created_by` из экземпляра
 - Частичное обновление (только переданные поля)
-- Обработка удаления файлов (если передано null)
+- Обработка удаления файлов (если передано null или пустой массив)
+- **Важно:** Использовать существующий `updateInstance` из `instance-service`
 
 **Ошибки:**
+
 - 404 - проект, entityDefinition или экземпляр не найден
 - 403 - нет доступа или не владелец
 - 401 - требуется авторизация
@@ -420,10 +471,12 @@ export async function checkPermission(
 9. Возврат успешного статуса
 
 **Особенности:**
+
 - Каскадное удаление всех связанных данных
 - Очистка файлов из Storage
 
 **Ошибки:**
+
 - 404 - проект, entityDefinition или экземпляр не найден
 - 403 - нет доступа или не владелец
 - 401 - требуется авторизация
@@ -457,15 +510,22 @@ export async function checkPermission(
 
 ```json
 {
-  "accessToken": "jwt_token_here",
+  "accessToken": "jwt_access_token_here",
+  "refreshToken": "refresh_token_here",
+  "expiresAt": 1234567890,
+  "expiresIn": 3600,
   "user": {
     "id": "...",
-    "email": "user@example.com"
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "user"
   }
 }
 ```
 
 **Ошибки:**
+
 - 404 - проект не найден
 - 403 - sign-in отключен для проекта
 - 401 - неверные credentials
@@ -501,15 +561,22 @@ export async function checkPermission(
 
 ```json
 {
-  "accessToken": "jwt_token_here",
+  "accessToken": "jwt_access_token_here",
+  "refreshToken": "refresh_token_here",
+  "expiresAt": 1234567890,
+  "expiresIn": 3600,
   "user": {
     "id": "...",
-    "email": "user@example.com"
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "user"
   }
 }
 ```
 
 **Ошибки:**
+
 - 404 - проект не найден
 - 403 - sign-up отключен для проекта
 - 400 - ошибка валидации или email уже существует
@@ -528,6 +595,7 @@ export async function checkPermission(
 4. Возврат успешного статуса
 
 **Ошибки:**
+
 - 401 - не авторизован
 
 ---
@@ -553,6 +621,7 @@ export async function checkPermission(
 ```
 
 **Ошибки:**
+
 - 404 - проект не найден
 - 403 - sign-in отключен для проекта
 
@@ -563,6 +632,7 @@ export async function checkPermission(
 **Файл:** `app/api/public/[projectId]/auth/callback/route.ts`
 
 **Query параметры:**
+
 - `code` (string, required) - код от OAuth провайдера
 
 **Функционал:**
@@ -577,15 +647,22 @@ export async function checkPermission(
 
 ```json
 {
-  "accessToken": "jwt_token_here",
+  "accessToken": "jwt_access_token_here",
+  "refreshToken": "refresh_token_here",
+  "expiresAt": 1234567890,
+  "expiresIn": 3600,
   "user": {
     "id": "...",
-    "email": "user@example.com"
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "user"
   }
 }
 ```
 
 **Ошибки:**
+
 - 400 - неверный или истекший code
 - 500 - ошибка обмена code на сессию
 
@@ -618,6 +695,7 @@ export async function checkPermission(
 ```
 
 **Ошибки:**
+
 - 400 - ошибка валидации email
 
 ---
@@ -642,6 +720,7 @@ export async function checkPermission(
 3. Возврат успешного статуса
 
 **Ошибки:**
+
 - 400 - неверный или истекший токен
 - 400 - ошибка валидации пароля
 
@@ -670,6 +749,7 @@ export async function checkPermission(
 ```
 
 **Ошибки:**
+
 - 401 - не авторизован
 
 ---
@@ -683,7 +763,7 @@ export async function checkPermission(
 **Функционал:**
 
 ```typescript
-import type { Field } from '@/lib/universal-entity/types';
+import type { Field } from "@/lib/universal-entity/types";
 
 export interface ValidationResult {
   valid: boolean;
@@ -695,7 +775,7 @@ export interface ValidationResult {
 
 /**
  * Валидация данных на основе fields конфигурации
- * 
+ *
  * @param data - Данные для валидации
  * @param fields - Конфигурация полей
  * @returns Результат валидации
@@ -703,16 +783,38 @@ export interface ValidationResult {
 export function validateInstanceData(
   data: Record<string, unknown>,
   fields: Field[]
-): ValidationResult
+): ValidationResult;
 ```
 
 **Проверки:**
+
 - Required поля присутствуют
 - Типы данных соответствуют dbType
 - Строковые поля не превышают максимальную длину
 - Числовые поля в допустимом диапазоне
 - Дата в правильном формате
 - Boolean значения корректны
+
+**Формат ошибок валидации:**
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "details": [
+      {
+        "field": "fieldName",
+        "message": "Field is required"
+      },
+      {
+        "field": "anotherField",
+        "message": "Invalid type: expected string, got number"
+      }
+    ]
+  }
+}
+```
 
 ---
 
@@ -744,10 +846,11 @@ export function formatError(error: unknown): {
     details?: unknown;
   };
   statusCode: number;
-}
+};
 ```
 
 **Стандартные коды ошибок:**
+
 - `PROJECT_NOT_FOUND` - проект не найден
 - `ENTITY_DEFINITION_NOT_FOUND` - entityDefinition не найден
 - `INSTANCE_NOT_FOUND` - экземпляр не найден
@@ -842,9 +945,21 @@ app/api/public/
 - **Без кэширования:** Каждый запрос идет напрямую в Supabase
 - **Оптимизированный запрос:** Один запрос для получения проекта + entityDefinitions + fields
 - **Проверка разрешений:** Учитываются все опции, включая Owner
-- **Обработка файлов:** Интеграция с существующим `file-service`
+- **Обработка файлов:**
+  - **Поддержка multipart/form-data** в основных endpoints (POST/PUT)
+  - Двухэтапный процесс: создание экземпляра → загрузка файлов → обновление данных с ID файлов
+  - Интеграция с существующим `file-service`
+  - **Вопрос для обсуждения:** Нужен ли отдельный endpoint `/api/public/[projectId]/upload` для загрузки файлов?
+    - Преимущества отдельного endpoint: RESTful подход, возможность загружать файлы отдельно
+    - Преимущества multipart в основном endpoint: удобнее для клиента (один запрос)
 - **Связи:** Поддержка relations через `relation-service`
-- **Валидация:** На основе конфигурации fields из БД
+- **Валидация:** На основе конфигурации fields из БД, детальные сообщения об ошибках
+- **Авторизация:**
+  - Поддержка Bearer token (для внешних клиентов)
+  - Поддержка Cookies (для клиентов с той же системой авторизации)
+  - Возврат access_token и refresh_token в ответах авторизации
+- **Использование существующих сервисов:** Все CRUD операции через `instance-service`, `relation-service`, `file-service`
+- **created_by:** Автоматически устанавливается через `createInstance` из `instance-service`
 
 ---
 
@@ -860,4 +975,3 @@ app/api/public/
 ---
 
 **Готов к реализации!** 🚀
-
