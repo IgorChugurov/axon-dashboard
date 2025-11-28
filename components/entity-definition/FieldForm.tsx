@@ -49,6 +49,7 @@ const DB_TYPE_OPTIONS: { value: DbType; label: string }[] = [
   { value: "oneToMany", label: "One to Many (relation)" },
   { value: "manyToMany", label: "Many to Many (relation)" },
   { value: "oneToOne", label: "One to One (relation)" },
+  { value: "files", label: "Files (array of file IDs)" },
 ];
 
 // Mapping dbType -> allowed field types
@@ -61,6 +62,7 @@ const FIELD_TYPE_BY_DB_TYPE: Record<DbType, FieldType[]> = {
   oneToMany: ["multipleSelect"],
   manyToMany: ["multipleSelect"],
   oneToOne: ["select"],
+  files: ["files", "images"],
 };
 
 export function FieldForm({

@@ -14,6 +14,7 @@ import { InputSwitch } from "./inputs/InputSwitch";
 import { InputDate } from "./inputs/InputDate";
 import { InputSelect } from "./inputs/InputSelect";
 import { InputRelation } from "./inputs/InputRelation";
+import { InputFile } from "./inputs/InputFile";
 import { isRelationField } from "../utils/fieldHelpers";
 
 interface GetInputForFieldProps {
@@ -21,6 +22,7 @@ interface GetInputForFieldProps {
   control: Control<FormData>;
   disabled?: boolean;
   options?: Array<{ id: string; name: string }>;
+  entityInstanceId?: string; // ID экземпляра (для файлов)
 }
 
 /**
@@ -31,6 +33,7 @@ export function GetInputForField({
   control,
   disabled,
   options = [],
+  entityInstanceId,
 }: GetInputForFieldProps) {
   const resolvedOptions = field.options ?? options;
 
@@ -62,6 +65,27 @@ export function GetInputForField({
           control={control}
           disabled={disabled}
           options={resolvedOptions}
+        />
+      );
+
+    case "files":
+    case "images":
+      // Для файлов нужен entityInstanceId
+      if (!entityInstanceId) {
+        return (
+          <div className="space-y-2 w-full">
+            <p className="text-sm text-yellow-500">
+              Загрузка файлов доступна только после создания записи
+            </p>
+          </div>
+        );
+      }
+      return (
+        <InputFile
+          field={field}
+          control={control}
+          disabled={disabled}
+          entityInstanceId={entityInstanceId}
         />
       );
 

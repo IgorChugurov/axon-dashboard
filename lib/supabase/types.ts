@@ -287,6 +287,7 @@ export interface Database {
           entity_definition_id: string;
           project_id: string;
           data: Json;
+          created_by: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -295,6 +296,7 @@ export interface Database {
           entity_definition_id: string;
           project_id: string;
           data?: Json;
+          created_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -303,6 +305,51 @@ export interface Database {
           entity_definition_id?: string;
           project_id?: string;
           data?: Json;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      entity_file: {
+        Row: {
+          id: string;
+          entity_instance_id: string;
+          field_id: string | null;
+          file_url: string;
+          file_path: string;
+          file_name: string;
+          file_size: number;
+          file_type: string;
+          storage_bucket: string;
+          uploaded_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          entity_instance_id: string;
+          field_id?: string | null;
+          file_url: string;
+          file_path: string;
+          file_name: string;
+          file_size: number;
+          file_type: string;
+          storage_bucket?: string;
+          uploaded_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          entity_instance_id?: string;
+          field_id?: string | null;
+          file_url?: string;
+          file_path?: string;
+          file_name?: string;
+          file_size?: number;
+          file_type?: string;
+          storage_bucket?: string;
+          uploaded_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };

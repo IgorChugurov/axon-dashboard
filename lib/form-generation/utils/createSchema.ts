@@ -42,10 +42,12 @@ export function createSchema(fields: Field[]): Yup.ObjectSchema<any> {
 function getValidatorForType(field: Field): Yup.AnySchema {
   switch (field.type) {
     case "number":
-      return Yup.number().nullable().transform((value, originalValue) => {
-        // Transform empty string to null
-        return originalValue === "" ? null : value;
-      });
+      return Yup.number()
+        .nullable()
+        .transform((value, originalValue) => {
+          // Transform empty string to null
+          return originalValue === "" ? null : value;
+        });
 
     case "boolean":
       return Yup.boolean();
@@ -60,6 +62,8 @@ function getValidatorForType(field: Field): Yup.AnySchema {
 
     case "multipleSelect":
     case "array":
+    case "files":
+    case "images":
       return Yup.array().of(Yup.string());
 
     case "select":
@@ -91,19 +95,17 @@ function applyRequiredValidation(
   switch (field.type) {
     case "multipleSelect":
     case "array":
+    case "files":
+    case "images":
       return (validator as any).min(1, message);
 
     case "select":
       // For selects, reject "none" value
-      return (validator as any).test(
-        "not-none",
-        message,
-        (value: any) => {
-          if (value == null) return false;
-          if (Array.isArray(value)) return value.length > 0;
-          return value !== "none" && value !== "";
-        }
-      );
+      return (validator as any).test("not-none", message, (value: any) => {
+        if (value == null) return false;
+        if (Array.isArray(value)) return value.length > 0;
+        return value !== "none" && value !== "";
+      });
 
     case "number":
       return (validator as Yup.NumberSchema).required(message);
@@ -193,6 +195,8 @@ export function createInitialFormData(
           break;
         case "multipleSelect":
         case "array":
+        case "files":
+        case "images":
           initialData[field.name] = [];
           break;
         case "select":
@@ -206,4 +210,3 @@ export function createInitialFormData(
 
   return initialData;
 }
-

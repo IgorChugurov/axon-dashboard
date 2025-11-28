@@ -131,7 +131,7 @@ export async function updateRelations(
   // Удаляем старые связи для указанных полей
   if (fieldIds.length > 0) {
     console.log("  - deleting old relations...");
-    
+
     // Сначала получаем количество для логирования
     const { count } = await supabase
       .from("entity_relation")
@@ -187,10 +187,10 @@ export async function getRelatedInstances(
   const supabase = await createClient();
 
   // Получаем ID связанных экземпляров
-  console.log("[Relation Service] getRelatedInstances - querying entity_relation:");
-  console.log("  - sourceInstanceId:", sourceInstanceId);
-  console.log("  - relationFieldId:", relationFieldId);
-  
+  // console.log("[Relation Service] getRelatedInstances - querying entity_relation:");
+  // console.log("  - sourceInstanceId:", sourceInstanceId);
+  // console.log("  - relationFieldId:", relationFieldId);
+
   const { data: relations, error } = (await supabase
     .from("entity_relation")
     .select("target_instance_id")
@@ -214,18 +214,24 @@ export async function getRelatedInstances(
       .from("entity_relation")
       .select("source_instance_id, relation_field_id, target_instance_id")
       .eq("source_instance_id", sourceInstanceId);
-    console.log("  - all relations for this instance:", allRelationsForInstance?.length || 0);
+    console.log(
+      "  - all relations for this instance:",
+      allRelationsForInstance?.length || 0
+    );
     if (allRelationsForInstance && allRelationsForInstance.length > 0) {
       console.log("  - all relation records:", allRelationsForInstance);
     }
-    
+
     // Проверяем, есть ли связи с этим полем для других экземпляров (для отладки)
     const { data: allRelationsForField } = await supabase
       .from("entity_relation")
       .select("source_instance_id, relation_field_id, target_instance_id")
       .eq("relation_field_id", relationFieldId)
       .limit(5);
-    console.log("  - sample relations with this field:", allRelationsForField?.length || 0);
+    console.log(
+      "  - sample relations with this field:",
+      allRelationsForField?.length || 0
+    );
     if (allRelationsForField && allRelationsForField.length > 0) {
       console.log("  - sample relation records:", allRelationsForField);
     }
@@ -255,10 +261,13 @@ export async function getRelatedInstances(
   console.log("  - targetInstanceIds:", targetInstanceIds);
   console.log("  - related instances count:", instances?.length || 0);
   if (instances && instances.length > 0) {
-    console.log("  - related instances:", instances.map((inst: any) => ({
-      id: inst.id,
-      data: inst.data,
-    })));
+    console.log(
+      "  - related instances:",
+      instances.map((inst: any) => ({
+        id: inst.id,
+        data: inst.data,
+      }))
+    );
   }
 
   return (instances || []).map(

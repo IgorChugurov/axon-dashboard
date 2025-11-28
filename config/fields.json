@@ -191,7 +191,8 @@
         { "id": "manyToOne", "name": "Many to One (relation)" },
         { "id": "oneToMany", "name": "One to Many (relation)" },
         { "id": "manyToMany", "name": "Many to Many (relation)" },
-        { "id": "oneToOne", "name": "One to One (relation)" }
+        { "id": "oneToOne", "name": "One to One (relation)" },
+        { "id": "files", "name": "Files (array of file IDs)" }
       ]
     },
     {
@@ -235,7 +236,9 @@
         { "id": "boolean", "name": "Boolean (switch)" },
         { "id": "date", "name": "Date" },
         { "id": "select", "name": "Select" },
-        { "id": "multipleSelect", "name": "Multiple Select" }
+        { "id": "multipleSelect", "name": "Multiple Select" },
+        { "id": "files", "name": "Files (list)" },
+        { "id": "images", "name": "Images (gallery)" }
       ]
     },
     {

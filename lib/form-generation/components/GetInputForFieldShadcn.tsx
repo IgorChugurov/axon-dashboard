@@ -17,6 +17,7 @@ import { InputSelectShadcn } from "./inputs-shadcn/InputSelectShadcn";
 import { InputRelationShadcn } from "./inputs-shadcn/InputRelationShadcn";
 import { InputArrayShadcn } from "./inputs-shadcn/InputArrayShadcn";
 import { InputEnvironmentValue } from "./inputs-shadcn/InputEnvironmentValue";
+import { InputFile } from "./inputs/InputFile";
 import { isRelationField } from "../utils/fieldHelpers";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 
@@ -25,6 +26,7 @@ interface GetInputForFieldShadcnProps {
   control: Control<FormData>;
   disabled?: boolean;
   options?: Array<{ id: string; name: string }>;
+  entityInstanceId?: string; // ID экземпляра (для файлов)
 }
 
 /**
@@ -35,6 +37,7 @@ export function GetInputForFieldShadcn({
   control,
   disabled,
   options = [],
+  entityInstanceId,
 }: GetInputForFieldShadcnProps) {
   const resolvedOptions = field.options ?? options;
 
@@ -107,6 +110,27 @@ export function GetInputForFieldShadcn({
     case "array":
       return (
         <InputArrayShadcn field={field} control={control} disabled={disabled} />
+      );
+
+    case "files":
+    case "images":
+      // Для файлов нужен entityInstanceId
+      if (!entityInstanceId) {
+        return (
+          <Field>
+            <FieldLabel className="text-yellow-600">
+              Загрузка файлов доступна только после создания записи
+            </FieldLabel>
+          </Field>
+        );
+      }
+      return (
+        <InputFile
+          field={field}
+          control={control}
+          disabled={disabled}
+          entityInstanceId={entityInstanceId}
+        />
       );
 
     default:

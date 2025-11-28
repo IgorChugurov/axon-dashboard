@@ -40,6 +40,9 @@ function transformEntityDefinition(row: any): EntityDefinition {
     enablePagination: row.enable_pagination,
     pageSize: row.page_size,
     enableFilters: row.enable_filters,
+    // File upload limits
+    maxFileSizeMb: row.max_file_size_mb,
+    maxFilesCount: row.max_files_count,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -83,6 +86,14 @@ function transformField(row: any): Field {
     includeInListSa: row.include_in_list_sa,
     foreignKey: row.foreign_key,
     foreignKeyValue: row.foreign_key_value,
+    // File upload configuration
+    acceptFileTypes: row.accept_file_types,
+    maxFileSize: row.max_file_size,
+    maxFiles: row.max_files,
+    storageBucket: row.storage_bucket,
+    // Dynamic value field configuration
+    typeFieldName: row.type_field_name,
+    optionsFieldName: row.options_field_name,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

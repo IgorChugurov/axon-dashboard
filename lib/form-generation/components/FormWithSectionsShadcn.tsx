@@ -50,6 +50,7 @@ interface FormWithSectionsShadcnProps {
   cancelButtonText?: string;
   uiConfig?: EntityUIConfig;
   itemName?: string; // For delete confirmation modal
+  entityInstanceId?: string; // ID экземпляра (для файлов)
 }
 
 export function FormWithSectionsShadcn({
@@ -63,6 +64,7 @@ export function FormWithSectionsShadcn({
   cancelButtonText,
   uiConfig,
   itemName,
+  entityInstanceId,
 }: FormWithSectionsShadcnProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -217,6 +219,7 @@ export function FormWithSectionsShadcn({
                             control={methods.control}
                             disabled={isDisabled}
                             options={field.options ?? []}
+                            entityInstanceId={entityInstanceId}
                           />
                         );
                       })}

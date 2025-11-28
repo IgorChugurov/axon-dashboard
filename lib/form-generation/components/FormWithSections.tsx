@@ -32,6 +32,7 @@ interface FormWithSectionsProps {
   cancelButtonText?: string;
   uiConfig?: EntityUIConfig;
   itemName?: string; // For delete confirmation modal
+  entityInstanceId?: string; // ID экземпляра (для файлов)
 }
 
 export function FormWithSections({
@@ -45,6 +46,7 @@ export function FormWithSections({
   cancelButtonText,
   uiConfig,
   itemName,
+  entityInstanceId,
 }: FormWithSectionsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -177,6 +179,7 @@ export function FormWithSections({
                           field={field}
                           control={methods.control}
                           disabled={isDisabled}
+                          entityInstanceId={entityInstanceId}
                           options={field.options ?? []}
                         />
                       </div>

@@ -184,6 +184,7 @@ function transformEntityInstance(row: Record<string, unknown>): EntityInstance {
     entityDefinitionId: row.entity_definition_id as string,
     projectId: row.project_id as string,
     data: (row.data as Record<string, FieldValue>) || {},
+    createdBy: row.created_by as string | null | undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -200,6 +201,11 @@ export async function createInstance(
 ): Promise<EntityInstanceWithFields> {
   const supabase = await createClient();
 
+  // Получаем текущего пользователя для установки created_by
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   // 1. Создаем экземпляр
   const { data: instance, error: instanceError } = await supabase
     .from("entity_instance")
@@ -207,6 +213,7 @@ export async function createInstance(
       entity_definition_id: entityDefinitionId,
       project_id: projectId,
       data: data,
+      created_by: user?.id || null,
     } as never)
     .select()
     .single();
@@ -282,25 +289,25 @@ export async function getInstanceById(
   if (includeRelations && includeRelations.length > 0) {
     const fields = await getFields(transformedInstance.entityDefinitionId);
 
-    console.log(`[Instance Service] getInstanceById - loading relations:`);
-    console.log(`  - includeRelations:`, includeRelations);
-    console.log(
-      `  - entityDefinitionId:`,
-      transformedInstance.entityDefinitionId
-    );
-    console.log(`  - total fields:`, fields.length);
-    console.log(
-      `  - relation fields in entity:`,
-      fields
-        .filter(
-          (f) =>
-            f.dbType === "manyToMany" ||
-            f.dbType === "manyToOne" ||
-            f.dbType === "oneToMany" ||
-            f.dbType === "oneToOne"
-        )
-        .map((f) => ({ name: f.name, dbType: f.dbType }))
-    );
+    // console.log(`[Instance Service] getInstanceById - loading relations:`);
+    // console.log(`  - includeRelations:`, includeRelations);
+    // console.log(
+    //   `  - entityDefinitionId:`,
+    //   transformedInstance.entityDefinitionId
+    // );
+    // console.log(`  - total fields:`, fields.length);
+    // console.log(
+    //   `  - relation fields in entity:`,
+    //   fields
+    //     .filter(
+    //       (f) =>
+    //         f.dbType === "manyToMany" ||
+    //         f.dbType === "manyToOne" ||
+    //         f.dbType === "oneToMany" ||
+    //         f.dbType === "oneToOne"
+    //     )
+    //     .map((f) => ({ name: f.name, dbType: f.dbType }))
+    // );
 
     for (const relationFieldName of includeRelations) {
       const relationField = fields.find(
@@ -347,6 +354,46 @@ export async function getInstanceById(
 
   // Получаем поля для нормализации
   const fields = await getFields(transformedInstance.entityDefinitionId);
+
+  // Загружаем файлы для полей типа files/images
+  const fileFields = fields.filter(
+    (f) => f.type === "files" || f.type === "images"
+  );
+
+  if (fileFields.length > 0) {
+    const supabase = await createClient();
+
+    // Загружаем все файлы для этого экземпляра одним запросом
+    const { data: allFiles, error: filesError } = (await supabase
+      .from("entity_file")
+      .select("id, field_id")
+      .eq("entity_instance_id", instanceId)) as {
+      data: Array<{ id: string; field_id: string | null }> | null;
+      error: any;
+    };
+
+    if (!filesError && allFiles) {
+      // Группируем файлы по field_id
+      const filesByFieldId = new Map<string, string[]>();
+      allFiles.forEach((file) => {
+        if (file.field_id) {
+          if (!filesByFieldId.has(file.field_id)) {
+            filesByFieldId.set(file.field_id, []);
+          }
+          filesByFieldId.get(file.field_id)!.push(file.id);
+        }
+      });
+
+      // Подставляем массивы ID файлов в data для каждого поля
+      fileFields.forEach((field) => {
+        const fileIds = filesByFieldId.get(field.id) || [];
+        if (fileIds.length > 0 || !transformedInstance.data[field.name]) {
+          // Обновляем data только если есть файлы или поле не заполнено
+          transformedInstance.data[field.name] = fileIds;
+        }
+      });
+    }
+  }
 
   // Уплощаем экземпляр
   const result = flattenInstance(
@@ -555,6 +602,62 @@ export async function getInstances(
 
   // Если связей нет - уплощаем без них
   const fields = await getFields(entityDefinitionId);
+
+  // Загружаем файлы для всех экземпляров если есть поля типа files/images
+  const fileFields = fields.filter(
+    (f) => f.type === "files" || f.type === "images"
+  );
+
+  if (fileFields.length > 0 && transformedInstances.length > 0) {
+    const supabase = await createClient();
+    const instanceIds = transformedInstances.map((inst) => inst.id);
+    const fieldIds = fileFields.map((f) => f.id);
+
+    // Загружаем все файлы для всех экземпляров одним запросом
+    const { data: allFiles, error: filesError } = (await supabase
+      .from("entity_file")
+      .select("id, entity_instance_id, field_id")
+      .in("entity_instance_id", instanceIds)
+      .in("field_id", fieldIds)) as {
+      data: Array<{
+        id: string;
+        entity_instance_id: string;
+        field_id: string | null;
+      }> | null;
+      error: any;
+    };
+
+    if (!filesError && allFiles) {
+      // Группируем файлы по instance_id и field_id
+      const filesMap = new Map<string, Map<string, string[]>>();
+      allFiles.forEach((file) => {
+        if (file.field_id) {
+          if (!filesMap.has(file.entity_instance_id)) {
+            filesMap.set(file.entity_instance_id, new Map());
+          }
+          const instanceFiles = filesMap.get(file.entity_instance_id)!;
+          if (!instanceFiles.has(file.field_id)) {
+            instanceFiles.set(file.field_id, []);
+          }
+          instanceFiles.get(file.field_id)!.push(file.id);
+        }
+      });
+
+      // Подставляем массивы ID файлов в data для каждого экземпляра
+      transformedInstances.forEach((instance) => {
+        const instanceFiles = filesMap.get(instance.id);
+        if (instanceFiles) {
+          fileFields.forEach((field) => {
+            const fileIds = instanceFiles.get(field.id) || [];
+            if (fileIds.length > 0 || !instance.data[field.name]) {
+              instance.data[field.name] = fileIds;
+            }
+          });
+        }
+      });
+    }
+  }
+
   const result = transformedInstances.map((inst) =>
     flattenInstance(inst, fields, options?.relationsAsIds ?? false)
   );

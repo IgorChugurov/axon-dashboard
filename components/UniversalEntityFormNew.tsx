@@ -344,6 +344,7 @@ export function UniversalEntityFormNew({
         onDelete={mode === "edit" && onDelete ? handleDelete : undefined}
         uiConfig={uiConfig}
         itemName={itemName}
+        entityInstanceId={instanceId}
       />
     </div>
   );

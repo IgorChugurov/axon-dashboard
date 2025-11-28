@@ -17,10 +17,10 @@ export interface EntityDefinition {
   projectId: string;
 
   // Права доступа
-  createPermission: "ALL" | "User" | "Admin" | "Admin|User";
-  readPermission: "ALL" | "User" | "Admin" | "Admin|User";
-  updatePermission: "ALL" | "User" | "Admin" | "Admin|User";
-  deletePermission: "ALL" | "User" | "Admin" | "Admin|User";
+  createPermission: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
+  readPermission: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
+  updatePermission: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
+  deletePermission: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
 
   // Section titles for form organization
   titleSection0?: string | null;
@@ -37,6 +37,10 @@ export interface EntityDefinition {
 
   // Filter settings
   enableFilters?: boolean | null; // default: false
+
+  // File upload limits
+  maxFileSizeMb?: number | null; // по умолчанию 5
+  maxFilesCount?: number | null; // по умолчанию 10
 
   createdAt: string;
   updatedAt: string;
@@ -56,7 +60,9 @@ export type FieldType =
   | "radio"
   | "multipleSelect"
   | "array"
-  | "dynamicValue"; // Кастомный тип: динамическое поле, меняющее тип в зависимости от других полей
+  | "dynamicValue" // Кастомный тип: динамическое поле, меняющее тип в зависимости от других полей
+  | "files" // Файлы (отображение как список)
+  | "images"; // Изображения (отображение как img теги)
 
 export type DbType =
   | "varchar"
@@ -66,7 +72,8 @@ export type DbType =
   | "manyToOne"
   | "oneToMany"
   | "manyToMany"
-  | "oneToOne";
+  | "oneToOne"
+  | "files"; // Для файлов (хранит массив ID из entity_file)
 
 export interface FieldOption {
   id: string;
@@ -128,6 +135,12 @@ export interface Field {
   typeFieldName?: string | null; // Name of the field that determines the input type (default: "type")
   optionsFieldName?: string | null; // Name of the field that contains options for select type (default: "options")
 
+  // File upload configuration (for type: "files" or "images")
+  acceptFileTypes?: string | null; // "image/*", "application/pdf", etc.
+  maxFileSize?: number | null; // в байтах (переопределяет лимит из EntityDefinition)
+  maxFiles?: number | null; // для типа "files"/"images" (переопределяет лимит из EntityDefinition)
+  storageBucket?: string | null; // имя bucket (default: "files")
+
   createdAt: string;
   updatedAt: string;
 }
@@ -160,6 +173,7 @@ export type DbTypeToTSType = {
   oneToMany: string[]; // массив ID
   manyToMany: string[]; // массив ID
   oneToOne: string; // ID связанной сущности
+  files: string[]; // массив ID из entity_file
 };
 
 /**
@@ -182,6 +196,9 @@ export interface EntityInstance<
 
   // Все поля хранятся в JSONB (внутреннее представление)
   data: EntityData<TData>;
+
+  // Владелец записи (для политик "только свои записи")
+  createdBy?: string | null;
 
   createdAt: string;
   updatedAt: string;
@@ -307,3 +324,25 @@ export function getFieldValue<T extends FieldValue>(
  */
 export type PartialInstanceData<T extends Record<string, FieldValue>> =
   Partial<T>;
+
+// =====================================================
+// Файлы
+// =====================================================
+
+/**
+ * Файл, привязанный к экземпляру сущности
+ */
+export interface EntityFile {
+  id: string;
+  entityInstanceId: string;
+  fieldId?: string | null;
+  fileUrl: string;
+  filePath: string;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  storageBucket: string;
+  uploadedBy?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

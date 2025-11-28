@@ -47,10 +47,7 @@ export function FieldFormNew({
   const messages = fieldsConfig.messages;
 
   // Query key для инвалидации кэша
-  const queryKey = useMemo(
-    () => ["list", projectId, "field"],
-    [projectId]
-  );
+  const queryKey = useMemo(() => ["list", projectId, "field"], [projectId]);
 
   // URL для редиректа
   const redirectUrl = `/projects/${projectId}/${entityDefinitionId}/fields`;
@@ -130,7 +127,13 @@ export function FieldFormNew({
 
   // Mutation для обновления
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Record<string, any> }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Record<string, any>;
+    }) => {
       showGlobalLoader();
       return updateFieldFromClient(id, {
         name: data.name,
@@ -201,9 +204,13 @@ export function FieldFormNew({
         if (!old) return old;
         return {
           ...old,
-          data: old.data?.filter((item: { id: string }) => item.id !== id) || [],
+          data:
+            old.data?.filter((item: { id: string }) => item.id !== id) || [],
           pagination: old.pagination
-            ? { ...old.pagination, total: Math.max(0, (old.pagination.total || 0) - 1) }
+            ? {
+                ...old.pagination,
+                total: Math.max(0, (old.pagination.total || 0) - 1),
+              }
             : undefined,
         };
       });
@@ -276,8 +283,11 @@ export function FieldFormNew({
       onSubmit={handleSubmit}
       onDelete={mode === "edit" ? handleDelete : undefined}
       onCancel={handleCancel}
-      isLoading={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
+      isLoading={
+        createMutation.isPending ||
+        updateMutation.isPending ||
+        deleteMutation.isPending
+      }
     />
   );
 }
-

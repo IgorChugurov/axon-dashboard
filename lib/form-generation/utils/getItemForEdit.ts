@@ -37,7 +37,7 @@ export function getItemForEdit(
  * Normalize a value from server based on field type
  */
 function normalizeValue(value: any, field: Field): any {
-  console.log("normalizeValue", value, field);
+  //console.log("normalizeValue", value, field);
   switch (field.type) {
     case "select":
       // If null or "none", return appropriate default
@@ -48,6 +48,8 @@ function normalizeValue(value: any, field: Field): any {
 
     case "multipleSelect":
     case "array":
+    case "files":
+    case "images":
       // Ensure array
       if (!Array.isArray(value)) {
         return value ? [value] : [];
@@ -88,6 +90,8 @@ function getDefaultForNull(field: Field): any {
 
     case "multipleSelect":
     case "array":
+    case "files":
+    case "images":
       return [];
 
     case "number":
