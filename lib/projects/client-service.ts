@@ -29,6 +29,8 @@ function transformProject(row: any): Project {
     description: row.description,
     status: row.status,
     createdBy: row.created_by,
+    enableSignIn: row.enable_sign_in ?? true,
+    enableSignUp: row.enable_sign_up ?? true,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -38,12 +40,14 @@ function transformProject(row: any): Project {
  * Получение списка projects с пагинацией и поиском
  * Используется в Client Components для SPA навигации
  */
-export async function getProjectsFromClient(params: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  filters?: Record<string, string[]>;
-} = {}): Promise<ProjectsResponse> {
+export async function getProjectsFromClient(
+  params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    filters?: Record<string, string[]>;
+  } = {}
+): Promise<ProjectsResponse> {
   const supabase = createClient();
 
   const page = params.page || 1;
@@ -51,9 +55,7 @@ export async function getProjectsFromClient(params: {
   const offset = (page - 1) * limit;
 
   // Начинаем запрос
-  let query = supabase
-    .from("projects")
-    .select("*", { count: "exact" });
+  let query = supabase.from("projects").select("*", { count: "exact" });
 
   // Поиск по имени (если указан)
   if (params.search) {
@@ -129,10 +131,7 @@ export async function getProjectByIdFromClient(id: string): Promise<Project> {
 export async function deleteProjectFromClient(id: string): Promise<void> {
   const supabase = createClient();
 
-  const { error } = await supabase
-    .from("projects")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("projects").delete().eq("id", id);
 
   if (error) {
     console.error("[Projects Client Service] Delete error:", error);
@@ -150,13 +149,17 @@ export async function createProjectFromClient(
   const supabase = createClient();
 
   // Получаем текущего пользователя
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const insertData = {
     name: data.name,
     description: data.description || null,
     status: "active",
     created_by: user?.id || null,
+    enable_sign_in: data.enableSignIn ?? true,
+    enable_sign_up: data.enableSignUp ?? true,
   };
 
   const { data: created, error } = await supabase
@@ -187,6 +190,10 @@ export async function updateProjectFromClient(
   if (data.name !== undefined) updateData.name = data.name;
   if (data.description !== undefined) updateData.description = data.description;
   if (data.status !== undefined) updateData.status = data.status;
+  if (data.enableSignIn !== undefined)
+    updateData.enable_sign_in = data.enableSignIn;
+  if (data.enableSignUp !== undefined)
+    updateData.enable_sign_up = data.enableSignUp;
 
   const { data: updated, error } = await supabase
     .from("projects")
@@ -202,4 +209,3 @@ export async function updateProjectFromClient(
 
   return transformProject(updated);
 }
-

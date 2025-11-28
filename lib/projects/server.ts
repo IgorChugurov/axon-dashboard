@@ -45,7 +45,12 @@ export class ProjectsServerProvider {
    */
   async updateProject(
     id: string,
-    data: Partial<Pick<Project, "name" | "description" | "status">>
+    data: Partial<
+      Pick<
+        Project,
+        "name" | "description" | "status" | "enableSignIn" | "enableSignUp"
+      >
+    >
   ): Promise<Project> {
     return updateProjectInSupabase(id, data);
   }

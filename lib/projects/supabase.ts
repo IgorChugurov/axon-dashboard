@@ -7,6 +7,24 @@ import { createClient } from "@/lib/supabase/server";
 import { ServerDataParams } from "@/lib/server-data/types";
 import type { Project, CreateProjectData } from "./types";
 
+/**
+ * Преобразование данных из БД в типы TypeScript
+ * Конвертирует snake_case из БД в camelCase для TypeScript
+ */
+function transformProject(row: any): Project {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    status: row.status,
+    createdBy: row.created_by,
+    enableSignIn: row.enable_sign_in ?? true,
+    enableSignUp: row.enable_sign_up ?? true,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export interface SupabaseProjectsResponse {
   data: Project[];
   pagination?: {
@@ -86,7 +104,7 @@ export async function getProjectsFromSupabase(
   });
 
   return {
-    data: (data as Project[]) || [],
+    data: (data || []).map(transformProject),
     pagination: {
       page,
       limit,
@@ -116,6 +134,8 @@ export async function createProjectInSupabase(
     description: projectData.description || null,
     status: projectData.status || "active",
     created_by: user.data.user.id,
+    enable_sign_in: projectData.enableSignIn ?? true,
+    enable_sign_up: projectData.enableSignUp ?? true,
   };
 
   const { data, error } = await supabase
@@ -129,7 +149,7 @@ export async function createProjectInSupabase(
     throw new Error(`Failed to create project: ${error.message}`);
   }
 
-  return data as Project;
+  return transformProject(data);
 }
 
 /**
@@ -137,7 +157,12 @@ export async function createProjectInSupabase(
  */
 export async function updateProjectInSupabase(
   id: string,
-  projectData: Partial<Pick<Project, "name" | "description" | "status">>
+  projectData: Partial<
+    Pick<
+      Project,
+      "name" | "description" | "status" | "enableSignIn" | "enableSignUp"
+    >
+  >
 ): Promise<Project> {
   const supabase = await createClient();
 
@@ -146,6 +171,10 @@ export async function updateProjectInSupabase(
   if (projectData.description !== undefined)
     updateData.description = projectData.description;
   if (projectData.status !== undefined) updateData.status = projectData.status;
+  if (projectData.enableSignIn !== undefined)
+    updateData.enable_sign_in = projectData.enableSignIn;
+  if (projectData.enableSignUp !== undefined)
+    updateData.enable_sign_up = projectData.enableSignUp;
 
   const { data, error } = await supabase
     .from("projects")
@@ -159,7 +188,7 @@ export async function updateProjectInSupabase(
     throw new Error(`Failed to update project: ${error.message}`);
   }
 
-  return data as Project;
+  return transformProject(data);
 }
 
 /**

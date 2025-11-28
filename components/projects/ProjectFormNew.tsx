@@ -28,6 +28,8 @@ interface ProjectFormNewProps {
     name: string;
     description?: string | null;
     status?: string;
+    enableSignIn?: boolean;
+    enableSignUp?: boolean;
   };
 }
 
@@ -60,16 +62,18 @@ export function ProjectFormNew({
         name: initialData.name,
         description: initialData.description || "",
         status: initialData.status || "active",
+        enableSignIn: initialData.enableSignIn ?? true,
+        enableSignUp: initialData.enableSignUp ?? true,
       }
     : {};
 
   // Функция создания - адаптер для client-service
-  const handleCreate = async (
-    data: Record<string, any>
-  ): Promise<Project> => {
+  const handleCreate = async (data: Record<string, any>): Promise<Project> => {
     const createData = {
       name: data.name,
       description: data.description || null,
+      enableSignIn: data.enableSignIn ?? true,
+      enableSignUp: data.enableSignUp ?? true,
     };
 
     return createProjectFromClient(createData);
@@ -83,6 +87,8 @@ export function ProjectFormNew({
     const updateData = {
       name: data.name,
       description: data.description || null,
+      enableSignIn: data.enableSignIn,
+      enableSignUp: data.enableSignUp,
     };
 
     return updateProjectFromClient(id, updateData);
@@ -118,4 +124,3 @@ export function ProjectFormNew({
     />
   );
 }
-

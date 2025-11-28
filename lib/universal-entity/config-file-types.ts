@@ -34,16 +34,44 @@ export interface EntityDefinitionConfig {
   type?: "primary" | "secondary" | "tertiary";
 
   /** Права доступа для создания */
-  createPermission?: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
+  createPermission?:
+    | "ALL"
+    | "User"
+    | "Admin"
+    | "Admin|User"
+    | "Owner"
+    | "Owner|Admin"
+    | "Owner|User";
 
   /** Права доступа для чтения */
-  readPermission?: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
+  readPermission?:
+    | "ALL"
+    | "User"
+    | "Admin"
+    | "Admin|User"
+    | "Owner"
+    | "Owner|Admin"
+    | "Owner|User";
 
   /** Права доступа для обновления */
-  updatePermission?: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
+  updatePermission?:
+    | "ALL"
+    | "User"
+    | "Admin"
+    | "Admin|User"
+    | "Owner"
+    | "Owner|Admin"
+    | "Owner|User";
 
   /** Права доступа для удаления */
-  deletePermission?: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
+  deletePermission?:
+    | "ALL"
+    | "User"
+    | "Admin"
+    | "Admin|User"
+    | "Owner"
+    | "Owner|Admin"
+    | "Owner|User";
 }
 
 /**

@@ -96,6 +96,8 @@ export interface Database {
           description: string | null;
           status: string;
           created_by: string | null;
+          enable_sign_in: boolean;
+          enable_sign_up: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -105,6 +107,8 @@ export interface Database {
           description?: string | null;
           status?: string;
           created_by?: string | null;
+          enable_sign_in?: boolean;
+          enable_sign_up?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -114,6 +118,8 @@ export interface Database {
           description?: string | null;
           status?: string;
           created_by?: string | null;
+          enable_sign_in?: boolean;
+          enable_sign_up?: boolean;
           created_at?: string;
           updated_at?: string;
         };

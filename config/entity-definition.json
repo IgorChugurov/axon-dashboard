@@ -416,7 +416,10 @@
         { "id": "ALL", "name": "All (including anonymous)" },
         { "id": "User", "name": "Registered users only" },
         { "id": "Admin", "name": "Administrators only" },
-        { "id": "Admin|User", "name": "Admins and Users" }
+        { "id": "Admin|User", "name": "Admins and Users" },
+        { "id": "Owner", "name": "Owner only" },
+        { "id": "Owner|Admin", "name": "Owner and Admins" },
+        { "id": "Owner|User", "name": "Owner and Users" }
       ]
     },
     {
@@ -457,7 +460,10 @@
         { "id": "ALL", "name": "All (including anonymous)" },
         { "id": "User", "name": "Registered users only" },
         { "id": "Admin", "name": "Administrators only" },
-        { "id": "Admin|User", "name": "Admins and Users" }
+        { "id": "Admin|User", "name": "Admins and Users" },
+        { "id": "Owner", "name": "Owner only" },
+        { "id": "Owner|Admin", "name": "Owner and Admins" },
+        { "id": "Owner|User", "name": "Owner and Users" }
       ]
     },
     {
@@ -498,7 +504,10 @@
         { "id": "ALL", "name": "All (including anonymous)" },
         { "id": "User", "name": "Registered users only" },
         { "id": "Admin", "name": "Administrators only" },
-        { "id": "Admin|User", "name": "Admins and Users" }
+        { "id": "Admin|User", "name": "Admins and Users" },
+        { "id": "Owner", "name": "Owner only" },
+        { "id": "Owner|Admin", "name": "Owner and Admins" },
+        { "id": "Owner|User", "name": "Owner and Users" }
       ]
     },
     {
@@ -539,7 +548,10 @@
         { "id": "ALL", "name": "All (including anonymous)" },
         { "id": "User", "name": "Registered users only" },
         { "id": "Admin", "name": "Administrators only" },
-        { "id": "Admin|User", "name": "Admins and Users" }
+        { "id": "Admin|User", "name": "Admins and Users" },
+        { "id": "Owner", "name": "Owner only" },
+        { "id": "Owner|Admin", "name": "Owner and Admins" },
+        { "id": "Owner|User", "name": "Owner and Users" }
       ]
     },
     {
