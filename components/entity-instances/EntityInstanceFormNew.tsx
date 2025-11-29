@@ -8,11 +8,7 @@
 
 import { useMemo, useCallback } from "react";
 import { UniversalEntityFormNew } from "@/components/UniversalEntityFormNew";
-import {
-  createEntityInstanceFromClient,
-  updateEntityInstanceFromClient,
-  deleteEntityInstanceFromClient,
-} from "@/lib/universal-entity/instance-client-service";
+import { createClientSDK } from "@/lib/sdk/public-api";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type {
   EntityDefinition,
@@ -73,24 +69,36 @@ export function EntityInstanceFormNew({
     [relationFieldNames]
   );
 
-  // Функция создания - адаптер для client-service
+  // Создаем SDK клиент
+  const sdk = useMemo(() => {
+    return createClientSDK(
+      projectId,
+      {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      },
+      {
+        enableCache: false, // Отключаем кэш для админки - всегда свежие данные
+      }
+    );
+  }, [projectId]);
+
+  // Функция создания - использует SDK
   const handleCreate = useCallback(
     async (
       formData: Record<string, any>
     ): Promise<EntityInstanceWithFields> => {
       const { data, relations } = separateDataAndRelations(formData);
 
-      return createEntityInstanceFromClient(
-        entityDefinition.id,
-        projectId,
+      return sdk.createInstance(entityDefinition.id, {
         data,
-        Object.keys(relations).length > 0 ? relations : undefined
-      );
+        ...(Object.keys(relations).length > 0 ? { relations } : {}),
+      });
     },
-    [entityDefinition.id, projectId, separateDataAndRelations]
+    [entityDefinition.id, sdk, separateDataAndRelations]
   );
 
-  // Функция обновления - адаптер для client-service
+  // Функция обновления - использует SDK
   const handleUpdate = useCallback(
     async (
       id: string,
@@ -98,21 +106,20 @@ export function EntityInstanceFormNew({
     ): Promise<EntityInstanceWithFields> => {
       const { data, relations } = separateDataAndRelations(formData);
 
-      return updateEntityInstanceFromClient(
-        id,
+      return sdk.updateInstance(entityDefinition.id, id, {
         data,
-        Object.keys(relations).length > 0 ? relations : undefined
-      );
+        ...(Object.keys(relations).length > 0 ? { relations } : {}),
+      });
     },
-    [separateDataAndRelations]
+    [entityDefinition.id, sdk, separateDataAndRelations]
   );
 
-  // Функция удаления - адаптер для client-service
+  // Функция удаления - использует SDK
   const handleDelete = useCallback(
     async (id: string): Promise<void> => {
-      return deleteEntityInstanceFromClient(projectId, id);
+      return sdk.deleteInstance(entityDefinition.id, id);
     },
-    [projectId]
+    [entityDefinition.id, sdk]
   );
 
   // URL для редиректа после успешной операции

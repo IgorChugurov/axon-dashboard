@@ -23,7 +23,6 @@ import {
   deleteAdminFromClient,
 } from "@/lib/admins/client-service";
 import type { Admin } from "@/lib/admins/types";
-import { deleteEntityInstanceFromClient } from "./instance-client-service";
 import { createClientSDK, type RelationFilterInfo } from "@/lib/sdk/public-api";
 import {
   getEntityDefinitionsFromClient,
@@ -152,7 +151,18 @@ export function createEntityInstanceListService(
   };
 
   const onDelete = async (id: string) => {
-    await deleteEntityInstanceFromClient(projectId, id);
+    // Создаем SDK клиент (client-side) с явной передачей ключей
+    const sdk = createClientSDK(
+      projectId,
+      {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      },
+      {
+        enableCache: false, // В админке не кэшируем
+      }
+    );
+    await sdk.deleteInstance(entityDefinitionId, id);
   };
 
   return {

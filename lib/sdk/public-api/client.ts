@@ -864,12 +864,150 @@ export class PublicAPIClient extends BasePublicAPIClient {
     }
   }
 
-  // Заглушки для остальных методов (пока не реализованы)
+  /**
+   * Создать экземпляр сущности
+   * Поддерживает создание с relations и автоматически устанавливает created_by
+   */
   async createInstance(
     entityDefinitionId: string,
     data: CreateInstanceData
   ): Promise<EntityInstanceWithFields> {
-    throw new Error("createInstance: Not implemented yet");
+    try {
+      // 1. Получаем fields из кэша SDK
+      const fields = await this.getFields(entityDefinitionId);
+
+      // 2. Получаем текущего пользователя для установки created_by
+      const {
+        data: { user },
+        error: userError,
+      } = await this.supabase.auth.getUser();
+
+      if (userError) {
+        // Не критично, если пользователь не авторизован - created_by будет null
+        // Но логируем для отладки
+        console.warn(
+          "[SDK] Could not get user for created_by:",
+          userError.message
+        );
+      }
+
+      // 3. Разделяем data и relations из CreateInstanceData
+      const { data: instanceData, relations } = data;
+
+      // 4. Создаем экземпляр
+      const { data: instance, error: instanceError } = (await this.supabase
+        .from("entity_instance")
+        .insert({
+          entity_definition_id: entityDefinitionId,
+          project_id: this.projectId,
+          data: instanceData,
+          created_by: user?.id || null,
+        } as never)
+        .select()
+        .single()) as {
+        data: {
+          id: string;
+          entity_definition_id: string;
+          project_id: string;
+          data: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        } | null;
+        error: any;
+      };
+
+      if (instanceError || !instance) {
+        handleInstanceError(
+          instanceError || new Error("Failed to create instance"),
+          "new"
+        );
+      }
+
+      const transformedInstance = transformEntityInstance(instance);
+
+      // 5. Создаем связи если есть
+      if (relations && Object.keys(relations).length > 0) {
+        // Определяем relation поля
+        const relationFields = fields.filter(
+          (f) =>
+            f.dbType === "manyToMany" ||
+            f.dbType === "manyToOne" ||
+            f.dbType === "oneToMany" ||
+            f.dbType === "oneToOne"
+        );
+
+        const relationInserts: Array<{
+          source_instance_id: string;
+          target_instance_id: string;
+          relation_field_id: string;
+          relation_type: string;
+        }> = [];
+
+        for (const [fieldName, targetInstanceIds] of Object.entries(
+          relations
+        )) {
+          const field = relationFields.find((f) => f.name === fieldName);
+
+          if (!field) {
+            console.warn(
+              `[SDK] Field ${fieldName} not found or not a relation field`
+            );
+            continue;
+          }
+
+          // Преобразуем в массив если нужно
+          const ids = Array.isArray(targetInstanceIds)
+            ? targetInstanceIds
+            : targetInstanceIds
+            ? [targetInstanceIds]
+            : [];
+
+          for (const targetInstanceId of ids) {
+            if (targetInstanceId) {
+              relationInserts.push({
+                source_instance_id: transformedInstance.id,
+                target_instance_id: targetInstanceId,
+                relation_field_id: field.id,
+                relation_type: field.dbType,
+              });
+            }
+          }
+        }
+
+        if (relationInserts.length > 0) {
+          const { error: relationsError } = (await this.supabase
+            .from("entity_relation")
+            .insert(relationInserts as never)) as {
+            error: any;
+          };
+
+          if (relationsError) {
+            throw new SDKError(
+              "RELATIONS_CREATE_ERROR",
+              `Failed to create relations: ${relationsError.message}`,
+              500,
+              relationsError
+            );
+          }
+        }
+      }
+
+      // 6. Возвращаем полный экземпляр через getInstance
+      return await this.getInstance(entityDefinitionId, transformedInstance.id);
+    } catch (error: any) {
+      // Если ошибка уже является SDKError (NotFoundError, PermissionDeniedError и т.д.)
+      // просто пробрасываем её дальше
+      if (
+        error instanceof NotFoundError ||
+        error instanceof PermissionDeniedError ||
+        error instanceof SDKError
+      ) {
+        throw error;
+      }
+
+      // Для остальных ошибок используем общую обработку
+      handleSupabaseError(error);
+    }
   }
 
   async updateInstance(
@@ -877,11 +1015,246 @@ export class PublicAPIClient extends BasePublicAPIClient {
     id: string,
     data: UpdateInstanceData
   ): Promise<EntityInstanceWithFields> {
-    throw new Error("updateInstance: Not implemented yet");
+    try {
+      // 1. Проверяем, что экземпляр существует и принадлежит правильному entityDefinitionId и projectId
+      const { data: currentInstance, error: checkError } = (await this.supabase
+        .from("entity_instance")
+        .select("id, data, entity_definition_id, project_id")
+        .eq("id", id)
+        .eq("entity_definition_id", entityDefinitionId)
+        .eq("project_id", this.projectId)
+        .single()) as {
+        data: {
+          id: string;
+          data: Record<string, unknown>;
+          entity_definition_id: string;
+          project_id: string;
+        } | null;
+        error: any;
+      };
+
+      if (checkError || !currentInstance) {
+        handleInstanceError(checkError || new Error("Instance not found"), id);
+      }
+
+      // 2. Получаем fields из кэша SDK
+      const fields = await this.getFields(entityDefinitionId);
+
+      // 3. Разделяем data и relations из UpdateInstanceData
+      const { data: instanceData, relations } = data;
+
+      // 4. Объединяем данные (новые перезаписывают старые)
+      const updatedData = {
+        ...(currentInstance.data || {}),
+        ...instanceData,
+      };
+
+      // 5. Обновляем экземпляр
+      const { data: updated, error: updateError } = (await this.supabase
+        .from("entity_instance")
+        .update({
+          data: updatedData,
+          updated_at: new Date().toISOString(),
+        } as never)
+        .eq("id", id)
+        .eq("entity_definition_id", entityDefinitionId)
+        .eq("project_id", this.projectId)
+        .select()
+        .single()) as {
+        data: {
+          id: string;
+          entity_definition_id: string;
+          project_id: string;
+          data: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        } | null;
+        error: any;
+      };
+
+      if (updateError || !updated) {
+        throw new SDKError(
+          "UPDATE_ERROR",
+          `Failed to update entity instance: ${
+            updateError?.message || "Update failed"
+          }`,
+          500,
+          updateError
+        );
+      }
+
+      // 6. Обновляем связи если есть
+      if (relations && Object.keys(relations).length > 0) {
+        // Определяем relation поля
+        const relationFields = fields.filter(
+          (f) =>
+            f.dbType === "manyToMany" ||
+            f.dbType === "manyToOne" ||
+            f.dbType === "oneToMany" ||
+            f.dbType === "oneToOne"
+        );
+
+        // Получаем fieldIds для полей, которые нужно обновить
+        const fieldIds = Object.keys(relations)
+          .map((fieldName) => {
+            const field = relationFields.find((f) => f.name === fieldName);
+            return field?.id;
+          })
+          .filter(Boolean) as string[];
+
+        // Удаляем старые связи для указанных полей
+        if (fieldIds.length > 0) {
+          const { error: deleteError } = (await this.supabase
+            .from("entity_relation")
+            .delete()
+            .eq("source_instance_id", id)
+            .in("relation_field_id", fieldIds)) as {
+            error: any;
+          };
+
+          if (deleteError) {
+            throw new SDKError(
+              "RELATIONS_DELETE_ERROR",
+              `Failed to delete old relations: ${deleteError.message}`,
+              500,
+              deleteError
+            );
+          }
+        }
+
+        // Создаем новые связи
+        const relationInserts: Array<{
+          source_instance_id: string;
+          target_instance_id: string;
+          relation_field_id: string;
+          relation_type: string;
+        }> = [];
+
+        for (const [fieldName, targetInstanceIds] of Object.entries(
+          relations
+        )) {
+          const field = relationFields.find((f) => f.name === fieldName);
+
+          if (!field) {
+            console.warn(
+              `[SDK] Field ${fieldName} not found or not a relation field`
+            );
+            continue;
+          }
+
+          // Преобразуем в массив если нужно
+          const ids = Array.isArray(targetInstanceIds)
+            ? targetInstanceIds
+            : targetInstanceIds
+            ? [targetInstanceIds]
+            : [];
+
+          for (const targetInstanceId of ids) {
+            if (targetInstanceId) {
+              relationInserts.push({
+                source_instance_id: id,
+                target_instance_id: targetInstanceId,
+                relation_field_id: field.id,
+                relation_type: field.dbType,
+              });
+            }
+          }
+        }
+
+        if (relationInserts.length > 0) {
+          const { error: relationsError } = (await this.supabase
+            .from("entity_relation")
+            .insert(relationInserts as never)) as {
+            error: any;
+          };
+
+          if (relationsError) {
+            throw new SDKError(
+              "RELATIONS_CREATE_ERROR",
+              `Failed to create relations: ${relationsError.message}`,
+              500,
+              relationsError
+            );
+          }
+        }
+      }
+
+      // 7. Возвращаем полный обновленный экземпляр через getInstance
+      return await this.getInstance(entityDefinitionId, id);
+    } catch (error: any) {
+      // Если ошибка уже является SDKError (NotFoundError, PermissionDeniedError и т.д.)
+      // просто пробрасываем её дальше
+      if (
+        error instanceof NotFoundError ||
+        error instanceof PermissionDeniedError ||
+        error instanceof SDKError
+      ) {
+        throw error;
+      }
+
+      // Для остальных ошибок используем общую обработку
+      handleSupabaseError(error);
+    }
   }
 
+  /**
+   * Удалить экземпляр сущности
+   * Связи удалятся автоматически через ON DELETE CASCADE
+   */
   async deleteInstance(entityDefinitionId: string, id: string): Promise<void> {
-    throw new Error("deleteInstance: Not implemented yet");
+    try {
+      // 1. Проверяем, что экземпляр существует и принадлежит правильному entityDefinitionId и projectId
+      // Это дополнительная проверка безопасности
+      const { data: instance, error: checkError } = (await this.supabase
+        .from("entity_instance")
+        .select("id, entity_definition_id, project_id")
+        .eq("id", id)
+        .eq("entity_definition_id", entityDefinitionId)
+        .eq("project_id", this.projectId)
+        .single()) as {
+        data: {
+          id: string;
+          entity_definition_id: string;
+          project_id: string;
+        } | null;
+        error: any;
+      };
+
+      if (checkError || !instance) {
+        handleInstanceError(checkError || new Error("Instance not found"), id);
+      }
+
+      // 2. Удаляем экземпляр
+      // Связи удалятся автоматически через ON DELETE CASCADE в БД
+      const { error: deleteError } = await this.supabase
+        .from("entity_instance")
+        .delete()
+        .eq("id", id)
+        .eq("entity_definition_id", entityDefinitionId)
+        .eq("project_id", this.projectId);
+
+      if (deleteError) {
+        throw new SDKError(
+          "DELETE_ERROR",
+          `Failed to delete entity instance: ${deleteError.message}`,
+          500,
+          deleteError
+        );
+      }
+    } catch (error: any) {
+      // Если ошибка уже является SDKError (NotFoundError, PermissionDeniedError и т.д.)
+      // просто пробрасываем её дальше
+      if (
+        error instanceof NotFoundError ||
+        error instanceof PermissionDeniedError ||
+        error instanceof SDKError
+      ) {
+        throw error;
+      }
+
+      // Для остальных ошибок используем общую обработку
+      handleSupabaseError(error);
+    }
   }
 
   async signIn(email: string, password: string): Promise<AuthResult> {
