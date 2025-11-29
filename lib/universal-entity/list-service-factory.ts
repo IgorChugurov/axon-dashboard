@@ -23,11 +23,8 @@ import {
   deleteAdminFromClient,
 } from "@/lib/admins/client-service";
 import type { Admin } from "@/lib/admins/types";
-import {
-  getEntityInstancesFromClient,
-  deleteEntityInstanceFromClient,
-  type RelationFilterInfo,
-} from "./instance-client-service";
+import { deleteEntityInstanceFromClient } from "./instance-client-service";
+import { createClientSDK, type RelationFilterInfo } from "@/lib/sdk/public-api";
 import {
   getEntityDefinitionsFromClient,
   deleteEntityDefinitionFromClient,
@@ -113,25 +110,33 @@ export function createEntityInstanceListService(
     params,
     _signal
   ) => {
+    // Создаем SDK клиент (client-side) с явной передачей ключей
+    const sdk = createClientSDK(
+      projectId,
+      {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      },
+      {
+        enableCache: false, // В админке не кэшируем
+      }
+    );
+
     // Передаем режимы фильтрации для каждого relation-поля отдельно
     // filterModes - это объект вида { fieldName: "any" | "all" }
     const relationFilterModes = params.filterModes || {};
 
-    const result = await getEntityInstancesFromClient(
-      entityDefinitionId,
-      projectId,
-      {
-        page: params.page,
-        limit: params.limit,
-        search: params.search,
-        searchableFields: options?.searchableFields,
-        filters: params.filters,
-        relationFilters: options?.relationFilters,
-        relationFilterModes,
-        includeRelations: options?.includeRelations,
-        relationsAsIds: options?.relationsAsIds,
-      }
-    );
+    const result = await sdk.getInstances(entityDefinitionId, {
+      page: params.page,
+      limit: params.limit,
+      search: params.search,
+      searchableFields: options?.searchableFields,
+      filters: params.filters,
+      relationFilters: options?.relationFilters,
+      relationFilterModes,
+      includeRelations: options?.includeRelations,
+      relationsAsIds: options?.relationsAsIds,
+    });
 
     return {
       data: result.data || [],

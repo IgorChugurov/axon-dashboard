@@ -2,7 +2,13 @@
  * Типы для публичного API SDK
  */
 
-import type { FieldValue } from "@/lib/universal-entity/types";
+import type {
+  FieldValue,
+  FieldType,
+  DbType,
+  FieldOption,
+} from "./types/entity-types";
+import type { PartialUIConfig } from "./types/ui-config-types";
 
 /**
  * Конфигурация проекта с entityDefinitions и fields
@@ -19,30 +25,112 @@ export interface ProjectConfig {
 
 /**
  * Конфигурация entityDefinition с полями
+ * Расширенная версия со всеми полями для админки и публичного API
  */
 export interface EntityDefinitionConfig {
   id: string;
   name: string;
+  description?: string | null;
   tableName: string;
+  type: "primary" | "secondary" | "tertiary";
+  projectId: string;
   readPermission: string;
   createPermission: string;
   updatePermission: string;
   deletePermission: string;
+  // Section titles for form organization
+  titleSection0?: string | null;
+  titleSection1?: string | null;
+  titleSection2?: string | null;
+  titleSection3?: string | null;
+  // UI Configuration
+  uiConfig?: PartialUIConfig | null;
+  // Pagination settings
+  enablePagination?: boolean | null;
+  pageSize?: number | null;
+  // Filter settings
+  enableFilters?: boolean | null;
+  // File upload limits
+  maxFileSizeMb?: number | null;
+  maxFilesCount?: number | null;
+  createdAt: string;
+  updatedAt: string;
   fields: FieldConfig[];
 }
 
 /**
  * Конфигурация поля
+ * Расширенная версия со всеми полями для админки и публичного API
  */
 export interface FieldConfig {
   id: string;
+  entityDefinitionId: string;
   name: string;
-  type: string;
-  dbType: string;
+  dbType: DbType;
+  type: FieldType;
+  // UI конфигурация
+  label: string;
+  placeholder?: string | null;
+  description?: string | null;
+  forEditPage: boolean;
+  forCreatePage: boolean;
   required: boolean;
+  requiredText?: string | null;
+  forEditPageDisabled: boolean;
+  displayIndex: number;
+  displayInTable: boolean;
+  sectionIndex: number;
+  isOptionTitleField: boolean;
+  searchable: boolean;
+  filterableInList?: boolean;
+  options?: FieldOption[];
+  // Связи
   relatedEntityDefinitionId?: string | null;
   relationFieldId?: string | null;
+  isRelationSource: boolean;
+  selectorRelationId?: string | null;
+  relationFieldName?: string | null;
+  relationFieldLabel?: string | null;
+  // Значения по умолчанию
+  defaultStringValue?: string | null;
+  defaultNumberValue?: number | null;
+  defaultBooleanValue?: boolean | null;
+  defaultDateValue?: string | null;
+  // API конфигурация
+  autoPopulate: boolean;
+  includeInSinglePma: boolean;
+  includeInListPma: boolean;
+  includeInSingleSa: boolean;
+  includeInListSa: boolean;
+  // Conditional field visibility
+  foreignKey?: string | null;
+  foreignKeyValue?: string | null;
+  // Dynamic value field configuration
+  typeFieldName?: string | null;
+  optionsFieldName?: string | null;
+  // File upload configuration
+  acceptFileTypes?: string | null;
+  maxFileSize?: number | null;
+  maxFiles?: number | null;
+  storageBucket?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
+
+/**
+ * Информация о фильтре для relation-поля
+ */
+export interface RelationFilterInfo {
+  fieldName: string;
+  fieldId: string; // ID поля в таблице field
+}
+
+/**
+ * Режим фильтрации для relation полей
+ * - 'any': хотя бы одно из выбранных значений (OR) - по умолчанию
+ * - 'all': все выбранные значения (AND)
+ */
+export type RelationFilterMode = "any" | "all";
 
 /**
  * Параметры запроса для получения списка экземпляров
@@ -51,7 +139,10 @@ export interface QueryParams {
   page?: number;
   limit?: number;
   search?: string;
+  searchableFields?: string[]; // поля для поиска в JSONB (по умолчанию ["name"])
   filters?: Record<string, string[]>;
+  relationFilters?: RelationFilterInfo[]; // информация о relation-полях для фильтрации
+  relationFilterModes?: Record<string, RelationFilterMode>; // режимы фильтрации для каждого поля: 'any' (по умолчанию) или 'all'
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   includeRelations?: string[];

@@ -3,7 +3,7 @@
  */
 
 import type { FieldConfig } from "./types";
-import type { FieldValue } from "@/lib/universal-entity/types";
+import type { FieldValue } from "./types/entity-types";
 
 /**
  * Результат валидации данных

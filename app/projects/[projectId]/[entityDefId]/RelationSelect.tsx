@@ -1,13 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Label } from "@/components/ui/label";
+import { useEntityOptions, type Option } from "@/hooks/use-entity-options";
 import { X } from "lucide-react";
-
-interface Option {
-  id: string;
-  title: string;
-}
 
 interface RelationSelectProps {
   fieldId: string;
@@ -28,36 +22,16 @@ export function RelationSelect({
   required = false,
   disabled = false,
 }: RelationSelectProps) {
-  const [options, setOptions] = useState<Option[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [titleField, setTitleField] = useState<string>("id");
+  // Используем общий хук для загрузки options
+  // React Query автоматически дедуплицирует запросы для одинаковых relatedEntityDefinitionId
+  const {
+    data,
+    isLoading: loading,
+    error,
+  } = useEntityOptions(relatedEntityDefinitionId);
 
-  useEffect(() => {
-    loadOptions();
-  }, [relatedEntityDefinitionId]);
-
-  const loadOptions = async () => {
-    try {
-      setLoading(true);
-
-      // Загружаем опции через API
-      const response = await fetch(
-        `/api/entities/${relatedEntityDefinitionId}/options`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to load options");
-      }
-
-      const data = await response.json();
-      setOptions(data.options || []);
-      setTitleField(data.titleField || "id");
-    } catch (error) {
-      console.error("[RelationSelect] Error loading options:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const options = data?.options || [];
+  const titleField = data?.titleField || "id";
 
   const handleToggle = (id: string) => {
     if (multiple) {
@@ -72,9 +46,19 @@ export function RelationSelect({
 
   const selectedOptions = options.filter((opt) => value.includes(opt.id));
 
+  // Показываем состояние загрузки
   if (loading) {
     return (
       <div className="text-sm text-muted-foreground">Loading options...</div>
+    );
+  }
+
+  // Показываем ошибку, если есть
+  if (error) {
+    return (
+      <div className="text-sm text-red-500">
+        Failed to load options. Please try again.
+      </div>
     );
   }
 
@@ -156,4 +140,3 @@ export function RelationSelect({
     </div>
   );
 }
-

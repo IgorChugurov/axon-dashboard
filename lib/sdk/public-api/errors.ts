@@ -86,3 +86,22 @@ export function handleSupabaseError(error: any): never {
     error
   );
 }
+
+/**
+ * Обработка ошибок при работе с entity instance
+ * Специфичная обработка для операций с instances
+ */
+export function handleInstanceError(error: any, instanceId: string): never {
+  // PGRST116 = Row not found
+  if (error?.code === "PGRST116") {
+    throw new NotFoundError("Entity instance", instanceId);
+  }
+
+  // 42501 = Insufficient privilege (RLS) - нет прав доступа
+  if (error?.code === "42501") {
+    throw new PermissionDeniedError("read", `entity instance ${instanceId}`);
+  }
+
+  // Остальные ошибки через общую обработку
+  handleSupabaseError(error);
+}

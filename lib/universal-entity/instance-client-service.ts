@@ -5,6 +5,8 @@
  */
 
 import { createClient } from "@/lib/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 import type { EntityInstanceWithFields, Field } from "./types";
 
 /**
@@ -603,6 +605,207 @@ export interface InstanceData {
 
 export interface RelationsData {
   [fieldName: string]: string[]; // массив ID связанных экземпляров
+}
+
+/**
+ * Получить один экземпляр по ID с relations и files
+ * Универсальная функция - работает с любым Supabase client (server или client)
+ * Оптимизирована: 3 batch-запроса (instance, relations, files)
+ */
+export async function getEntityInstanceByIdFromClient(
+  supabase: SupabaseClient<Database>,
+  entityDefinitionId: string,
+  instanceId: string,
+  projectId: string,
+  options?: {
+    relationsAsIds?: boolean;
+    fields?: Array<{ id: string; name: string; dbType: string; type?: string }>;
+  }
+): Promise<EntityInstanceWithFields> {
+  // 1. Получаем instance (1 запрос)
+  const { data: instance, error: instanceError } = (await supabase
+    .from("entity_instance")
+    .select("*")
+    .eq("id", instanceId)
+    .eq("entity_definition_id", entityDefinitionId)
+    .eq("project_id", projectId)
+    .single()) as {
+    data: {
+      id: string;
+      entity_definition_id: string;
+      project_id: string;
+      data: Record<string, unknown>;
+      created_at: string;
+      updated_at: string;
+    } | null;
+    error: any;
+  };
+
+  if (instanceError || !instance) {
+    if (instanceError?.code === "PGRST116") {
+      throw new Error(`Entity instance not found: ${instanceId}`);
+    }
+    throw new Error(
+      `Failed to get entity instance: ${
+        instanceError?.message || "Instance not found"
+      }`
+    );
+  }
+
+  // Трансформируем экземпляр
+  const transformedInstance = transformEntityInstance(instance);
+
+  // 2. Загружаем fields (из кэша если переданы, иначе из БД)
+  let fields: Array<{
+    id: string;
+    name: string;
+    dbType: string;
+    type?: string;
+  }> = options?.fields || [];
+  if (fields.length === 0) {
+    fields = await getFieldsFromClient(entityDefinitionId);
+  }
+
+  // 3. Определяем все relation fields
+  const relationFields = fields.filter(
+    (f) =>
+      f.dbType === "manyToMany" ||
+      f.dbType === "manyToOne" ||
+      f.dbType === "oneToMany" ||
+      f.dbType === "oneToOne"
+  );
+
+  // 4. Загружаем все relations одним batch-запросом (1 запрос)
+  const relations: Record<string, EntityInstanceWithFields[]> = {};
+  if (relationFields.length > 0) {
+    const relationFieldIds = relationFields
+      .map((f) => f.id)
+      .filter((id): id is string => Boolean(id));
+
+    if (relationFieldIds.length > 0) {
+      // Batch-запрос: получаем все relations для всех полей одним запросом
+      const { data: allRelations, error: relationsError } = (await supabase
+        .from("entity_relation")
+        .select("target_instance_id, relation_field_id")
+        .eq("source_instance_id", instanceId)
+        .in("relation_field_id", relationFieldIds)) as {
+        data: Array<{
+          target_instance_id: string;
+          relation_field_id: string;
+        }> | null;
+        error: any;
+      };
+
+      if (relationsError) {
+        console.error(
+          "[Entity Instances Client Service] Get relations error:",
+          relationsError
+        );
+        // Не бросаем ошибку, просто не загружаем связи
+      } else if (allRelations && allRelations.length > 0) {
+        // Получаем все уникальные target_instance_id
+        const targetInstanceIds = [
+          ...new Set(allRelations.map((r) => r.target_instance_id)),
+        ];
+
+        // Загружаем все связанные экземпляры одним запросом
+        const { data: relatedInstances, error: instancesError } =
+          (await supabase
+            .from("entity_instance")
+            .select("*")
+            .in("id", targetInstanceIds)) as {
+            data: Array<{
+              id: string;
+              entity_definition_id: string;
+              project_id: string;
+              data: Record<string, unknown>;
+              created_at: string;
+              updated_at: string;
+            }> | null;
+            error: any;
+          };
+
+        if (!instancesError && relatedInstances) {
+          // Создаем карту связанных экземпляров
+          const relatedInstancesMap = new Map(
+            relatedInstances.map((inst) => [
+              inst.id,
+              transformEntityInstance(inst),
+            ])
+          );
+
+          // Группируем relations по полям
+          for (const relation of allRelations) {
+            const relationField = relationFields.find(
+              (f) => f.id === relation.relation_field_id
+            );
+            if (relationField) {
+              const relatedInstance = relatedInstancesMap.get(
+                relation.target_instance_id
+              );
+              if (relatedInstance) {
+                if (!relations[relationField.name]) {
+                  relations[relationField.name] = [];
+                }
+                relations[relationField.name].push(
+                  relatedInstance as EntityInstanceWithFields
+                );
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 5. Загружаем файлы одним batch-запросом (1 запрос)
+  const fileFields = fields.filter(
+    (f) => f.type === "files" || f.type === "images"
+  );
+
+  if (fileFields.length > 0) {
+    const { data: allFiles, error: filesError } = (await supabase
+      .from("entity_file")
+      .select("id, field_id")
+      .eq("entity_instance_id", instanceId)) as {
+      data: Array<{ id: string; field_id: string | null }> | null;
+      error: any;
+    };
+
+    if (!filesError && allFiles) {
+      // Группируем файлы по field_id
+      const filesByFieldId = new Map<string, string[]>();
+      allFiles.forEach((file) => {
+        if (file.field_id) {
+          if (!filesByFieldId.has(file.field_id)) {
+            filesByFieldId.set(file.field_id, []);
+          }
+          filesByFieldId.get(file.field_id)!.push(file.id);
+        }
+      });
+
+      // Подставляем массивы ID файлов в data для каждого поля
+      fileFields.forEach((field) => {
+        const fileIds = filesByFieldId.get(field.id) || [];
+        if (fileIds.length > 0 || !transformedInstance.data[field.name]) {
+          transformedInstance.data[field.name] = fileIds;
+        }
+      });
+    }
+  }
+
+  // 6. Создаем объект с relations для уплощения
+  const instanceWithRelations = {
+    ...transformedInstance,
+    relations: Object.keys(relations).length > 0 ? relations : undefined,
+  };
+
+  // 7. Уплощаем экземпляр используя существующую утилиту
+  return flattenInstance(
+    instanceWithRelations,
+    fields,
+    options?.relationsAsIds ?? false
+  );
 }
 
 /**
