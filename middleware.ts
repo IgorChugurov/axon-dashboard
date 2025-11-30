@@ -37,12 +37,11 @@ export async function middleware(request: NextRequest) {
   // Вызываем updateSession() для:
   // - Автоматического обновления токенов если они истекли
   // - Получения объекта user для проверки авторизации
-  // - Защиты от race conditions при параллельных запросах
-  //
   // updateSession() возвращает:
   // - response: NextResponse с обновленными cookies
   // - user: объект пользователя или null если не авторизован
   const { response, user } = await updateSession(request);
+  //console.log("user", user);
 
   // ============================================================================
   // ШАГ 2: Публичные маршруты
@@ -56,7 +55,7 @@ export async function middleware(request: NextRequest) {
       redirectResponse.headers.set("x-pathname", pathname);
       return redirectResponse;
     }
-    
+
     response.headers.set("x-pathname", pathname);
     return response;
   }
