@@ -331,9 +331,21 @@ export class PublicAPIClient extends BasePublicAPIClient {
       const offset = (page - 1) * limit;
 
       // 3. Разделяем фильтры на обычные (JSONB) и relation-фильтры
-      const relationFilterFieldNames = new Set(
-        (params?.relationFilters || []).map((rf) => rf.fieldName)
-      );
+      // SDK сам определяет relation-поля из fields (не зависит от внешних метаданных)
+      const relationFieldsMap = new Map<string, { fieldId: string }>();
+
+      // Создаем карту relation-полей из fields
+      fields.forEach((field) => {
+        if (
+          field.relatedEntityDefinitionId &&
+          (field.dbType === "manyToMany" ||
+            field.dbType === "manyToOne" ||
+            field.dbType === "oneToMany" ||
+            field.dbType === "oneToOne")
+        ) {
+          relationFieldsMap.set(field.name, { fieldId: field.id });
+        }
+      });
 
       const jsonbFilters: Record<string, string[]> = {};
       const relationFiltersToApply: Array<{
@@ -345,18 +357,14 @@ export class PublicAPIClient extends BasePublicAPIClient {
       if (params?.filters) {
         Object.entries(params.filters).forEach(([fieldName, values]) => {
           if (values && values.length > 0) {
-            if (relationFilterFieldNames.has(fieldName)) {
-              // Это relation-фильтр
-              const relationInfo = params.relationFilters?.find(
-                (rf) => rf.fieldName === fieldName
-              );
-              if (relationInfo) {
-                relationFiltersToApply.push({
-                  fieldName,
-                  fieldId: relationInfo.fieldId,
-                  values,
-                });
-              }
+            const relationField = relationFieldsMap.get(fieldName);
+            if (relationField) {
+              // Это relation-фильтр - SDK сам определил из fields
+              relationFiltersToApply.push({
+                fieldName,
+                fieldId: relationField.fieldId,
+                values,
+              });
             } else {
               // Это обычный JSONB-фильтр
               jsonbFilters[fieldName] = values;
@@ -502,10 +510,14 @@ export class PublicAPIClient extends BasePublicAPIClient {
       }
 
       // 5. Определяем поля для поиска
-      const searchFields =
-        params?.searchableFields && params.searchableFields.length > 0
-          ? params.searchableFields
-          : ["name"];
+      // SDK сам определяет из fields с searchable: true
+      const searchFields = (() => {
+        const searchable = fields
+          .filter((f) => f.searchable)
+          .map((f) => f.name);
+        // Если нет searchable полей, используем "name" по умолчанию
+        return searchable.length > 0 ? searchable : ["name"];
+      })();
       const searchTerm = params?.search?.trim() || null;
 
       let data: any[] | null = null;
@@ -602,17 +614,27 @@ export class PublicAPIClient extends BasePublicAPIClient {
       const transformedInstances = data.map(transformEntityInstance);
 
       // 9. Загружаем relations batch-запросом (если нужно)
+      // SDK сам определяет из fields с displayInTable: true и relation-полей
       const relationsMap = new Map<
         string,
         Record<string, EntityInstanceWithFields[]>
       >();
 
-      if (
-        params?.includeRelations &&
-        params.includeRelations.length > 0 &&
-        transformedInstances.length > 0
-      ) {
-        const relationFields = params.includeRelations
+      // Определяем relation-поля для загрузки автоматически из fields
+      const relationFieldsToLoad = fields
+        .filter(
+          (f) =>
+            f.relatedEntityDefinitionId &&
+            (f.dbType === "manyToMany" ||
+              f.dbType === "manyToOne" ||
+              f.dbType === "oneToMany" ||
+              f.dbType === "oneToOne") &&
+            f.displayInTable
+        )
+        .map((f) => f.name);
+
+      if (relationFieldsToLoad.length > 0 && transformedInstances.length > 0) {
+        const relationFields = relationFieldsToLoad
           .map((fieldName) => {
             const field = fields.find(
               (f) =>

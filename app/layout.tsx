@@ -16,7 +16,7 @@ import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/toaster";
 import { GlobalLoader } from "@/components/GlobalLoader";
 import { cookies } from "next/headers";
-import { getServerUser } from "@/lib/supabase/auth";
+import { getServerUserFromHeaders } from "@/lib/supabase/auth-headers";
 import { getAllProjectsFromSupabase } from "@/lib/projects/supabase";
 
 const GeistSans = Geist({
@@ -39,28 +39,26 @@ export default async function RootLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  // Получаем текущий путь
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
 
   // Маршруты, для которых не нужна проверка авторизации
+  // Используется только для определения структуры body (flex или нет)
   const publicRoutes = ["/login", "/logout", "/signup"];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
   );
 
-  let user = null;
+  // Получаем пользователя из headers (установленных middleware)
+  // Это избегает повторных запросов к Supabase и БД
+  const user = await getServerUserFromHeaders();
+
   let projects: any[] = [];
 
-  // Проверяем авторизацию только для защищенных маршрутов
-  if (!isPublicRoute) {
-    // Получаем пользователя из Supabase
-    user = await getServerUser();
-
-    // Загружаем все проекты для отображения в сайдбаре
+  // Загружаем проекты только для авторизованных пользователей
+  if (user) {
     try {
       projects = await getAllProjectsFromSupabase();
-      //console.log("[Layout] Loaded projects:", projects.length);
     } catch (error) {
       console.error("[Layout] Error loading projects:", error);
       // Не блокируем рендер, если не удалось загрузить проекты

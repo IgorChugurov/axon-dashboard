@@ -35,7 +35,7 @@
 ✅ Сортировка  
 ✅ Действия (edit, delete, link)  
 ✅ Оптимистичные обновления  
-✅ React Query кэширование  
+✅ React Query кэширование
 
 ---
 
@@ -199,11 +199,14 @@ export function MyEntitiesListClient({
 ```typescript
 // app/projects/[projectId]/[entityDefId]/page.tsx
 import { EntityInstancesListClient } from "@/components/universal-entity-list";
-import { getEntityDefinitionById, getFields } from "@/lib/universal-entity/config-service";
+import {
+  getEntityDefinitionById,
+  getFields,
+} from "@/lib/universal-entity/config-service";
 
 export default async function EntityListPage({ params }) {
   const { projectId, entityDefId } = await params;
-  
+
   const entityDefinition = await getEntityDefinitionById(entityDefId);
   const fields = await getFields(entityDefId);
 
@@ -214,8 +217,10 @@ export default async function EntityListPage({ params }) {
       fields={fields}
       routing={{
         createUrlTemplate: "/projects/{projectId}/{entityDefinitionId}/new",
-        editUrlTemplate: "/projects/{projectId}/{entityDefinitionId}/{instanceId}",
-        detailsUrlTemplate: "/projects/{projectId}/{entityDefinitionId}/{instanceId}",
+        editUrlTemplate:
+          "/projects/{projectId}/{entityDefinitionId}/{instanceId}",
+        detailsUrlTemplate:
+          "/projects/{projectId}/{entityDefinitionId}/{instanceId}",
       }}
     />
   );
@@ -242,6 +247,7 @@ export default async function EntityListPage({ params }) {
 ```
 
 **Особенности:**
+
 - Использует `projectId: "global"`
 - Требует подтверждение удаления с вводом имени
 
@@ -273,12 +279,14 @@ export default async function EntityListPage({ params }) {
   routing={{
     createUrlTemplate: "/projects/{projectId}/{entityDefinitionId}/new",
     editUrlTemplate: "/projects/{projectId}/{entityDefinitionId}/{instanceId}",
-    detailsUrlTemplate: "/projects/{projectId}/{entityDefinitionId}/{instanceId}",
+    detailsUrlTemplate:
+      "/projects/{projectId}/{entityDefinitionId}/{instanceId}",
   }}
 />
 ```
 
 **Особенности:**
+
 - Автоматически загружает options для relation-полей
 - Поддерживает фильтрацию по relations
 - Поддерживает поиск по нескольким полям
@@ -294,8 +302,10 @@ export default async function EntityListPage({ params }) {
   config={fieldsConfig}
   routing={{
     createUrlTemplate: "/projects/{projectId}/{entityDefinitionId}/fields/new",
-    editUrlTemplate: "/projects/{projectId}/{entityDefinitionId}/fields/{instanceId}",
-    detailsUrlTemplate: "/projects/{projectId}/{entityDefinitionId}/fields/{instanceId}",
+    editUrlTemplate:
+      "/projects/{projectId}/{entityDefinitionId}/fields/{instanceId}",
+    detailsUrlTemplate:
+      "/projects/{projectId}/{entityDefinitionId}/fields/{instanceId}",
   }}
 />
 ```
@@ -311,7 +321,8 @@ export default async function EntityListPage({ params }) {
   routing={{
     createUrlTemplate: "/projects/{projectId}/settings/environments/new",
     editUrlTemplate: "/projects/{projectId}/settings/environments/{instanceId}",
-    detailsUrlTemplate: "/projects/{projectId}/settings/environments/{instanceId}",
+    detailsUrlTemplate:
+      "/projects/{projectId}/settings/environments/{instanceId}",
   }}
 />
 ```
@@ -346,14 +357,14 @@ interface EntityConfigFile {
 ### Типы колонок
 
 ```typescript
-type ColumnType = 
-  | "text"           // Обычный текст
-  | "date"           // Дата
-  | "boolean"         // Да/Нет
-  | "number"          // Число
-  | "actions"         // Действия (edit, delete)
+type ColumnType =
+  | "text" // Обычный текст
+  | "date" // Дата
+  | "boolean" // Да/Нет
+  | "number" // Число
+  | "actions" // Действия (edit, delete)
   | "navigateToDetails" // Ссылка на детали
-  | "openEditPage";    // Ссылка на редактирование
+  | "openEditPage"; // Ссылка на редактирование
 ```
 
 ### Конфигурация колонок
@@ -456,13 +467,15 @@ type ColumnType =
 ### 1. Используйте специализированные клиенты
 
 ✅ **Хорошо:**
+
 ```typescript
 <ProjectsListClient config={config} routing={routing} />
 ```
 
 ❌ **Плохо:**
+
 ```typescript
-<UniversalEntityListClient 
+<UniversalEntityListClient
   projectId="global"
   serviceType="project"
   config={config}
@@ -475,6 +488,7 @@ type ColumnType =
 ### 2. Создавайте сервисы через фабрику
 
 ✅ **Хорошо:**
+
 ```typescript
 const listService = useMemo(
   () => createMyEntityListService(projectId),
@@ -486,13 +500,13 @@ const listService = useMemo(
 
 ```typescript
 // Для проектов (глобальные)
-queryKey: ["list", "global", "project"]
+queryKey: ["list", "global", "project"];
 
 // Для сущностей проекта
-queryKey: ["list", projectId, "entity-instance"]
+queryKey: ["list", projectId, "entity-instance"];
 
 // Для конкретного типа
-queryKey: ["list", projectId, "environment"]
+queryKey: ["list", projectId, "environment"];
 ```
 
 ### 4. Настраивайте routing правильно
@@ -518,17 +532,13 @@ queryKey: ["list", projectId, "environment"]
 
 ### 5. Обрабатывайте relations правильно
 
-Для Entity Instances автоматически загружаются relations. Для кастомных списков:
+Для Entity Instances автоматически загружаются relations через SDK. SDK сам определяет:
 
-```typescript
-const listService = useMemo(
-  () => createEntityInstanceListService(entityDefId, projectId, {
-    includeRelations: ["category", "tags"],
-    relationsAsIds: false, // true для редактирования
-  }),
-  [entityDefId, projectId]
-);
-```
+- relation-поля для фильтрации (из fields)
+- searchable поля для поиска (из fields с `searchable: true`)
+- relation-поля для загрузки (из fields с `displayInTable: true`)
+
+**Примечание:** `createEntityInstanceListService` больше не используется. Используйте `EntityInstancesListClient` с `useSDK()` напрямую, как показано в примере выше.
 
 ---
 
@@ -537,4 +547,3 @@ const listService = useMemo(
 - [Конфигурация списков](../implementation/UI_CONFIG_SYSTEM_REPORT.md)
 - [Таблица роутов](../reports/ROUTES_ANALYSIS.md)
 - [Примеры конфигов](../../config/)
-

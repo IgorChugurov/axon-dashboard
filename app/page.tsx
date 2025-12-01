@@ -2,11 +2,13 @@
  * Home Page - Редирект на последний проект или welcome
  *
  * При заходе на главную страницу:
- * 1. Проверяем роль пользователя (только для админов)
- * 2. Читаем куку с последним проектом
- * 3. Проверяем существование проекта в БД
- * 4. Если проект существует - редирект на /projects/:projectId
- * 5. Иначе показываем страницу выбора проекта
+ * 1. Читаем куку с последним проектом
+ * 2. Проверяем существование проекта в БД
+ * 3. Если проект существует - редирект на /projects/:projectId
+ * 4. Иначе показываем страницу выбора проекта
+ *
+ * Примечание: Проверка авторизации и роли выполняется в middleware,
+ * поэтому здесь мы можем доверять, что пользователь авторизован и имеет права админа
  */
 
 import { cookies } from "next/headers";
@@ -14,28 +16,21 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProjectFromCookies } from "@/lib/projects/cookies";
-import { getUserRole } from "@/lib/auth/roles";
+import { getServerUserFromHeaders } from "@/lib/supabase/auth-headers";
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  
-  // Получаем текущего пользователя
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  // Получаем пользователя из headers (установленных middleware)
+  // Это избегает повторных запросов к Supabase и БД
+  const user = await getServerUserFromHeaders();
+
   if (!user) {
     // Не авторизован - middleware должен был редиректнуть
+    // Но на всякий случай делаем редирект
     redirect("/login");
   }
-  
-  // Проверяем роль пользователя
-  const userRole = await getUserRole(user.id);
-  
-  // Обычные пользователи не имеют доступа к админке
-  // Middleware уже редиректит их на /welcome, но проверим для надёжности
-  if (userRole === "user") {
-    redirect("/welcome");
-  }
-  
+
+  // Middleware уже проверил роль и сделал редирект для обычных пользователей
+  // Здесь мы можем быть уверены, что пользователь - админ
   // Далее логика только для админов
   // Читаем куку с последним проектом
   const cookieStore = await cookies();
@@ -43,6 +38,7 @@ export default async function HomePage() {
 
   if (lastProjectId) {
     // Проверяем существование проекта в БД
+    const supabase = await createClient();
     const { data: project, error } = await supabase
       .from("projects")
       .select("id")
@@ -63,9 +59,7 @@ export default async function HomePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Welcome</h1>
-        <p className="text-muted-foreground">
-          Welcome to your admin dashboard
-        </p>
+        <p className="text-muted-foreground">Welcome to your admin dashboard</p>
       </div>
 
       <div className="rounded-lg border bg-card p-6">

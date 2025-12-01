@@ -6,7 +6,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Plus } from "lucide-react";
-import { DataTableFacetedFilter } from "./DataTableFacetedFilter";
+import { FilterField } from "./FilterField";
 import type { Field } from "@/lib/universal-entity/types";
 import type { FilterMode } from "./types/list-types";
 
@@ -45,20 +45,25 @@ export function DataTableToolbar({
   onCreate,
 }: DataTableToolbarProps) {
   // Получаем поля, которые можно фильтровать
-  const filterableFields = fields.filter(
-    (field) =>
-      field.filterableInList && field.options && field.options.length > 0
-  );
+  // Для relation-полей options будут загружены лениво при открытии фильтра
+  // Для обычных полей должны быть options уже в поле
+  const filterableFields = fields.filter((field) => {
+    if (!field.filterableInList) return false;
 
-  // Проверяем, является ли поле relation-полем (для показа toggle режима)
-  const isRelationField = (field: Field): boolean => {
-    return (
-      field.dbType === "manyToOne" ||
-      field.dbType === "oneToOne" ||
-      field.dbType === "manyToMany" ||
-      field.dbType === "oneToMany"
-    );
-  };
+    // Для relation-полей достаточно наличия relatedEntityDefinitionId
+    if (
+      field.relatedEntityDefinitionId &&
+      (field.dbType === "manyToOne" ||
+        field.dbType === "oneToOne" ||
+        field.dbType === "manyToMany" ||
+        field.dbType === "oneToMany")
+    ) {
+      return true;
+    }
+
+    // Для обычных полей нужны готовые options
+    return field.options && field.options.length > 0;
+  });
 
   // Обработчик изменения фильтра для конкретного поля
   const handleFilterChange = (fieldName: string, value: string[]) => {
@@ -102,31 +107,18 @@ export function DataTableToolbar({
         {/* Фильтры */}
         {hasFilters && (
           <div className="flex items-center gap-2 flex-wrap">
-            {filterableFields.map((field) => {
-              const options =
-                field.options?.map((opt) => ({
-                  label: opt.name,
-                  value: opt.id,
-                })) || [];
-
-              // Для relation-полей показываем toggle режима фильтрации
-              const showModeToggle = isRelationField(field);
-
-              return (
-                <DataTableFacetedFilter
-                  key={field.name}
-                  title={field.label}
-                  options={options}
-                  value={filters[field.name] || []}
-                  onChange={(value) => handleFilterChange(field.name, value)}
-                  showModeToggle={showModeToggle}
-                  filterMode={filterModes[field.name] || "any"}
-                  onFilterModeChange={(mode) =>
-                    handleFilterModeChange(field.name, mode)
-                  }
-                />
-              );
-            })}
+            {filterableFields.map((field) => (
+              <FilterField
+                key={field.name}
+                field={field}
+                value={filters[field.name] || []}
+                onChange={(value) => handleFilterChange(field.name, value)}
+                filterMode={filterModes[field.name] || "any"}
+                onFilterModeChange={(mode) =>
+                  handleFilterModeChange(field.name, mode)
+                }
+              />
+            ))}
           </div>
         )}
       </div>

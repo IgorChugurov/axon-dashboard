@@ -47,7 +47,6 @@ import {
 import { Icon_logo } from "./Logo";
 import type { EntityDefinition } from "@/lib/universal-entity/types";
 import type { Project } from "@/lib/projects/types";
-import { EntitiesSidebarSectionWrapper } from "./EntitiesSidebarSection";
 
 // Menu items.
 const items = [
@@ -68,7 +67,7 @@ interface AppSidebarProps {
   entities?: EntityDefinition[];
 }
 
-export function AppSidebar({ projects = [], entities = [] }: AppSidebarProps) {
+export function AppSidebar({ projects = [] }: AppSidebarProps) {
   const { user, logout, isLoading } = useAuth();
 
   const handleLogout = async () => {
@@ -142,7 +141,7 @@ export function AppSidebar({ projects = [], entities = [] }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
         {/* Dynamic Entities from Database - используем Context если доступен, иначе props */}
-        <EntitiesSidebarSectionWrapper entities={entities} />
+
         <Collapsible defaultValue="open" className="group/collapsible">
           <SidebarGroup className="group/collapsible">
             <SidebarGroupLabel asChild>

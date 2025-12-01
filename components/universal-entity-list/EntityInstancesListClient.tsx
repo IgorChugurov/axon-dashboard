@@ -1,18 +1,18 @@
 /**
  * Client Component обертка для списка Entity Instances
  * Формирует EntityConfigFile из данных БД (EntityDefinition + Fields)
- * Использует фабрику сервисов для создания onLoadData и onDelete
- * Загружает options для relation-полей с filterableInList: true
+ * Использует SDK напрямую для загрузки данных и удаления
+ * Options для фильтров загружаются лениво при открытии фильтра
  */
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { UniversalEntityListClient } from "./UniversalEntityListClient";
-import { createEntityInstanceListService } from "@/lib/universal-entity/list-service-factory";
 import { createEntityConfigFileFromDbData } from "@/lib/universal-entity/config-utils";
-import { useRelationFieldOptions } from "./hooks/use-relation-field-options";
-import type { RoutingConfig } from "./types/list-types";
+import { useSDK } from "@/components/providers/SDKProvider";
+// Примечание: relationFieldNames и searchableFields больше не нужны - SDK сам определяет из fields
+import type { RoutingConfig, LoadDataFn, LoadParams } from "./types/list-types";
 import type {
   EntityDefinition,
   Field,
@@ -32,79 +32,56 @@ export function EntityInstancesListClient({
   fields,
   routing,
 }: EntityInstancesListClientProps) {
-  // Загружаем options для relation-полей с filterableInList: true
-  const { fieldsWithOptions, isLoading: optionsLoading } =
-    useRelationFieldOptions(fields);
+  // Получаем SDK клиент из провайдера
+  const { sdk } = useSDK();
 
-  // DEBUG: Проверка данных для фильтров
-
-  // Формируем EntityConfigFile из данных БД (с обогащенными полями)
+  // Формируем EntityConfigFile из данных БД
+  // Options для фильтров будут загружены лениво при открытии фильтра
   const config = useMemo(
-    () => createEntityConfigFileFromDbData(entityDefinition, fieldsWithOptions),
-    [entityDefinition, fieldsWithOptions]
+    () => createEntityConfigFileFromDbData(entityDefinition, fields),
+    [entityDefinition, fields]
   );
-  //console.log("EntityInstancesListClient config", config);
 
-  // Определяем поля со связями для загрузки (только displayInTable)
-  const relationFieldNames = useMemo(() => {
-    return fieldsWithOptions
-      .filter(
-        (f) =>
-          f.relatedEntityDefinitionId &&
-          (f.dbType === "manyToMany" ||
-            f.dbType === "manyToOne" ||
-            f.dbType === "oneToMany" ||
-            f.dbType === "oneToOne") &&
-          f.displayInTable
-      )
-      .map((f) => f.name);
-  }, [fieldsWithOptions]);
+  // Примечание: relationFieldNames, searchableFields и relationFiltersInfo больше не нужны
+  // SDK сам определяет все это из fields внутри getInstances()
 
-  // Определяем relation-поля для фильтрации (filterableInList: true)
-  const relationFiltersInfo = useMemo(() => {
-    return fieldsWithOptions
-      .filter(
-        (f) =>
-          f.filterableInList &&
-          f.relatedEntityDefinitionId &&
-          (f.dbType === "manyToMany" ||
-            f.dbType === "manyToOne" ||
-            f.dbType === "oneToMany" ||
-            f.dbType === "oneToOne")
-      )
-      .map((f) => ({
-        fieldName: f.name,
-        fieldId: f.id,
-      }));
-  }, [fieldsWithOptions]);
+  // Функция загрузки данных через SDK
+  const onLoadData = useCallback<LoadDataFn<EntityInstanceWithFields>>(
+    async (params: LoadParams, _signal?: AbortSignal) => {
+      // Передаем режимы фильтрации для каждого relation-поля отдельно
+      const relationFilterModes = params.filterModes || {};
 
-  // Определяем searchable поля для поиска в JSONB
-  const searchableFields = useMemo(() => {
-    const searchable = fieldsWithOptions
-      .filter((f) => f.searchable)
-      .map((f) => f.name);
-    // Если нет searchable полей, используем "name" по умолчанию
-    return searchable.length > 0 ? searchable : ["name"];
-  }, [fieldsWithOptions]);
-
-  // Создаем сервис через фабрику с опциями для relations
-  const listService = useMemo(
-    () =>
-      createEntityInstanceListService(entityDefinition.id, projectId, {
-        includeRelations:
-          relationFieldNames.length > 0 ? relationFieldNames : undefined,
+      const result = await sdk.getInstances(entityDefinition.id, {
+        page: params.page,
+        limit: params.limit,
+        search: params.search,
+        // searchableFields, includeRelations и relationFilters удалены - SDK сам определяет из fields
+        filters: params.filters,
+        relationFilterModes,
         relationsAsIds: false, // Загружаем полные объекты для отображения в таблице
-        relationFilters:
-          relationFiltersInfo.length > 0 ? relationFiltersInfo : undefined,
-        searchableFields,
-      }),
-    [
-      entityDefinition.id,
-      projectId,
-      relationFieldNames,
-      relationFiltersInfo,
-      searchableFields,
-    ]
+      });
+
+      return {
+        data: result.data || [],
+        pagination: result.pagination || {
+          page: params.page,
+          limit: params.limit,
+          total: 0,
+          totalPages: 0,
+          hasPreviousPage: false,
+          hasNextPage: false,
+        },
+      };
+    },
+    [sdk, entityDefinition.id]
+  );
+
+  // Функция удаления через SDK
+  const onDelete = useCallback(
+    async (id: string) => {
+      await sdk.deleteInstance(entityDefinition.id, id);
+    },
+    [sdk, entityDefinition.id]
   );
 
   // Заменяем {entityDefinitionId} в шаблонах URL
@@ -131,8 +108,8 @@ export function EntityInstancesListClient({
       serviceType="entity-instance"
       config={config}
       routing={resolvedRouting}
-      onLoadData={listService.onLoadData}
-      onDelete={listService.onDelete}
+      onLoadData={onLoadData}
+      onDelete={onDelete}
     />
   );
 }

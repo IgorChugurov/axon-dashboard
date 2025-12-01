@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { PROJECT_COOKIE_NAME } from "@/lib/projects/cookies";
+import { clearCachedRole } from "@/lib/auth/role-cache";
 
 export async function POST() {
   try {
@@ -23,14 +24,17 @@ export async function POST() {
 
     console.log("[Logout API] Logout successful");
 
-    // Создаем ответ и удаляем куку проекта
+    // Создаем ответ и удаляем куки
     const response = NextResponse.json({ success: true });
-    
+
     // Удаляем куку текущего проекта
     response.cookies.set(PROJECT_COOKIE_NAME, "", {
       path: "/",
       maxAge: 0,
     });
+
+    // Очищаем кэш роли пользователя
+    clearCachedRole(response);
 
     return response;
   } catch (error: unknown) {

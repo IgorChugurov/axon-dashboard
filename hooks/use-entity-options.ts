@@ -1,48 +1,21 @@
 /**
  * Хук для загрузки options для relation-полей
- * Использует React Query для кэширования и дедупликации запросов
+ * Использует SDK для загрузки данных через React Query
  *
  * Все компоненты, использующие один и тот же relatedEntityDefinitionId,
  * будут использовать один и тот же запрос и кэш
  */
 
 import { useQuery } from "@tanstack/react-query";
-
-interface Option {
-  id: string;
-  title: string;
-}
-
-interface EntityOptionsData {
-  options: Option[];
-  titleField: string;
-}
-
-/**
- * Загружает options для relation-поля через API
- */
-async function loadEntityOptions(
-  relatedEntityDefinitionId: string
-): Promise<EntityOptionsData> {
-  const response = await fetch(
-    `/api/entities/${relatedEntityDefinitionId}/options`
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to load options: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return {
-    options: data.options || [],
-    titleField: data.titleField || "id",
-  };
-}
+import { useSDK } from "@/components/providers/SDKProvider";
+import { loadEntityOptions } from "./load-entity-options";
+import type { EntityOptionsData, Option } from "./load-entity-options";
 
 /**
  * Хук для загрузки options для relation-поля
  *
  * @param relatedEntityDefinitionId - ID связанной сущности
+ * @param options - Опции для React Query (enabled и т.д.)
  * @returns Данные options, состояние загрузки и ошибки
  *
  * @example
@@ -51,10 +24,16 @@ async function loadEntityOptions(
  * const options = data?.options || [];
  * ```
  */
-export function useEntityOptions(relatedEntityDefinitionId: string) {
+export function useEntityOptions(
+  relatedEntityDefinitionId: string,
+  options?: { enabled?: boolean }
+) {
+  const { sdk } = useSDK();
+
   return useQuery({
     queryKey: ["entity-options", relatedEntityDefinitionId],
-    queryFn: () => loadEntityOptions(relatedEntityDefinitionId),
+    queryFn: () => loadEntityOptions(relatedEntityDefinitionId, sdk),
+    enabled: options?.enabled !== false && !!relatedEntityDefinitionId,
     staleTime: 5 * 60 * 1000, // 5 минут - данные считаются свежими
     gcTime: 10 * 60 * 1000, // 10 минут - кэш хранится в памяти
     retry: 1, // повторить 1 раз при ошибке
@@ -62,4 +41,4 @@ export function useEntityOptions(relatedEntityDefinitionId: string) {
   });
 }
 
-export type { Option, EntityOptionsData };
+export type { Option, EntityOptionsData } from "./load-entity-options";

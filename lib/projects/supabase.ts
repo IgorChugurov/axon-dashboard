@@ -3,6 +3,7 @@
  * Заменяет старый backend API
  */
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ServerDataParams } from "@/lib/server-data/types";
 import type { Project, CreateProjectData } from "./types";

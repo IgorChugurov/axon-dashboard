@@ -36,6 +36,12 @@ interface DataTableFacetedFilterProps {
   filterMode?: FilterMode;
   /** Callback при изменении режима фильтрации */
   onFilterModeChange?: (mode: FilterMode) => void;
+  /** Callback при изменении состояния открытия Popover */
+  onOpenChange?: (open: boolean) => void;
+  /** Показывать состояние загрузки */
+  isLoading?: boolean;
+  /** Сообщение об ошибке */
+  error?: string;
 }
 
 export function DataTableFacetedFilter({
@@ -46,9 +52,21 @@ export function DataTableFacetedFilter({
   showModeToggle = false,
   filterMode = "any",
   onFilterModeChange,
+  onOpenChange,
+  isLoading = false,
+  error,
 }: DataTableFacetedFilterProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+
+  // Обработчик изменения состояния открытия
+  const handleOpenChange = React.useCallback(
+    (newOpen: boolean) => {
+      setOpen(newOpen);
+      onOpenChange?.(newOpen);
+    },
+    [onOpenChange]
+  );
 
   // Обработчик переключения режима фильтрации
   const handleModeToggle = React.useCallback(
@@ -96,7 +114,7 @@ export function DataTableFacetedFilter({
   }, []);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="h-8 border-dashed">
           <PlusCircle className="h-4 w-4" />
@@ -163,7 +181,15 @@ export function DataTableFacetedFilter({
 
         {/* Список опций */}
         <div className="max-h-[300px] overflow-y-auto p-1">
-          {filteredOptions.length === 0 ? (
+          {isLoading ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              Loading options...
+            </div>
+          ) : error ? (
+            <div className="py-6 text-center text-sm text-destructive">
+              {error}
+            </div>
+          ) : filteredOptions.length === 0 ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
               No results found.
             </div>

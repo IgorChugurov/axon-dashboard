@@ -56,31 +56,46 @@ export function EntityInstancesListClient({
   entityDefinition, // ← получаем от страницы
   fields, // ← получаем от страницы
 }) {
+  // Получаем SDK из провайдера
+  const { sdk } = useSDK();
+
   // Используем entityDefinition и fields для:
   // 1. Построения конфигурации таблицы
-  // 2. Определения какие поля показывать
-  // 3. Определения какие поля фильтровать
-  // 4. Определения какие relations загружать
+  // 2. SDK сам определяет из fields:
+  //    - relation-поля для фильтрации
+  //    - searchable поля для поиска
+  //    - relation-поля для загрузки (displayInTable: true)
 
-  // Определяем relation fields для загрузки
-  const relationFieldNames = fields
-    .filter((f) => f.displayInTable && f.dbType === "manyToMany")
-    .map((f) => f.name);
+  // Функция загрузки данных через SDK
+  const onLoadData = useCallback(
+    async (params) => {
+      const result = await sdk.getInstances(entityDefinition.id, {
+        page: params.page,
+        limit: params.limit,
+        search: params.search,
+        filters: params.filters,
+        relationFilterModes: params.filterModes,
+        // SDK сам определяет searchableFields, includeRelations и relationFilters из fields
+      });
 
-  // Создаем сервис для загрузки данных
-  const listService = createEntityInstanceListService(
-    entityDefinition.id, // ← entityDefinitionId
-    projectId,
-    {
-      includeRelations: relationFieldNames, // ← какие relations загружать
-    }
+      return {
+        data: result.data || [],
+        pagination: result.pagination,
+      };
+    },
+    [sdk, entityDefinition.id]
   );
 
-  // Используем сервис для загрузки instances
+  // Функция удаления через SDK
+  const onDelete = useCallback(
+    async (id: string) => {
+      await sdk.deleteInstance(entityDefinition.id, id);
+    },
+    [sdk, entityDefinition.id]
+  );
+
   return (
-    <UniversalEntityListClient
-      onLoadData={listService.loadData} // ← функция загрузки
-    />
+    <UniversalEntityListClient onLoadData={onLoadData} onDelete={onDelete} />
   );
 }
 ```
@@ -89,94 +104,46 @@ export function EntityInstancesListClient({
 
 - ✅ Использует entityDefinition для конфигурации
 - ✅ Использует fields для определения структуры
-- ✅ Создает сервис для загрузки instances
+- ✅ Использует SDK из провайдера (кэш, единый экземпляр)
+- ✅ SDK сам определяет все метаданные из fields
 - ❌ Instances еще НЕ загружены!
 
 ---
 
-#### Шаг 3: Загрузка Instances (внутри компонента)
+#### Шаг 3: Загрузка Instances через SDK
 
-**Файл:** `lib/universal-entity/list-service-factory.ts`
-
-```typescript
-export function createEntityInstanceListService(
-  entityDefinitionId: string, // ← передаем ID сущности
-  projectId: string,
-  options?: {
-    includeRelations?: string[];
-  }
-) {
-  return {
-    loadData: async (params) => {
-      // ✅ ВЫЗЫВАЕМ функцию загрузки
-      return await getEntityInstancesFromClient(
-        entityDefinitionId, // ← передаем ID сущности
-        projectId,
-        {
-          page: params.page,
-          limit: params.limit,
-          includeRelations: options?.includeRelations,
-        }
-      );
-    },
-  };
-}
-```
-
-**Что передается:**
-
-- ✅ `entityDefinitionId` - ID сущности (из URL)
-- ✅ `projectId` - ID проекта (из URL)
-- ✅ Параметры пагинации, фильтров, поиска
-
----
-
-#### Шаг 4: Функция загрузки Instances
-
-**Файл:** `lib/universal-entity/instance-client-service.ts`
+**Файл:** `lib/sdk/public-api/client.ts`
 
 ```typescript
-export async function getEntityInstancesFromClient(
-  entityDefinitionId: string,  // ← получаем ID сущности
-  projectId: string,
-  params: { ... }
+async getInstances(
+  entityDefinitionId: string,
+  params?: QueryParams
 ) {
-  const supabase = createClient();
+  // 1. ✅ Получаем fields из кэша SDK
+  const fields = await this.getFields(entityDefinitionId);
 
-  // 1. ✅ ЗАГРУЖАЕМ Instances из БД
-  const { data: instances } = await supabase
-    .from("entity_instance")
-    .select("*")
-    .eq("entity_definition_id", entityDefinitionId)  // ← фильтр по ID сущности
-    .eq("project_id", projectId);
+  // 2. ✅ SDK сам определяет из fields:
+  //    - relation-поля для фильтрации
+  //    - searchable поля для поиска
+  //    - relation-поля для загрузки (displayInTable: true)
 
-  // 2. ✅ ЗАГРУЖАЕМ Fields (для уплощения)
-  const fields = await getFieldsFromClient(entityDefinitionId);
-  // Откуда: из БД (таблица field)
-  // Зачем: чтобы знать типы полей для уплощения (data -> плоская структура)
-
-  // 3. ✅ ЗАГРУЖАЕМ Relations (если нужно)
-  if (params.includeRelations) {
-    // Загружаем связи из entity_relation
-  }
-
-  // 4. ✅ УПЛОЩАЕМ экземпляры (data -> плоская структура)
-  const flattened = instances.map(inst =>
-    flattenInstance(inst, fields)
-  );
+  // 3. ✅ ЗАГРУЖАЕМ Instances из БД
+  // 4. ✅ ЗАГРУЖАЕМ Relations (если нужно)
+  // 5. ✅ УПЛОЩАЕМ экземпляры
 
   return {
-    data: flattened,
+    data: flattenedInstances,
     pagination: { ... }
   };
 }
 ```
 
-**Что загружается внутри функции:**
+**Что загружается внутри SDK:**
 
+- ✅ Fields (из кэша SDK или БД)
 - ✅ Instances (из `entity_instance`)
-- ✅ Fields (из `field`) - для уплощения
-- ✅ Relations (из `entity_relation`) - если нужно
+- ✅ Relations (из `entity_relation`) - автоматически для полей с `displayInTable: true`
+- ✅ Файлы (из `entity_file`) - автоматически для полей типа `files`/`images`
 - ❌ EntityDefinition (НЕ загружается!)
 
 ---

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import { getUserRoleCached } from "@/lib/auth/roles";
+import { getUserRoleWithCache } from "@/lib/auth/roles";
 
 /**
  * Next.js Middleware
@@ -76,15 +76,52 @@ export async function middleware(request: NextRequest) {
   // ============================================================================
   // ШАГ 4: Проверка ролей и прав доступа
   // ============================================================================
-  // Получаем роль пользователя из базы данных
-  // Используем кешированную версию для производительности
-  const userRole = await getUserRoleCached(user.id);
+  // Получаем роль пользователя с кэшированием (проверяет cookie, если нет - делает RPC-запрос)
+  const userRole = await getUserRoleWithCache(user.id, request, response);
+
+  // Устанавливаем headers для передачи данных в Server Components
+  // Это позволяет избежать повторных запросов к Supabase и БД
+  response.headers.set("x-user-id", user.id);
+  response.headers.set("x-user-role", userRole);
+  response.headers.set("x-user-email", user.email || "");
+
+  // Передаем дополнительные поля из user_metadata
+  const firstName =
+    user.user_metadata?.first_name ||
+    user.user_metadata?.full_name?.split(" ")[0];
+  const lastName =
+    user.user_metadata?.last_name ||
+    user.user_metadata?.full_name?.split(" ").slice(1).join(" ");
+  const avatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+
+  if (firstName) {
+    response.headers.set("x-user-first-name", firstName);
+  }
+  if (lastName) {
+    response.headers.set("x-user-last-name", lastName);
+  }
+  if (avatar) {
+    response.headers.set("x-user-avatar", avatar);
+  }
 
   // Если обычный пользователь (role: "user") пытается попасть в админ-панель,
   // редиректим его на страницу /welcome (для обычных пользователей)
   if (userRole === "user" && !pathname.startsWith("/welcome")) {
     const welcomeUrl = new URL("/welcome", request.url);
     const welcomeResponse = NextResponse.redirect(welcomeUrl);
+    // Передаем данные и в редирект
+    welcomeResponse.headers.set("x-user-id", user.id);
+    welcomeResponse.headers.set("x-user-role", userRole);
+    welcomeResponse.headers.set("x-user-email", user.email || "");
+    if (firstName) {
+      welcomeResponse.headers.set("x-user-first-name", firstName);
+    }
+    if (lastName) {
+      welcomeResponse.headers.set("x-user-last-name", lastName);
+    }
+    if (avatar) {
+      welcomeResponse.headers.set("x-user-avatar", avatar);
+    }
     welcomeResponse.headers.set("x-pathname", pathname);
     return welcomeResponse;
   }

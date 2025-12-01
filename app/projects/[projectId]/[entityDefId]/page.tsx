@@ -4,10 +4,8 @@
  */
 
 import { notFound } from "next/navigation";
-import {
-  getEntityDefinitionById,
-  getFields,
-} from "@/lib/universal-entity/config-service";
+import { cookies } from "next/headers";
+import { createServerSDK } from "@/lib/sdk/public-api/server";
 import { EntityInstancesListClient } from "@/components/universal-entity-list";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
@@ -18,21 +16,47 @@ interface EntityListPageProps {
 export default async function EntityListPage({ params }: EntityListPageProps) {
   const { projectId, entityDefId } = await params;
 
-  // Загружаем entityDefinition
-  const entityDefinition = await getEntityDefinitionById(entityDefId);
+  // Получаем cookie handler для Next.js
+  const cookieStore = await cookies();
 
-  if (!entityDefinition) {
+  // Создаем SDK клиент с явной передачей ключей и cookie handler
+  const sdk = await createServerSDK(
+    projectId,
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: (cookiesToSet) => {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Игнорируем ошибки в Server Components
+          }
+        },
+      },
+    },
+    {
+      enableCache: true, // Используем кэш для оптимизации
+    }
+  );
+
+  // Получаем entity definition с полями через SDK одним запросом (JOIN)
+  // SDK использует кэширование для оптимизации последующих запросов
+  const config = await sdk.getEntityDefinitionWithUIConfig(entityDefId);
+
+  if (!config) {
     notFound();
   }
+
+  const { entityDefinition, fields } = config;
 
   // Проверяем, что entityDefinition принадлежит проекту
   if (entityDefinition.projectId !== projectId) {
     notFound();
   }
-
-  // Загружаем поля
-  const fields = await getFields(entityDefId);
-  //console.log("fields", fields);
 
   return (
     <div className="space-y-6">

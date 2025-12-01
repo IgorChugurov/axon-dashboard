@@ -8,7 +8,7 @@
 
 import { useMemo, useCallback } from "react";
 import { UniversalEntityFormNew } from "@/components/UniversalEntityFormNew";
-import { createClientSDK } from "@/lib/sdk/public-api";
+import { useSDK } from "@/components/providers/SDKProvider";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type {
   EntityDefinition,
@@ -35,6 +35,9 @@ export function EntityInstanceFormNew({
   instanceId,
   initialData = {},
 }: EntityInstanceFormNewProps) {
+  // Получаем SDK из провайдера (должен быть обернут в SDKProvider)
+  const { sdk } = useSDK();
+
   // Определяем поля связей
   const relationFieldNames = useMemo(() => {
     return fields
@@ -68,20 +71,6 @@ export function EntityInstanceFormNew({
     },
     [relationFieldNames]
   );
-
-  // Создаем SDK клиент
-  const sdk = useMemo(() => {
-    return createClientSDK(
-      projectId,
-      {
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      },
-      {
-        enableCache: false, // Отключаем кэш для админки - всегда свежие данные
-      }
-    );
-  }, [projectId]);
 
   // Функция создания - использует SDK
   const handleCreate = useCallback(

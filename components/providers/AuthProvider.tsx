@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { AuthState, LoginCredentials, User } from "@/lib/auth/types";
 import { createClient } from "@/lib/supabase/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { transformSupabaseUser } from "@/lib/supabase/transform";
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -20,28 +21,6 @@ interface AuthContextType extends AuthState {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Преобразование Supabase User в наш User тип
-function transformSupabaseUser(supabaseUser: SupabaseUser | null): User | null {
-  if (!supabaseUser) return null;
-
-  return {
-    id: supabaseUser.id,
-    email: supabaseUser.email || "",
-    firstName:
-      supabaseUser.user_metadata?.first_name ||
-      supabaseUser.user_metadata?.full_name?.split(" ")[0],
-    lastName:
-      supabaseUser.user_metadata?.last_name ||
-      supabaseUser.user_metadata?.full_name?.split(" ").slice(1).join(" "),
-    avatar:
-      supabaseUser.user_metadata?.avatar_url ||
-      supabaseUser.user_metadata?.picture,
-    role: supabaseUser.user_metadata?.role,
-    createdAt: supabaseUser.created_at,
-    updatedAt: supabaseUser.updated_at,
-  };
-}
 
 export function AuthProvider({
   children,
@@ -54,25 +33,36 @@ export function AuthProvider({
     user: initialUser,
     tokens: null,
     isAuthenticated: !!initialUser,
-    isLoading: true, // Начинаем с загрузки, чтобы проверить сессию
+    isLoading: !!initialUser ? false : true, // Если есть initialUser, не загружаем
   });
   const router = useRouter();
   const supabase = createClient();
 
   // Инициализация и отслеживание изменений авторизации
   useEffect(() => {
-    // Получаем текущую сессию
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const user = transformSupabaseUser(session?.user ?? null);
+    // Используем initialUser как основной источник данных
+    if (initialUser) {
       setAuthState({
-        user,
+        user: initialUser,
         tokens: null,
-        isAuthenticated: !!user,
+        isAuthenticated: true,
         isLoading: false,
       });
-    });
+    } else {
+      // Только если нет initialUser, проверяем сессию
+      // Это может быть на публичных страницах или при первой загрузке
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        const user = transformSupabaseUser(session?.user ?? null);
+        setAuthState({
+          user,
+          tokens: null,
+          isAuthenticated: !!user,
+          isLoading: false,
+        });
+      });
+    }
 
-    // Отслеживаем изменения авторизации
+    // Подписываемся на изменения авторизации для синхронизации
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -85,34 +75,21 @@ export function AuthProvider({
         isLoading: false,
       });
 
-      // При успешном входе обновляем страницу
-      if (event === "SIGNED_IN" && user) {
-        router.refresh();
-      }
+      // Убираем избыточный router.refresh() при SIGNED_IN
+      // onAuthStateChange уже обновляет состояние, этого достаточно
+      // router.refresh() вызовется автоматически при навигации
 
       // При выходе редиректим на логин
       if (event === "SIGNED_OUT") {
         router.push("/login");
-        router.refresh();
+        router.refresh(); // Только при выходе для очистки серверного состояния
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [router, supabase.auth]);
-
-  // Обновляем состояние при изменении initialUser (от сервера)
-  useEffect(() => {
-    if (initialUser) {
-      setAuthState((prev) => ({
-        ...prev,
-        user: initialUser,
-        isAuthenticated: true,
-        isLoading: false,
-      }));
-    }
-  }, [initialUser]);
+  }, [initialUser, router, supabase.auth]);
 
   const login = async (credentials: LoginCredentials) => {
     setAuthState((prev) => ({ ...prev, isLoading: true }));
@@ -136,7 +113,7 @@ export function AuthProvider({
       });
 
       router.push("/");
-      router.refresh();
+      // router.refresh() не нужен - навигация обновит страницу автоматически
     } catch (error) {
       setAuthState((prev) => ({ ...prev, isLoading: false }));
       throw error;
@@ -203,7 +180,7 @@ export function AuthProvider({
       });
 
       router.push("/login");
-      router.refresh();
+      router.refresh(); // Нужен для очистки серверного состояния при выходе
     }
   };
 

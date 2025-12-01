@@ -139,13 +139,13 @@ export interface QueryParams {
   page?: number;
   limit?: number;
   search?: string;
-  searchableFields?: string[]; // поля для поиска в JSONB (по умолчанию ["name"])
+  // searchableFields удален - SDK сам определяет из fields с searchable: true
   filters?: Record<string, string[]>;
-  relationFilters?: RelationFilterInfo[]; // информация о relation-полях для фильтрации
+  // relationFilters удален - SDK сам определяет relation-поля из fields
   relationFilterModes?: Record<string, RelationFilterMode>; // режимы фильтрации для каждого поля: 'any' (по умолчанию) или 'all'
   sortBy?: string;
   sortOrder?: "asc" | "desc";
-  includeRelations?: string[];
+  // includeRelations удален - SDK сам определяет из fields с displayInTable: true
   relationsAsIds?: boolean;
 }
 
