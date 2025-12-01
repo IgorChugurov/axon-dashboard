@@ -3,14 +3,11 @@
  *
  * ВАЖНО: Этот файл использует next/headers и может быть импортирован
  * ТОЛЬКО в Server Components или Server Actions
- */
-
-import { headers } from "next/headers";
-import { User, UserRole } from "@/lib/auth/types";
-
-/**
- * Получение пользователя из headers (установленных middleware)
- * Используется в Server Components для избежания повторных запросов
+ *
+ * НАЗНАЧЕНИЕ:
+ * - Читает headers, установленные middleware
+ * - Оптимизация: избегает повторных запросов к Supabase в Server Components
+ * - Используется в layout.tsx и page.tsx для получения пользователя без запросов к БД
  *
  * Middleware устанавливает headers:
  * - x-user-id: ID пользователя
@@ -19,6 +16,14 @@ import { User, UserRole } from "@/lib/auth/types";
  * - x-user-first-name: имя пользователя (опционально)
  * - x-user-last-name: фамилия пользователя (опционально)
  * - x-user-avatar: аватар пользователя (опционально)
+ */
+
+import { headers } from "next/headers";
+import type { User, UserRole } from "@/packages/auth-sdk/src/types";
+
+/**
+ * Получение пользователя из headers (установленных middleware)
+ * Используется в Server Components для избежания повторных запросов
  *
  * Если headers нет (публичный маршрут), возвращает null
  */
@@ -47,7 +52,7 @@ export async function getServerUserFromHeaders(): Promise<User | null> {
       avatar: avatar || undefined,
     };
   } catch (error) {
-    console.error("[Auth] Error reading from headers:", error);
+    console.error("[Auth Headers] Error reading from headers:", error);
     return null;
   }
 }

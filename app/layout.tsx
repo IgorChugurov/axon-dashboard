@@ -16,7 +16,7 @@ import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/toaster";
 import { GlobalLoader } from "@/components/GlobalLoader";
 import { cookies } from "next/headers";
-import { getServerUserFromHeaders } from "@/lib/supabase/auth-headers";
+import { getServerUserFromHeaders } from "@/lib/auth/headers";
 import { getAllProjectsFromSupabase } from "@/lib/projects/supabase";
 
 const GeistSans = Geist({
@@ -42,16 +42,28 @@ export default async function RootLayout({
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
 
-  // Маршруты, для которых не нужна проверка авторизации
-  // Используется только для определения структуры body (flex или нет)
-  const publicRoutes = ["/login", "/logout", "/signup"];
-  const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
-
   // Получаем пользователя из headers (установленных middleware)
   // Это избегает повторных запросов к Supabase и БД
   const user = await getServerUserFromHeaders();
+
+  // Маршруты, для которых не нужна проверка авторизации
+  // Используется только для определения структуры body (flex или нет)
+  // Для этих маршрутов не показываем сайдбар и навбар
+  const publicRoutes = [
+    "/login",
+    "/logout",
+    "/signup",
+    "/auth/reset-password",
+    "/auth/callback",
+  ];
+
+  // КРИТИЧНО: Определяем isPublicRoute с учетом авторизации
+  // Если пользователь авторизован, даже на публичном маршруте показываем интерфейс
+  // Это решает проблему, когда после логина pathname еще не обновился
+  const isPublicRoute =
+    publicRoutes.some((route) => pathname.startsWith(route)) && !user;
+
+  // Пользователь уже получен выше для проверки isPublicRoute
 
   let projects: any[] = [];
 

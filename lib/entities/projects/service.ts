@@ -4,7 +4,7 @@
  */
 
 import { createEntityService } from "@/lib/entity-service";
-import { getServerUser } from "@/lib/supabase/auth";
+import { getServerUserFromHeaders } from "@/lib/auth/headers";
 import type { Project } from "./types";
 
 /**
@@ -19,7 +19,7 @@ export const projectsService = createEntityService<Project>({
   hooks: {
     // Добавляем created_by при создании проекта
     beforeCreate: async (data) => {
-      const user = await getServerUser();
+      const user = await getServerUserFromHeaders();
       if (!user) {
         throw new Error("Unauthorized: User not found");
       }

@@ -3,31 +3,30 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { clearCurrentProjectCookie } from "@/lib/projects/cookies";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function LogoutPage() {
   const router = useRouter();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const handleLogout = async () => {
       try {
         // Очищаем куку проекта на клиенте
         clearCurrentProjectCookie();
-        
-        // Выход через Next.js API Route
-        await fetch("/api/auth/logout", {
-          method: "POST",
-        });
+
+        // Выход через SDK (он сам очистит все cookies через API route)
+        await logout();
       } catch (error) {
         console.error("Logout error:", error);
-      } finally {
-        // Перенаправляем на страницу логина
+        // В любом случае редиректим на логин
         router.push("/login");
-        router.refresh(); // Обновляем серверное состояние
+        router.refresh();
       }
     };
 
     handleLogout();
-  }, [router]);
+  }, [router, logout]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

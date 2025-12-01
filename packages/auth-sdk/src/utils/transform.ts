@@ -5,7 +5,7 @@
  * импортирован как в Server Components, так и в Client Components
  */
 
-import { User } from "@/lib/auth/types";
+import type { User } from "../types";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 /**
@@ -34,3 +34,4 @@ export function transformSupabaseUser(
     updatedAt: supabaseUser.updated_at,
   };
 }
+

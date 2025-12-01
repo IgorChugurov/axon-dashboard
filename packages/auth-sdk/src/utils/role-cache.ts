@@ -13,12 +13,11 @@
  * - Валидация userId - кэш привязан к конкретному пользователю
  */
 
-import type { NextRequest, NextResponse } from "next/server";
-import type { UserRole } from "./types";
+import type { UserRole } from "../types";
+import type { CookieHandler, CookieOptions } from "../types";
 
 const ROLE_CACHE_COOKIE_NAME = "x-user-role-cache";
-const CACHE_TTL_SECONDS = 5 * 60; // 5 минут
-const CACHE_TTL_MS = CACHE_TTL_SECONDS * 1000;
+const DEFAULT_CACHE_TTL_SECONDS = 5 * 60; // 5 минут
 
 interface RoleCacheData {
   role: UserRole;
@@ -28,16 +27,17 @@ interface RoleCacheData {
 
 /**
  * Чтение роли из кэша (cookie)
- * @param request - NextRequest объект
+ * @param cookies - CookieHandler для чтения cookies
  * @param userId - ID текущего пользователя для валидации
  * @returns Роль пользователя или null если кэш отсутствует/истек/невалиден
  */
 export function getCachedRole(
-  request: NextRequest,
+  cookies: CookieHandler,
   userId: string
 ): UserRole | null {
   try {
-    const cacheCookie = request.cookies.get(ROLE_CACHE_COOKIE_NAME);
+    const allCookies = cookies.getAll();
+    const cacheCookie = allCookies.find((c) => c.name === ROLE_CACHE_COOKIE_NAME);
 
     if (!cacheCookie?.value) {
       return null;
@@ -85,17 +85,19 @@ export function getCachedRole(
 
 /**
  * Сохранение роли в кэш (cookie)
- * @param response - NextResponse объект
+ * @param cookies - CookieHandler для записи cookies
  * @param userId - ID пользователя
  * @param role - Роль пользователя
+ * @param ttlSeconds - TTL в секундах (по умолчанию 5 минут)
  */
 export function setCachedRole(
-  response: NextResponse,
+  cookies: CookieHandler,
   userId: string,
-  role: UserRole
+  role: UserRole,
+  ttlSeconds: number = DEFAULT_CACHE_TTL_SECONDS
 ): void {
   try {
-    const expiresAt = Date.now() + CACHE_TTL_MS;
+    const expiresAt = Date.now() + ttlSeconds * 1000;
     const cacheData: RoleCacheData = {
       role,
       userId,
@@ -104,13 +106,21 @@ export function setCachedRole(
 
     const cookieValue = JSON.stringify(cacheData);
 
-    response.cookies.set(ROLE_CACHE_COOKIE_NAME, cookieValue, {
+    const cookieOptions: CookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: CACHE_TTL_SECONDS,
+      maxAge: ttlSeconds,
       path: "/",
-    });
+    };
+
+    cookies.setAll([
+      {
+        name: ROLE_CACHE_COOKIE_NAME,
+        value: cookieValue,
+        options: cookieOptions,
+      },
+    ]);
 
     console.log("[RoleCache] Cache SET", {
       userId,
@@ -124,9 +134,23 @@ export function setCachedRole(
 
 /**
  * Очистка кэша роли (при logout или изменении роли)
- * @param response - NextResponse объект
+ * @param cookies - CookieHandler для удаления cookies
  */
-export function clearCachedRole(response: NextResponse): void {
-  response.cookies.delete(ROLE_CACHE_COOKIE_NAME);
-  console.log("[RoleCache] Cache CLEARED");
+export function clearCachedRole(cookies: CookieHandler): void {
+  try {
+    cookies.setAll([
+      {
+        name: ROLE_CACHE_COOKIE_NAME,
+        value: "",
+        options: {
+          maxAge: 0,
+          path: "/",
+        },
+      },
+    ]);
+    console.log("[RoleCache] Cache CLEARED");
+  } catch (error) {
+    console.error("[RoleCache] Error clearing cache:", error);
+  }
 }
+
