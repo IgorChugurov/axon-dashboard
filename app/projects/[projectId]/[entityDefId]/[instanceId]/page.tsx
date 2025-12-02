@@ -49,7 +49,8 @@ export default async function EntityEditPage({ params }: EntityEditPageProps) {
       },
     },
     {
-      enableCache: false, // В админке не кэшируем
+      enableCache: true, // Включаем кэш с коротким TTL для оптимизации
+      cacheTTL: 2 * 60 * 1000, // 2 минуты - баланс между свежестью данных и производительностью
     }
   );
 

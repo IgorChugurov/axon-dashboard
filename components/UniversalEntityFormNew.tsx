@@ -14,7 +14,11 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
+import type {
+  EntityDefinition,
+  Field,
+  EntityInstanceWithFields,
+} from "@/lib/universal-entity/types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import { FormWithSectionsShadcn } from "@/lib/form-generation";
 import { useToast } from "@/hooks/use-toast";
@@ -172,10 +176,34 @@ export function UniversalEntityFormNew({
       showGlobalLoader();
       return onUpdate(id, data);
     },
-    onSuccess: () => {
-      // Инвалидируем кэш
-      if (queryKey) {
-        queryClient.invalidateQueries({ queryKey });
+    onSuccess: (updatedInstance) => {
+      // Оптимистичное обновление кэша React Query вместо инвалидации
+      // Это избегает повторной загрузки всего списка
+      if (queryKey && updatedInstance) {
+        // Получаем все query keys с префиксом queryKey (все страницы списка)
+        const allQueries = queryClient.getQueriesData<{
+          data: EntityInstanceWithFields[];
+          pagination: any;
+        }>({
+          queryKey: queryKey.slice(0, 3), // ["list", projectId, serviceType]
+        });
+
+        // Обновляем все закэшированные страницы, где может быть обновленный элемент
+        allQueries.forEach(([key, queryData]) => {
+          if (queryData?.data) {
+            const updatedData = queryData.data.map((item) =>
+              item.id === updatedInstance.id ? updatedInstance : item
+            );
+
+            // Обновляем кэш только если элемент найден и изменен
+            if (updatedData !== queryData.data) {
+              queryClient.setQueryData(key, {
+                ...queryData,
+                data: updatedData,
+              });
+            }
+          }
+        });
       }
 
       toast({

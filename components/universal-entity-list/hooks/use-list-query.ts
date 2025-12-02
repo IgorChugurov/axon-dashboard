@@ -52,9 +52,13 @@ export function useListQuery<TData extends { id: string }>({
     queryFn: async ({ signal }) => {
       return await onLoadData(params, signal);
     },
-    staleTime: 30 * 1000, // 30 секунд
+    staleTime: 60 * 1000, // 60 секунд - увеличили для уменьшения повторных запросов
     gcTime: 5 * 60 * 1000, // 5 минут
     enabled: true,
+    // Предотвращаем дублирование запросов
+    refetchOnMount: false, // Не перезагружать при монтировании, если данные свежие
+    refetchOnWindowFocus: false, // Не перезагружать при фокусе окна
+    refetchOnReconnect: false, // Не перезагружать при переподключении
     // Показываем предыдущие данные во время загрузки новых (плавный переход без loading)
     placeholderData: (previousData) => previousData,
   });

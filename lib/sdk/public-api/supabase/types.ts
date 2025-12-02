@@ -520,6 +520,22 @@ export interface Database {
           total_count: number;
         }>;
       };
+      get_related_instances: {
+        Args: {
+          p_source_instance_ids: string[];
+          p_relation_field_ids: string[];
+        };
+        Returns: Array<{
+          source_instance_id: string;
+          relation_field_id: string;
+          target_instance_id: string;
+          target_entity_definition_id: string;
+          target_project_id: string;
+          target_data: Json;
+          target_created_at: string;
+          target_updated_at: string;
+        }>;
+      };
     };
     Enums: {
       [_ in never]: never;

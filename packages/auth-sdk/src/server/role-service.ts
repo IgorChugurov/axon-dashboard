@@ -64,12 +64,12 @@ export async function getUserRoleWithCache(
 
   if (cachedRole) {
     // Кэш валиден - возвращаем роль из кэша (без RPC-запроса)
-    console.log("[Roles] Using cached role", { userId, role: cachedRole });
+    //console.log("[Roles] Using cached role", { userId, role: cachedRole });
     return cachedRole;
   }
 
   // ШАГ 2: Кэш отсутствует/истек - делаем RPC-запрос
-  console.log("[Roles] Cache MISS - fetching from DB", { userId });
+  //console.log("[Roles] Cache MISS - fetching from DB", { userId });
   const role = await getUserRole(supabase, userId);
 
   // ШАГ 3: Сохраняем роль в кэш для следующих запросов
@@ -110,4 +110,3 @@ export async function canManageAdmins(
 ): Promise<boolean> {
   return await isSuperAdmin(supabase, userId);
 }
-

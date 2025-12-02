@@ -654,123 +654,105 @@ export class PublicAPIClient extends BasePublicAPIClient {
           const instanceIds = transformedInstances.map((inst) => inst.id);
           const relationFieldIds = relationFields.map((rf) => rf.field.id);
 
-          const { data: allRelations, error: relationsError } =
-            (await this.supabase
-              .from("entity_relation")
-              .select(
-                "source_instance_id, target_instance_id, relation_field_id"
-              )
-              .in("source_instance_id", instanceIds)
-              .in("relation_field_id", relationFieldIds)) as {
+          // Используем RPC функцию для объединения загрузки relations и связанных instances
+          const { data: relationsWithInstances, error: rpcError } =
+            (await this.supabase.rpc(
+              "get_related_instances" as any,
+              {
+                p_source_instance_ids: instanceIds,
+                p_relation_field_ids: relationFieldIds,
+              } as any
+            )) as {
               data: Array<{
                 source_instance_id: string;
-                target_instance_id: string;
                 relation_field_id: string;
+                target_instance_id: string;
+                target_entity_definition_id: string;
+                target_project_id: string;
+                target_data: Record<string, unknown>;
+                target_created_at: string;
+                target_updated_at: string;
               }> | null;
               error: any;
             };
 
-          if (relationsError) {
+          if (rpcError) {
             throw new SDKError(
               "RELATIONS_LOAD_ERROR",
-              `Failed to load relations: ${relationsError.message}`,
+              `Failed to load relations with instances: ${rpcError.message}`,
               500,
-              relationsError
+              rpcError
             );
           }
 
-          if (allRelations && allRelations.length > 0) {
-            const targetInstanceIds = [
-              ...new Set(allRelations.map((r) => r.target_instance_id)),
+          if (relationsWithInstances && relationsWithInstances.length > 0) {
+            // Создаем Map связанных instances из результата RPC
+            const relatedInstancesMap = new Map(
+              relationsWithInstances.map((row) => [
+                row.target_instance_id,
+                transformEntityInstance({
+                  id: row.target_instance_id,
+                  entity_definition_id: row.target_entity_definition_id,
+                  project_id: row.target_project_id,
+                  data: row.target_data,
+                  created_at: row.target_created_at,
+                  updated_at: row.target_updated_at,
+                }),
+              ])
+            );
+
+            const targetEntityDefinitionIds = [
+              ...new Set(
+                Array.from(relatedInstancesMap.values()).map(
+                  (inst) => inst.entityDefinitionId
+                )
+              ),
             ];
+            const fieldsMap = new Map<
+              string,
+              Array<{ name: string; dbType: string }>
+            >();
+            await Promise.all(
+              targetEntityDefinitionIds.map(async (entityDefId) => {
+                const targetFields = await this.getFields(entityDefId);
+                fieldsMap.set(
+                  entityDefId,
+                  targetFields.map((f) => ({
+                    name: f.name,
+                    dbType: f.dbType,
+                  }))
+                );
+              })
+            );
 
-            const { data: relatedInstances, error: relatedInstancesError } =
-              (await this.supabase
-                .from("entity_instance")
-                .select("*")
-                .in("id", targetInstanceIds)) as {
-                data: Array<{
-                  id: string;
-                  entity_definition_id: string;
-                  project_id: string;
-                  data: Record<string, unknown>;
-                  created_at: string;
-                  updated_at: string;
-                }> | null;
-                error: any;
-              };
-
-            if (relatedInstancesError) {
-              throw new SDKError(
-                "RELATED_INSTANCES_LOAD_ERROR",
-                `Failed to load related instances: ${relatedInstancesError.message}`,
-                500,
-                relatedInstancesError
-              );
-            }
-
-            if (relatedInstances) {
-              const relatedInstancesMap = new Map(
-                relatedInstances.map((inst) => [
-                  inst.id,
-                  transformEntityInstance(inst),
-                ])
+            // Обрабатываем relations из результата RPC
+            for (const relationRow of relationsWithInstances) {
+              const instanceId = relationRow.source_instance_id;
+              const relationField = relationFields.find(
+                (rf) => rf.field.id === relationRow.relation_field_id
               );
 
-              const targetEntityDefinitionIds = [
-                ...new Set(
-                  Array.from(relatedInstancesMap.values()).map(
-                    (inst) => inst.entityDefinitionId
-                  )
-                ),
-              ];
-              const fieldsMap = new Map<
-                string,
-                Array<{ name: string; dbType: string }>
-              >();
-              await Promise.all(
-                targetEntityDefinitionIds.map(async (entityDefId) => {
-                  const targetFields = await this.getFields(entityDefId);
-                  fieldsMap.set(
-                    entityDefId,
-                    targetFields.map((f) => ({
-                      name: f.name,
-                      dbType: f.dbType,
-                    }))
-                  );
-                })
-              );
-
-              for (const relation of allRelations) {
-                const instanceId = relation.source_instance_id;
-                const relationField = relationFields.find(
-                  (rf) => rf.field.id === relation.relation_field_id
+              if (relationField) {
+                const relatedInstance = relatedInstancesMap.get(
+                  relationRow.target_instance_id
                 );
 
-                if (relationField) {
-                  const relatedInstance = relatedInstancesMap.get(
-                    relation.target_instance_id
-                  );
-
-                  if (relatedInstance) {
-                    if (!relationsMap.has(instanceId)) {
-                      relationsMap.set(instanceId, {});
-                    }
-                    const instanceRelations = relationsMap.get(instanceId)!;
-                    if (!instanceRelations[relationField.name]) {
-                      instanceRelations[relationField.name] = [];
-                    }
-                    const targetFields =
-                      fieldsMap.get(relatedInstance.entityDefinitionId) || [];
-                    const flattenedRelated = flattenInstance(
-                      relatedInstance,
-                      targetFields,
-                      params?.relationsAsIds ?? false
-                    );
-                    instanceRelations[relationField.name].push(
-                      flattenedRelated
-                    );
+                if (relatedInstance) {
+                  if (!relationsMap.has(instanceId)) {
+                    relationsMap.set(instanceId, {});
                   }
+                  const instanceRelations = relationsMap.get(instanceId)!;
+                  if (!instanceRelations[relationField.name]) {
+                    instanceRelations[relationField.name] = [];
+                  }
+                  const targetFields =
+                    fieldsMap.get(relatedInstance.entityDefinitionId) || [];
+                  const flattenedRelated = flattenInstance(
+                    relatedInstance,
+                    targetFields,
+                    params?.relationsAsIds ?? false
+                  );
+                  instanceRelations[relationField.name].push(flattenedRelated);
                 }
               }
             }
@@ -1201,8 +1183,8 @@ export class PublicAPIClient extends BasePublicAPIClient {
         }
       }
 
-      // 7. Возвращаем полный обновленный экземпляр через getInstance
-      return await this.getInstance(entityDefinitionId, id);
+      // 7. Формируем обновленный экземпляр из уже обновленных данных (без повторной загрузки)
+      return await this.buildUpdatedInstance(updated, fields, relations || {});
     } catch (error: any) {
       // Если ошибка уже является SDKError (NotFoundError, PermissionDeniedError и т.д.)
       // просто пробрасываем её дальше
@@ -1217,6 +1199,156 @@ export class PublicAPIClient extends BasePublicAPIClient {
       // Для остальных ошибок используем общую обработку
       handleSupabaseError(error);
     }
+  }
+
+  /**
+   * Формирует обновленный экземпляр из уже обновленных данных без повторной загрузки
+   * Оптимизация: избегает лишних запросов после updateInstance
+   * Загружает полные объекты relations для совместимости с форматом списка
+   */
+  private async buildUpdatedInstance(
+    updated: {
+      id: string;
+      entity_definition_id: string;
+      project_id: string;
+      data: Record<string, unknown>;
+      created_at: string;
+      updated_at: string;
+    },
+    fields: any[],
+    relations: Record<string, string[]>
+  ): Promise<EntityInstanceWithFields> {
+    // Трансформируем обновленный instance
+    const transformedInstance = transformEntityInstance(updated);
+
+    // Формируем relations объект с полными объектами (как в списке)
+    const relationsMap: Record<string, EntityInstanceWithFields[]> = {};
+
+    if (Object.keys(relations).length > 0) {
+      const relationFields = fields.filter(
+        (f) =>
+          f.dbType === "manyToMany" ||
+          f.dbType === "manyToOne" ||
+          f.dbType === "oneToMany" ||
+          f.dbType === "oneToOne"
+      );
+
+      // Собираем все уникальные target_instance_id
+      const allTargetInstanceIds = [
+        ...new Set(
+          Object.values(relations).flatMap((ids) =>
+            Array.isArray(ids) ? ids : [ids]
+          )
+        ),
+      ].filter(Boolean);
+
+      if (allTargetInstanceIds.length > 0) {
+        // Загружаем все связанные instances одним запросом
+        const { data: relatedInstances, error: instancesError } =
+          (await this.supabase
+            .from("entity_instance")
+            .select("*")
+            .in("id", allTargetInstanceIds)) as {
+            data: Array<{
+              id: string;
+              entity_definition_id: string;
+              project_id: string;
+              data: Record<string, unknown>;
+              created_at: string;
+              updated_at: string;
+            }> | null;
+            error: any;
+          };
+
+        if (instancesError) {
+          // Если не удалось загрузить связанные instances, используем только ID
+          console.warn(
+            "[SDK] Failed to load related instances for buildUpdatedInstance:",
+            instancesError.message
+          );
+        } else if (relatedInstances) {
+          // Создаем карту связанных экземпляров
+          const relatedInstancesMap = new Map(
+            relatedInstances.map((inst) => [
+              inst.id,
+              transformEntityInstance(inst),
+            ])
+          );
+
+          // Загружаем fields для связанных instances (для уплощения)
+          const targetEntityDefinitionIds = [
+            ...new Set(
+              Array.from(relatedInstancesMap.values()).map(
+                (inst) => inst.entityDefinitionId
+              )
+            ),
+          ];
+          const fieldsMap = new Map<
+            string,
+            Array<{ name: string; dbType: string }>
+          >();
+          await Promise.all(
+            targetEntityDefinitionIds.map(async (entityDefId) => {
+              const targetFields = await this.getFields(entityDefId);
+              fieldsMap.set(
+                entityDefId,
+                targetFields.map((f) => ({
+                  name: f.name,
+                  dbType: f.dbType,
+                }))
+              );
+            })
+          );
+
+          // Группируем relations по полям
+          for (const [fieldName, targetInstanceIds] of Object.entries(
+            relations
+          )) {
+            const field = relationFields.find((f) => f.name === fieldName);
+            if (field) {
+              const ids = Array.isArray(targetInstanceIds)
+                ? targetInstanceIds
+                : targetInstanceIds
+                ? [targetInstanceIds]
+                : [];
+
+              const relatedInstancesForField: EntityInstanceWithFields[] = [];
+              for (const id of ids) {
+                const relatedInstance = relatedInstancesMap.get(id);
+                if (relatedInstance) {
+                  const targetFields =
+                    fieldsMap.get(relatedInstance.entityDefinitionId) || [];
+                  const flattenedRelated = flattenInstance(
+                    relatedInstance,
+                    targetFields,
+                    false // relationsAsIds = false для совместимости со списком
+                  );
+                  relatedInstancesForField.push(flattenedRelated);
+                }
+              }
+
+              if (relatedInstancesForField.length > 0) {
+                relationsMap[fieldName] = relatedInstancesForField;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Создаем объект с relations для уплощения
+    const instanceWithRelations = {
+      ...transformedInstance,
+      relations:
+        Object.keys(relationsMap).length > 0 ? relationsMap : undefined,
+    };
+
+    // Уплощаем экземпляр (relationsAsIds = false для совместимости со списком)
+    return flattenInstance(
+      instanceWithRelations,
+      fields.map((f) => ({ name: f.name, dbType: f.dbType })),
+      false // relationsAsIds = false - возвращаем полные объекты как в списке
+    );
   }
 
   /**
