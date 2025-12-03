@@ -191,17 +191,19 @@ export function createProjectListService(): ListService<Project> {
 }
 
 /**
- * Создает сервис для работы со списком Admins
- * Примечание: Admins - глобальная сущность, не привязаны к projectId
- * Доступ контролируется RLS политиками (только superAdmin может видеть/управлять)
+ * Создает сервис для работы со списком Admins проекта
+ * Примечание: Показывает только админов конкретного проекта (projectSuperAdmin и projectAdmin)
+ * superAdmin (project_id = NULL) не показывается в списке админов проекта
+ * Доступ контролируется RLS политиками (только superAdmin и projectSuperAdmin могут видеть/управлять)
  */
-export function createAdminListService(): ListService<Admin> {
+export function createAdminListService(projectId: string): ListService<Admin> {
   const onLoadData: LoadDataFn<Admin> = async (params, _signal) => {
     const result = await getAdminsFromClient({
       page: params.page,
       limit: params.limit,
       search: params.search,
       filters: params.filters,
+      projectId: projectId, // Фильтруем только админов этого проекта
     });
 
     return {

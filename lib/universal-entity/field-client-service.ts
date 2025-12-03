@@ -155,6 +155,11 @@ export interface CreateFieldData {
   relationFieldId?: string | null;
   isRelationSource?: boolean;
   selectorRelationId?: string | null;
+  // Параметры для автоматического создания обратного поля (только при создании)
+  relationFieldName?: string | null; // Имя обратного поля
+  relationFieldLabel?: string | null; // Лейбл обратного поля
+  relationFieldRequired?: boolean; // Обязательность обратного поля
+  relationFieldRequiredText?: string | null; // Текст ошибки для обязательного поля
   defaultStringValue?: string | null;
   defaultNumberValue?: number | null;
   defaultBooleanValue?: boolean | null;
@@ -169,7 +174,29 @@ export interface CreateFieldData {
 /**
  * Данные для обновления field
  */
-export type UpdateFieldData = Partial<Omit<CreateFieldData, "entityDefinitionId">>;
+export type UpdateFieldData = Partial<
+  Omit<CreateFieldData, "entityDefinitionId">
+>;
+
+/**
+ * Определяет тип обратного поля для релейшен-типов
+ */
+function getReverseRelationType(
+  dbType: string
+): { dbType: string; type: string } | null {
+  switch (dbType) {
+    case "manyToOne":
+      return { dbType: "oneToMany", type: "multipleSelect" };
+    case "oneToMany":
+      return { dbType: "manyToOne", type: "select" };
+    case "manyToMany":
+      return { dbType: "manyToMany", type: "multipleSelect" };
+    case "oneToOne":
+      return { dbType: "oneToOne", type: "select" };
+    default:
+      return null;
+  }
+}
 
 /**
  * Создание field
@@ -191,7 +218,100 @@ export async function createFieldFromClient(
     throw new Error("Label is required");
   }
 
-  // Создание
+  // Проверка и создание обратного поля для relation типов
+  let reverseFieldId: string | null = null;
+  const isRelationType = [
+    "manyToOne",
+    "oneToMany",
+    "manyToMany",
+    "oneToOne",
+  ].includes(data.dbType);
+
+  if (
+    isRelationType &&
+    data.relatedEntityDefinitionId &&
+    data.relationFieldName &&
+    data.relationFieldLabel
+  ) {
+    // Валидация уникальности relationFieldName в связанной entityDefinition
+    const { data: existingReverseField } = await supabase
+      .from("field")
+      .select("id")
+      .eq("entity_definition_id", data.relatedEntityDefinitionId)
+      .eq("name", data.relationFieldName)
+      .single();
+
+    if (existingReverseField) {
+      throw new Error(
+        `Field with name "${data.relationFieldName}" already exists in the related entity`
+      );
+    }
+
+    // Определяем тип обратного поля
+    const reverseType = getReverseRelationType(data.dbType);
+    if (!reverseType) {
+      throw new Error(`Invalid relation type: ${data.dbType}`);
+    }
+
+    // Создаем обратное поле
+    const { data: reverseField, error: reverseError } = await supabase
+      .from("field")
+      .insert({
+        entity_definition_id: data.relatedEntityDefinitionId,
+        name: data.relationFieldName,
+        db_type: reverseType.dbType,
+        type: reverseType.type,
+        label: data.relationFieldLabel,
+        placeholder: null,
+        description: null,
+        for_edit_page: true,
+        for_create_page: true,
+        required: data.relationFieldRequired ?? false,
+        required_text: data.relationFieldRequiredText || null,
+        for_edit_page_disabled: false,
+        display_index: 0,
+        display_in_table: true,
+        section_index: 0,
+        is_option_title_field: false,
+        searchable: false,
+        filterable_in_list: false,
+        related_entity_definition_id: data.entityDefinitionId,
+        relation_field_id: null, // Будет установлено после создания исходного поля
+        is_relation_source: false, // Обратное поле не является источником
+        selector_relation_id: null,
+        default_string_value: null,
+        default_number_value: null,
+        default_boolean_value: null,
+        default_date_value: null,
+        auto_populate: false,
+        include_in_single_pma: true,
+        include_in_list_pma: true,
+        include_in_single_sa: true,
+        include_in_list_sa: true,
+        foreign_key: null,
+        foreign_key_value: null,
+        relation_field_name: data.name, // Сохраняем имя исходного поля
+        relation_field_label: data.label, // Сохраняем лейбл исходного поля
+      } as any)
+      .select()
+      .single();
+
+    if (reverseError || !reverseField) {
+      console.error(
+        "[Field Client Service] Create reverse field error:",
+        reverseError
+      );
+      throw new Error(
+        `Failed to create reverse field: ${
+          reverseError?.message || "Unknown error"
+        }`
+      );
+    }
+
+    reverseFieldId = (reverseField as { id: string }).id;
+  }
+
+  // Создание основного поля
   const { data: created, error } = await supabase
     .from("field")
     .insert({
@@ -214,9 +334,18 @@ export async function createFieldFromClient(
       searchable: data.searchable ?? false,
       filterable_in_list: data.filterableInList ?? false,
       related_entity_definition_id: data.relatedEntityDefinitionId || null,
-      relation_field_id: data.relationFieldId || null,
-      is_relation_source: data.isRelationSource ?? false,
+      relation_field_id: reverseFieldId || data.relationFieldId || null,
+      is_relation_source:
+        isRelationType && reverseFieldId
+          ? true
+          : data.isRelationSource ?? false,
       selector_relation_id: data.selectorRelationId || null,
+      relation_field_name: reverseFieldId
+        ? data.relationFieldName || null
+        : null,
+      relation_field_label: reverseFieldId
+        ? data.relationFieldLabel || null
+        : null,
       default_string_value: data.defaultStringValue || null,
       default_number_value: data.defaultNumberValue ?? null,
       default_boolean_value: data.defaultBooleanValue ?? null,
@@ -232,7 +361,38 @@ export async function createFieldFromClient(
 
   if (error) {
     console.error("[Field Client Service] Create error:", error);
+    // Если обратное поле было создано, нужно его удалить
+    if (reverseFieldId) {
+      await supabase.from("field").delete().eq("id", reverseFieldId);
+    }
     throw new Error(`Failed to create field: ${error.message}`);
+  }
+
+  // Обновляем обратное поле, устанавливая relation_field_id
+  if (reverseFieldId && created) {
+    const updateData = { relation_field_id: (created as { id: string }).id };
+    const { error: updateReverseError } = await supabase
+      .from("field")
+      .update(updateData as never)
+      .eq("id", reverseFieldId);
+
+    if (updateReverseError) {
+      console.error(
+        "[Field Client Service] Update reverse field error:",
+        updateReverseError
+      );
+      // Откатываем изменения
+      if (created) {
+        await supabase
+          .from("field")
+          .delete()
+          .eq("id", (created as { id: string }).id);
+      }
+      await supabase.from("field").delete().eq("id", reverseFieldId);
+      throw new Error(
+        `Failed to link reverse field: ${updateReverseError.message}`
+      );
+    }
   }
 
   return transformField(created);
@@ -262,17 +422,25 @@ export async function updateFieldFromClient(
   if (data.dbType !== undefined) updatePayload.db_type = data.dbType;
   if (data.type !== undefined) updatePayload.type = data.type;
   if (data.label !== undefined) updatePayload.label = data.label;
-  if (data.placeholder !== undefined) updatePayload.placeholder = data.placeholder;
-  if (data.description !== undefined) updatePayload.description = data.description;
-  if (data.forEditPage !== undefined) updatePayload.for_edit_page = data.forEditPage;
-  if (data.forCreatePage !== undefined) updatePayload.for_create_page = data.forCreatePage;
+  if (data.placeholder !== undefined)
+    updatePayload.placeholder = data.placeholder;
+  if (data.description !== undefined)
+    updatePayload.description = data.description;
+  if (data.forEditPage !== undefined)
+    updatePayload.for_edit_page = data.forEditPage;
+  if (data.forCreatePage !== undefined)
+    updatePayload.for_create_page = data.forCreatePage;
   if (data.required !== undefined) updatePayload.required = data.required;
-  if (data.requiredText !== undefined) updatePayload.required_text = data.requiredText;
+  if (data.requiredText !== undefined)
+    updatePayload.required_text = data.requiredText;
   if (data.forEditPageDisabled !== undefined)
     updatePayload.for_edit_page_disabled = data.forEditPageDisabled;
-  if (data.displayIndex !== undefined) updatePayload.display_index = data.displayIndex;
-  if (data.displayInTable !== undefined) updatePayload.display_in_table = data.displayInTable;
-  if (data.sectionIndex !== undefined) updatePayload.section_index = data.sectionIndex;
+  if (data.displayIndex !== undefined)
+    updatePayload.display_index = data.displayIndex;
+  if (data.displayInTable !== undefined)
+    updatePayload.display_in_table = data.displayInTable;
+  if (data.sectionIndex !== undefined)
+    updatePayload.section_index = data.sectionIndex;
   if (data.isOptionTitleField !== undefined)
     updatePayload.is_option_title_field = data.isOptionTitleField;
   if (data.searchable !== undefined) updatePayload.searchable = data.searchable;
@@ -280,7 +448,8 @@ export async function updateFieldFromClient(
     updatePayload.filterable_in_list = data.filterableInList;
   if (data.relatedEntityDefinitionId !== undefined)
     updatePayload.related_entity_definition_id = data.relatedEntityDefinitionId;
-  if (data.relationFieldId !== undefined) updatePayload.relation_field_id = data.relationFieldId;
+  if (data.relationFieldId !== undefined)
+    updatePayload.relation_field_id = data.relationFieldId;
   if (data.isRelationSource !== undefined)
     updatePayload.is_relation_source = data.isRelationSource;
   if (data.selectorRelationId !== undefined)
@@ -293,14 +462,16 @@ export async function updateFieldFromClient(
     updatePayload.default_boolean_value = data.defaultBooleanValue;
   if (data.defaultDateValue !== undefined)
     updatePayload.default_date_value = data.defaultDateValue;
-  if (data.autoPopulate !== undefined) updatePayload.auto_populate = data.autoPopulate;
+  if (data.autoPopulate !== undefined)
+    updatePayload.auto_populate = data.autoPopulate;
   if (data.includeInSinglePma !== undefined)
     updatePayload.include_in_single_pma = data.includeInSinglePma;
   if (data.includeInListPma !== undefined)
     updatePayload.include_in_list_pma = data.includeInListPma;
   if (data.includeInSingleSa !== undefined)
     updatePayload.include_in_single_sa = data.includeInSingleSa;
-  if (data.includeInListSa !== undefined) updatePayload.include_in_list_sa = data.includeInListSa;
+  if (data.includeInListSa !== undefined)
+    updatePayload.include_in_list_sa = data.includeInListSa;
 
   // Обновление
   const { data: updated, error } = await supabase

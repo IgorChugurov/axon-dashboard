@@ -55,7 +55,7 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
   const queryClient = useQueryClient();
 
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "superAdmin">("admin");
+  const [role, setRole] = useState<"projectAdmin" | "projectSuperAdmin">("projectAdmin");
   const [formState, setFormState] = useState<FormState>("idle");
   const [foundUser, setFoundUser] = useState<{
     id: string;
@@ -71,11 +71,16 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!foundUser) throw new Error("User not found");
-      return createAdminFromClient(foundUser.id, role);
+      // Создаем админа проекта с указанным projectId
+      return createAdminFromClient(foundUser.id, role, projectId);
     },
-    onSuccess: () => {
-      // Инвалидируем кэш списка админов
-      queryClient.invalidateQueries({ queryKey: ["list", projectId, "admin"] });
+    onSuccess: (createdAdmin) => {
+      // Инвалидируем все запросы списка админов (с любыми параметрами)
+      queryClient.invalidateQueries({ 
+        queryKey: ["list", projectId, "admin"],
+        exact: false, // Инвалидируем все запросы с этим префиксом
+      });
+      
       setFormState("success");
 
       // Редирект после небольшой задержки
@@ -116,8 +121,8 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
         return;
       }
 
-      // Шаг 2: Проверяем, не является ли уже админом
-      const alreadyAdmin = await isUserAlreadyAdmin(user.id);
+      // Шаг 2: Проверяем, не является ли уже админом в этом проекте
+      const alreadyAdmin = await isUserAlreadyAdmin(user.id, projectId);
 
       if (alreadyAdmin) {
         setFormState("already_admin");
@@ -147,7 +152,7 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
   // Сброс формы
   const handleReset = () => {
     setEmail("");
-    setRole("admin");
+    setRole("projectAdmin");
     setFormState("idle");
     setFoundUser(null);
     setErrorMessage(null);
@@ -167,8 +172,7 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
             Add New Administrator
           </CardTitle>
           <CardDescription>
-            Enter the email address of an existing user to add them as an
-            administrator.
+            Enter the email address of an existing user to add them as a project administrator.
           </CardDescription>
         </CardHeader>
 
@@ -286,21 +290,21 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
                 <Select
                   value={role}
                   onValueChange={(value) =>
-                    setRole(value as "admin" | "superAdmin")
+                    setRole(value as "projectAdmin" | "projectSuperAdmin")
                   }
                 >
                   <SelectTrigger id="role">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="superAdmin">Super Admin</SelectItem>
+                    <SelectItem value="projectAdmin">Project Admin</SelectItem>
+                    <SelectItem value="projectSuperAdmin">Project Super Admin</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-sm text-muted-foreground">
-                  {role === "admin"
-                    ? "Regular administrator with access to the dashboard."
-                    : "Super administrator with full access and ability to manage other administrators."}
+                  {role === "projectAdmin"
+                    ? "Project administrator with limited access to universal entities (read-only structure, can edit data)."
+                    : "Project super administrator with full access and ability to manage other project administrators."}
                 </p>
               </div>
             </div>

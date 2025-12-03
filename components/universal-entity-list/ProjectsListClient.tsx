@@ -22,6 +22,7 @@ import type { RoutingConfig } from "./types/list-types";
 import type { Project } from "@/lib/projects/types";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { clearCurrentProjectCookie } from "@/lib/projects/cookies";
+import { useUserRole } from "@/hooks/use-user-role";
 
 interface ProjectsListClientProps {
   config: EntityConfigFile;
@@ -34,6 +35,7 @@ export function ProjectsListClient({
 }: ProjectsListClientProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { isSuperAdmin } = useUserRole();
 
   // Используем "global" как pseudo-projectId для React Query key
   const projectId = "global";
@@ -48,12 +50,21 @@ export function ProjectsListClient({
     [config]
   );
 
-  // Извлекаем uiConfig из config
+  // Извлекаем uiConfig из config и скрываем кнопку создания для не-superAdmin
   const uiConfig = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { fields: _fields, ...uiConfig } = config;
-    return uiConfig as EntityUIConfig;
-  }, [config]);
+    const { fields: _fields, ...rest } = config;
+    const baseConfig = rest as EntityUIConfig;
+    
+    // Скрываем кнопку создания проекта для не-superAdmin
+    return {
+      ...baseConfig,
+      list: {
+        ...baseConfig.list,
+        showCreateButton: baseConfig.list.showCreateButton && isSuperAdmin,
+      },
+    };
+  }, [config, isSuperAdmin]);
 
   // Состояние для диалога подтверждения удаления
   const [deleteDialog, setDeleteDialog] = useState<{

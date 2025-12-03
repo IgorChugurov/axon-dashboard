@@ -113,25 +113,13 @@ export function UniversalEntityFormNew({
       return onCreate(data);
     },
     onSuccess: (createdItem) => {
-      // Добавляем созданный элемент в кэш списка (для мгновенного отображения)
+      // Инвалидируем все запросы списка (с любыми параметрами)
       if (queryKey && createdItem) {
-        queryClient.setQueriesData({ queryKey }, (old: any) => {
-          if (!old) return old;
-          return {
-            ...old,
-            // Добавляем новый элемент в начало списка
-            data: [createdItem, ...(old.data || [])],
-            pagination: old.pagination
-              ? {
-                  ...old.pagination,
-                  total: (old.pagination.total || 0) + 1,
-                }
-              : undefined,
-          };
+        // Инвалидируем все запросы с этим префиксом (помечаем как устаревшие)
+        queryClient.invalidateQueries({ 
+          queryKey,
+          exact: false, // Инвалидируем все запросы с этим префиксом
         });
-
-        // Инвалидируем кэш для фоновой загрузки полных данных (с relations)
-        queryClient.invalidateQueries({ queryKey });
       }
 
       toast({

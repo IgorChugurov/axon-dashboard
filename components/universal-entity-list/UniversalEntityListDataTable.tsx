@@ -19,6 +19,7 @@ import {
   useReactTable,
   PaginationState,
 } from "@tanstack/react-table";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Table,
   TableBody,
@@ -80,6 +81,7 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
   onLink,
 }: UniversalEntityListDataTableProps<TData>) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { list } = uiConfig;
   const pageSize = list.pageSize || 20;
 
@@ -89,6 +91,40 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
     serviceType,
     pageSize,
   });
+
+  // Отслеживаем предыдущие projectId и serviceType для инвалидации кеша
+  const prevProjectIdRef = useRef<string | null>(null);
+  const prevServiceTypeRef = useRef<ServiceType | null>(null);
+
+  // Инвалидируем кеш других списков при смене projectId или serviceType
+  useEffect(() => {
+    const projectIdChanged =
+      prevProjectIdRef.current !== null &&
+      prevProjectIdRef.current !== projectId;
+    const serviceTypeChanged =
+      prevServiceTypeRef.current !== null &&
+      prevServiceTypeRef.current !== serviceType;
+
+    if (projectIdChanged || serviceTypeChanged) {
+      // Инвалидируем все запросы для предыдущего списка
+      if (
+        prevProjectIdRef.current !== null &&
+        prevServiceTypeRef.current !== null
+      ) {
+        queryClient.invalidateQueries({
+          queryKey: [
+            "list",
+            prevProjectIdRef.current,
+            prevServiceTypeRef.current,
+          ],
+        });
+      }
+    }
+
+    // Обновляем refs
+    prevProjectIdRef.current = projectId;
+    prevServiceTypeRef.current = serviceType;
+  }, [projectId, serviceType, queryClient]);
 
   // Загрузка данных через React Query (всегда на клиенте)
   const {

@@ -40,11 +40,57 @@ export interface SupabaseProjectsResponse {
 
 /**
  * Получение проектов из Supabase с пагинацией и поиском
+ * Фильтрует проекты по доступным для текущего пользователя (использует get_accessible_project_ids)
  */
 export async function getProjectsFromSupabase(
   params: ServerDataParams = {}
 ): Promise<SupabaseProjectsResponse> {
   const supabase = await createClient();
+
+  // Получаем текущего пользователя
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      data: [],
+      pagination: {
+        page: params.page || 1,
+        limit: params.limit || 10,
+        total: 0,
+        totalPages: 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      },
+    };
+  }
+
+  // Получаем доступные проекты через RPC функцию
+  const { data: accessibleProjectIds, error: rpcError } = await supabase.rpc(
+    "get_accessible_project_ids",
+    { user_uuid: user.id }
+  );
+
+  if (rpcError) {
+    console.error("[Supabase Projects] RPC Error:", rpcError);
+    throw new Error(`Failed to get accessible projects: ${rpcError.message}`);
+  }
+
+  // Если нет доступных проектов, возвращаем пустой результат
+  if (!accessibleProjectIds || accessibleProjectIds.length === 0) {
+    return {
+      data: [],
+      pagination: {
+        page: params.page || 1,
+        limit: params.limit || 10,
+        total: 0,
+        totalPages: 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      },
+    };
+  }
 
   // Настройки пагинации
   const page = params.page || 1;
@@ -57,13 +103,14 @@ export async function getProjectsFromSupabase(
     offset,
     search: params.search,
     filters: params.filters,
+    accessibleProjectsCount: accessibleProjectIds.length,
   });
 
-  // Начинаем запрос
-  // RLS автоматически применит правильные политики:
-  // - Админы увидят все проекты
-  // - Обычные пользователи увидят только свои
-  let query = supabase.from("projects").select("*", { count: "exact" }); // count для получения общего количества
+  // Начинаем запрос с фильтрацией по доступным проектам
+  let query = supabase
+    .from("projects")
+    .select("*", { count: "exact" })
+    .in("id", accessibleProjectIds); // Фильтруем только доступные проекты
 
   // Поиск по имени (если указан)
   if (params.search) {
@@ -119,6 +166,7 @@ export async function getProjectsFromSupabase(
 
 /**
  * Создание проекта в Supabase
+ * Только superAdmin может создавать проекты
  */
 export async function createProjectInSupabase(
   projectData: CreateProjectData & { status?: string }
@@ -128,6 +176,21 @@ export async function createProjectInSupabase(
 
   if (!user.data.user) {
     throw new Error("Unauthorized");
+  }
+
+  // Проверяем, является ли пользователь superAdmin
+  const { data: isSuperAdmin, error: checkError } = await supabase.rpc(
+    "is_super_admin",
+    { user_uuid: user.data.user.id }
+  );
+
+  if (checkError) {
+    console.error("[Supabase Projects] Check superAdmin error:", checkError);
+    throw new Error(`Failed to check permissions: ${checkError.message}`);
+  }
+
+  if (!isSuperAdmin) {
+    throw new Error("Only superAdmin can create projects");
   }
 
   const insertData = {
@@ -207,14 +270,42 @@ export async function deleteProjectFromSupabase(id: string): Promise<void> {
 }
 
 /**
- * Получение всех проектов без пагинации (для сайдбара)
+ * Получение всех доступных проектов без пагинации (для сайдбара)
+ * Фильтрует проекты по доступным для текущего пользователя (использует get_accessible_project_ids)
  */
 export async function getAllProjectsFromSupabase(): Promise<Project[]> {
   const supabase = await createClient();
 
+  // Получаем текущего пользователя
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  // Получаем доступные проекты через RPC функцию
+  const { data: accessibleProjectIds, error: rpcError } = await supabase.rpc(
+    "get_accessible_project_ids",
+    { user_uuid: user.id }
+  );
+
+  if (rpcError) {
+    console.error("[Supabase Projects] RPC Error:", rpcError);
+    throw new Error(`Failed to get accessible projects: ${rpcError.message}`);
+  }
+
+  // Если нет доступных проектов, возвращаем пустой массив
+  if (!accessibleProjectIds || accessibleProjectIds.length === 0) {
+    return [];
+  }
+
+  // Загружаем проекты по доступным ID
   const { data, error } = await supabase
     .from("projects")
     .select("*")
+    .in("id", accessibleProjectIds)
     .order("name", { ascending: true });
 
   if (error) {
@@ -222,5 +313,5 @@ export async function getAllProjectsFromSupabase(): Promise<Project[]> {
     throw new Error(`Failed to fetch projects: ${error.message}`);
   }
 
-  return (data as Project[]) || [];
+  return (data || []).map(transformProject);
 }

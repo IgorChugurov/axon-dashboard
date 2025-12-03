@@ -39,6 +39,7 @@ function transformProject(row: any): Project {
 /**
  * Получение списка projects с пагинацией и поиском
  * Используется в Client Components для SPA навигации
+ * Фильтрует проекты по доступным для текущего пользователя (использует get_accessible_project_ids)
  */
 export async function getProjectsFromClient(
   params: {
@@ -50,12 +51,50 @@ export async function getProjectsFromClient(
 ): Promise<ProjectsResponse> {
   const supabase = createClient();
 
+  // Получаем текущего пользователя
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  // Получаем доступные проекты через RPC функцию
+  const { data: accessibleProjectIds, error: rpcError } = await supabase.rpc(
+    "get_accessible_project_ids",
+    { user_uuid: user.id }
+  );
+
+  if (rpcError) {
+    console.error("[Projects Client Service] RPC Error:", rpcError);
+    throw new Error(`Failed to get accessible projects: ${rpcError.message}`);
+  }
+
+  // Если нет доступных проектов, возвращаем пустой список
+  if (!accessibleProjectIds || accessibleProjectIds.length === 0) {
+    return {
+      data: [],
+      pagination: {
+        page: params.page || 1,
+        limit: params.limit || 20,
+        total: 0,
+        totalPages: 0,
+        hasPreviousPage: false,
+        hasNextPage: false,
+      },
+    };
+  }
+
   const page = params.page || 1;
   const limit = params.limit || 20;
   const offset = (page - 1) * limit;
 
-  // Начинаем запрос
-  let query = supabase.from("projects").select("*", { count: "exact" });
+  // Начинаем запрос с фильтрацией по доступным проектам
+  let query = supabase
+    .from("projects")
+    .select("*", { count: "exact" })
+    .in("id", accessibleProjectIds);
 
   // Поиск по имени (если указан)
   if (params.search) {
@@ -142,6 +181,7 @@ export async function deleteProjectFromClient(id: string): Promise<void> {
 /**
  * Создание нового project
  * Используется в Client Components для мутаций
+ * Только superAdmin может создавать проекты
  */
 export async function createProjectFromClient(
   data: CreateProjectData
@@ -153,11 +193,30 @@ export async function createProjectFromClient(
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  // Проверяем, является ли пользователь superAdmin
+  const { data: isSuperAdmin, error: checkError } = await supabase.rpc(
+    "is_super_admin",
+    { user_uuid: user.id }
+  );
+
+  if (checkError) {
+    console.error("[Projects Client Service] Check superAdmin error:", checkError);
+    throw new Error(`Failed to check permissions: ${checkError.message}`);
+  }
+
+  if (!isSuperAdmin) {
+    throw new Error("Only superAdmin can create projects");
+  }
+
   const insertData = {
     name: data.name,
     description: data.description || null,
     status: "active",
-    created_by: user?.id || null,
+    created_by: user.id,
     enable_sign_in: data.enableSignIn ?? true,
     enable_sign_up: data.enableSignUp ?? true,
   };

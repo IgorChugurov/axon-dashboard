@@ -1,20 +1,24 @@
 /**
- * Клиентский сервис для работы с admins через Supabase
+ * Клиентский сервис для работы с project_admins через Supabase
  * Используется в Client Components для прямого доступа к Supabase из браузера
+ *
+ * Все админы хранятся в project_admins:
+ * - superAdmin имеет project_id = NULL (глобальный доступ)
+ * - projectSuperAdmin и projectAdmin имеют project_id = конкретный проект
  */
 
 import { createClient } from "@/lib/supabase/client";
-import type { Admin, AdminsResponse } from "./types";
+import type { Admin, AdminsResponse, AdminRoleName } from "./types";
 
 /**
  * Получение списка администраторов с пагинацией и поиском
  *
  * Делает два запроса:
- * 1. Загружает admins с admin_roles
+ * 1. Загружает project_admins с admin_roles
  * 2. Загружает profiles для полученных user_id
  *
- * Это необходимо потому что нет прямого FK между admins и profiles
- * (admins.user_id → auth.users.id, а profiles.id = auth.users.id)
+ * Это необходимо потому что нет прямого FK между project_admins и profiles
+ * (project_admins.user_id → auth.users.id, а profiles.id = auth.users.id)
  */
 export async function getAdminsFromClient(
   params: {
@@ -22,6 +26,7 @@ export async function getAdminsFromClient(
     limit?: number;
     search?: string;
     filters?: Record<string, string[]>;
+    projectId?: string | null; // Если null - только superAdmin, если UUID - админы проекта, если не указан - все
   } = {}
 ): Promise<AdminsResponse> {
   const supabase = createClient();
@@ -30,21 +35,31 @@ export async function getAdminsFromClient(
   const limit = params.limit || 20;
   const offset = (page - 1) * limit;
 
-  // Шаг 1: Загружаем admins с admin_roles
-  let query = supabase.from("admins").select(
+  // Шаг 1: Загружаем project_admins
+  // Сначала загружаем только project_admins, чтобы избежать проблем с RLS на admin_roles
+  let query = supabase.from("project_admins").select(
     `
       id,
+      project_id,
       user_id,
       role_id,
       created_at,
       updated_at,
-      admin_roles (
-        name,
-        description
-      )
+      created_by
     `,
     { count: "exact" }
   );
+
+  // Фильтр по project_id
+  if (params.projectId !== undefined) {
+    if (params.projectId === null) {
+      // Только superAdmin (project_id IS NULL)
+      query = query.is("project_id", null);
+    } else {
+      // Админы конкретного проекта
+      query = query.eq("project_id", params.projectId);
+    }
+  }
 
   // Фильтр по роли (если указан)
   if (params.filters?.roleName && params.filters.roleName.length > 0) {
@@ -71,17 +86,27 @@ export async function getAdminsFromClient(
   // Выполняем запрос
   type AdminRow = {
     id: string;
+    project_id: string | null;
     user_id: string;
     role_id: string;
     created_at: string;
     updated_at: string;
-    admin_roles: { name: string; description: string | null } | null;
+    created_by: string | null;
   };
   const { data: adminsData, error: adminsError, count } = await query;
 
   if (adminsError) {
-    console.error("[Admins Client Service] Error loading admins:", adminsError);
-    throw new Error(`Failed to fetch admins: ${adminsError.message}`);
+    console.error("[Admins Client Service] Error loading admins:", {
+      error: adminsError,
+      message: adminsError.message,
+      details: adminsError.details,
+      hint: adminsError.hint,
+      code: adminsError.code,
+      projectId: params.projectId,
+    });
+    throw new Error(
+      `Failed to fetch admins: ${adminsError.message || "Unknown error"}`
+    );
   }
 
   if (!adminsData || adminsData.length === 0) {
@@ -100,7 +125,39 @@ export async function getAdminsFromClient(
 
   const typedAdminsData = adminsData as AdminRow[];
 
-  // Шаг 2: Загружаем profiles для полученных user_id
+  // Шаг 2: Загружаем admin_roles для полученных role_id
+  const roleIds = [...new Set(typedAdminsData.map((admin) => admin.role_id))];
+  type RoleRow = {
+    id: string;
+    name: string;
+    description: string | null;
+  };
+  const { data: rolesData, error: rolesError } = await supabase
+    .from("admin_roles")
+    .select("id, name, description")
+    .in("id", roleIds);
+
+  if (rolesError) {
+    console.error("[Admins Client Service] Error loading roles:", rolesError);
+    // Продолжаем без ролей, покажем то что есть
+  }
+
+  // Создаем map ролей по id для быстрого доступа
+  const rolesMap = new Map<
+    string,
+    { name: string; description: string | null }
+  >();
+  if (rolesData) {
+    const typedRolesData = rolesData as RoleRow[];
+    typedRolesData.forEach((role) => {
+      rolesMap.set(role.id, {
+        name: role.name,
+        description: role.description,
+      });
+    });
+  }
+
+  // Шаг 3: Загружаем profiles для полученных user_id
   const userIds = typedAdminsData.map((admin) => admin.user_id);
 
   type ProfileRow = {
@@ -146,27 +203,26 @@ export async function getAdminsFromClient(
     });
   }
 
-  // Шаг 3: Объединяем данные
+  // Шаг 4: Объединяем данные
   let admins: Admin[] = typedAdminsData.map((row) => {
     const profile = profilesMap.get(row.user_id);
-    const adminRole = row.admin_roles as {
-      name: string;
-      description: string | null;
-    } | null;
+    const adminRole = rolesMap.get(row.role_id);
 
     return {
       id: row.id,
       userId: row.user_id,
       roleId: row.role_id,
+      projectId: row.project_id,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      createdBy: row.created_by,
       // Данные из profiles
       email: profile?.email || null,
       firstName: profile?.first_name || null,
       lastName: profile?.last_name || null,
       avatarUrl: profile?.avatar_url || null,
       // Данные из admin_roles
-      roleName: (adminRole?.name as "admin" | "superAdmin") || "admin",
+      roleName: (adminRole?.name as Admin["roleName"]) || "projectAdmin",
       roleDescription: adminRole?.description || null,
     };
   });
@@ -210,13 +266,13 @@ export async function getAdminsFromClient(
 
 /**
  * Удаление администратора
- * Примечание: RLS политики разрешают только superAdmin удалять админов
- * и запрещают удаление других superAdmin
+ * Примечание: RLS политики разрешают только superAdmin и projectSuperAdmin удалять админов
+ * и запрещают удаление себя
  */
 export async function deleteAdminFromClient(id: string): Promise<void> {
   const supabase = createClient();
 
-  const { error } = await supabase.from("admins").delete().eq("id", id);
+  const { error } = await supabase.from("project_admins").delete().eq("id", id);
 
   if (error) {
     console.error("[Admins Client Service] Delete error:", error);
@@ -288,16 +344,33 @@ export async function findUserByEmail(email: string): Promise<{
 }
 
 /**
- * Проверка, является ли пользователь уже администратором
+ * Проверка, является ли пользователь уже администратором в проекте
+ * Проверяет наличие любой роли в project_admins для указанного проекта
+ * @param userId - ID пользователя
+ * @param projectId - ID проекта (опционально, если не указан - проверяет глобально)
  */
-export async function isUserAlreadyAdmin(userId: string): Promise<boolean> {
+export async function isUserAlreadyAdmin(
+  userId: string,
+  projectId?: string | null
+): Promise<boolean> {
   const supabase = createClient();
 
-  const { data, error } = await supabase
-    .from("admins")
+  let query = supabase
+    .from("project_admins")
     .select("id")
-    .eq("user_id", userId)
-    .maybeSingle();
+    .eq("user_id", userId);
+
+  if (projectId !== undefined) {
+    if (projectId === null) {
+      // Проверяем superAdmin (project_id IS NULL)
+      query = query.is("project_id", null);
+    } else {
+      // Проверяем админа конкретного проекта
+      query = query.eq("project_id", projectId);
+    }
+  }
+
+  const { data, error } = await query.limit(1).maybeSingle();
 
   if (error) {
     console.error("[Admins Client Service] Check admin error:", error);
@@ -311,24 +384,38 @@ export async function isUserAlreadyAdmin(userId: string): Promise<boolean> {
  * Создание администратора
  *
  * @param userId - ID пользователя из profiles/auth.users
- * @param roleName - Имя роли ('admin' или 'superAdmin')
+ * @param roleName - Имя роли ('superAdmin', 'projectSuperAdmin' или 'projectAdmin')
+ * @param projectId - ID проекта (null для superAdmin, UUID для проектных ролей)
+ * @param createdBy - ID пользователя, создающего админа (опционально)
  * @returns Созданный админ
  */
 export async function createAdminFromClient(
   userId: string,
-  roleName: "admin" | "superAdmin" = "admin"
+  roleName: "superAdmin" | "projectSuperAdmin" | "projectAdmin",
+  projectId: string | null = null,
+  createdBy?: string
 ): Promise<Admin> {
   const supabase = createClient();
 
+  // Валидация: superAdmin должен иметь project_id = NULL
+  if (roleName === "superAdmin" && projectId !== null) {
+    throw new Error("superAdmin must have project_id = NULL");
+  }
+
+  // Валидация: проектные роли должны иметь project_id
+  if (roleName !== "superAdmin" && projectId === null) {
+    throw new Error(`${roleName} must have project_id (cannot be NULL)`);
+  }
+
   // Шаг 1: Получаем role_id по имени роли
   type RoleRow = { id: string };
-  const { data: roleData, error: roleError } = await supabase
+  const { data: roleIdData, error: roleError } = await supabase
     .from("admin_roles")
     .select("id")
     .eq("name", roleName)
     .single();
 
-  if (roleError || !roleData) {
+  if (roleError || !roleIdData) {
     console.error("[Admins Client Service] Get role error:", roleError);
     throw new Error(
       `Failed to find role '${roleName}': ${
@@ -337,29 +424,35 @@ export async function createAdminFromClient(
     );
   }
 
-  const typedRoleData = roleData as RoleRow;
+  const typedRoleData = roleIdData as RoleRow;
 
-  // Шаг 2: Создаем запись в admins
+  // Шаг 2: Создаем запись в project_admins
   type AdminRow = {
     id: string;
+    project_id: string | null;
     user_id: string;
     role_id: string;
     created_at: string;
     updated_at: string;
+    created_by: string | null;
   };
   const { data: adminData, error: adminError } = await supabase
-    .from("admins")
+    .from("project_admins")
     .insert({
       user_id: userId,
       role_id: typedRoleData.id,
+      project_id: projectId,
+      created_by: createdBy || null,
     } as any)
     .select(
       `
       id,
+      project_id,
       user_id,
       role_id,
       created_at,
-      updated_at
+      updated_at,
+      created_by
     `
     )
     .single();
@@ -392,17 +485,29 @@ export async function createAdminFromClient(
 
   const typedProfileData = profileData as ProfileRow | null;
 
+  // Шаг 4: Загружаем описание роли
+  type RoleDescriptionRow = { description: string | null };
+  const { data: roleDescriptionData } = await supabase
+    .from("admin_roles")
+    .select("description")
+    .eq("id", typedRoleData.id)
+    .single();
+
+  const typedRoleDescription = roleDescriptionData as RoleDescriptionRow | null;
+
   return {
     id: typedAdminData.id,
     userId: typedAdminData.user_id,
     roleId: typedAdminData.role_id,
+    projectId: typedAdminData.project_id,
     createdAt: typedAdminData.created_at,
     updatedAt: typedAdminData.updated_at,
+    createdBy: typedAdminData.created_by,
     email: typedProfileData?.email || null,
     firstName: typedProfileData?.first_name || null,
     lastName: typedProfileData?.last_name || null,
     avatarUrl: typedProfileData?.avatar_url || null,
     roleName: roleName,
-    roleDescription: null,
+    roleDescription: typedRoleDescription?.description || null,
   };
 }

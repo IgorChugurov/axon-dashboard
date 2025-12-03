@@ -764,7 +764,8 @@
       "includeInSingleSa": true,
       "includeInListSa": true,
       "foreignKey": "dbType",
-      "foreignKeyValue": "manyToOne|oneToMany|manyToMany|oneToOne"
+      "foreignKeyValue": "manyToOne|oneToMany|manyToMany|oneToOne",
+      "exclude": "parentEntityId"
     },
     {
       "id": "field-relationFieldId",

@@ -110,6 +110,10 @@ export function FieldForm({
     relationFieldId: initialData?.relationFieldId || "",
     isRelationSource: initialData?.isRelationSource ?? false,
     selectorRelationId: initialData?.selectorRelationId || "",
+    relationFieldName: initialData?.relationFieldName || "",
+    relationFieldLabel: initialData?.relationFieldLabel || "",
+    relationFieldRequired: initialData?.relationFieldRequired ?? false,
+    relationFieldRequiredText: initialData?.relationFieldRequiredText || "",
     defaultStringValue: initialData?.defaultStringValue || "",
     defaultNumberValue: initialData?.defaultNumberValue ?? 0,
     defaultBooleanValue: initialData?.defaultBooleanValue ?? false,
@@ -127,7 +131,11 @@ export function FieldForm({
     if (allowedTypes && !allowedTypes.includes(formData.type)) {
       setFormData((prev) => ({ ...prev, type: allowedTypes[0] }));
     }
-  }, [formData.dbType]);
+    // Auto-open Relations section when relation type is selected
+    if (isRelationType(formData.dbType) && mode === "create") {
+      setRelationsOpen(true);
+    }
+  }, [formData.dbType, mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +176,15 @@ export function FieldForm({
           submitData.relationFieldId = formData.relationFieldId || null;
           submitData.isRelationSource = formData.isRelationSource;
           submitData.selectorRelationId = formData.selectorRelationId || null;
+
+          // Fields for creating related field (only on create)
+          if (mode === "create") {
+            submitData.relationFieldName = formData.relationFieldName || null;
+            submitData.relationFieldLabel = formData.relationFieldLabel || null;
+            submitData.relationFieldRequired = formData.relationFieldRequired;
+            submitData.relationFieldRequiredText =
+              formData.relationFieldRequiredText || null;
+          }
         }
 
         // Defaults
@@ -206,6 +223,11 @@ export function FieldForm({
     ["manyToOne", "oneToMany", "manyToMany", "oneToOne"].includes(dbType);
 
   const allowedFieldTypes = FIELD_TYPE_BY_DB_TYPE[formData.dbType] || ["text"];
+
+  // Filter available entities - exclude current entity (can't relate to itself)
+  const filteredAvailableEntities = availableEntities.filter(
+    (entity) => entity.id !== entityDefinitionId
+  );
 
   // Filter available fields for relationFieldId (only from related entity)
   const relatedFields = availableFields.filter(
@@ -496,12 +518,13 @@ export function FieldForm({
                 onValueChange={(value) =>
                   handleChange("relatedEntityDefinitionId", value)
                 }
+                disabled={mode === "edit"}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select entity..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableEntities.map((entity) => (
+                  {filteredAvailableEntities.map((entity) => (
                     <SelectItem key={entity.id} value={entity.id}>
                       {entity.name}
                     </SelectItem>
@@ -509,6 +532,83 @@ export function FieldForm({
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Fields for creating related field in the other entity (only on create) */}
+            {mode === "create" && formData.relatedEntityDefinitionId && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="relationFieldName">
+                    Related Field Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="relationFieldName"
+                    value={formData.relationFieldName}
+                    onChange={(e) =>
+                      handleChange("relationFieldName", e.target.value)
+                    }
+                    placeholder="relatedFieldName"
+                    required
+                    pattern="^[a-zA-Z_][a-zA-Z0-9_]*$"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Name of the field to create in the related entity
+                    (camelCase)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="relationFieldLabel">
+                    Related Field Label <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="relationFieldLabel"
+                    value={formData.relationFieldLabel}
+                    onChange={(e) =>
+                      handleChange("relationFieldLabel", e.target.value)
+                    }
+                    placeholder="Related Field"
+                    required
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Display label for the field in the related entity
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="relationFieldRequired"
+                    checked={formData.relationFieldRequired}
+                    onChange={(e) =>
+                      handleChange("relationFieldRequired", e.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="relationFieldRequired">
+                    Related Field Required
+                  </Label>
+                </div>
+
+                {formData.relationFieldRequired && (
+                  <div className="space-y-2">
+                    <Label htmlFor="relationFieldRequiredText">
+                      Related Field Required Error Text
+                    </Label>
+                    <Input
+                      id="relationFieldRequiredText"
+                      value={formData.relationFieldRequiredText}
+                      onChange={(e) =>
+                        handleChange(
+                          "relationFieldRequiredText",
+                          e.target.value
+                        )
+                      }
+                      placeholder="This field is required"
+                    />
+                  </div>
+                )}
+              </>
+            )}
 
             {formData.relatedEntityDefinitionId && (
               <div className="space-y-2">
@@ -523,6 +623,7 @@ export function FieldForm({
                       value === "__none__" ? "" : value
                     )
                   }
+                  disabled={mode === "edit"}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select field..." />
@@ -559,78 +660,82 @@ export function FieldForm({
         </Collapsible>
       )}
 
-      {/* Default Values */}
-      <Collapsible open={defaultsOpen} onOpenChange={setDefaultsOpen}>
-        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-accent">
-          <h3 className="text-lg font-semibold">Default Values</h3>
-          <ChevronDown
-            className={`h-4 w-4 transition-transform ${
-              defaultsOpen ? "rotate-180" : ""
-            }`}
-          />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-4 pt-4">
-          {formData.dbType === "varchar" && (
-            <div className="space-y-2">
-              <Label htmlFor="defaultStringValue">Default String Value</Label>
-              <Input
-                id="defaultStringValue"
-                value={formData.defaultStringValue}
-                onChange={(e) =>
-                  handleChange("defaultStringValue", e.target.value)
-                }
-              />
-            </div>
-          )}
+      {/* Default Values (only for non-relation types) */}
+      {!isRelationType(formData.dbType) && (
+        <Collapsible open={defaultsOpen} onOpenChange={setDefaultsOpen}>
+          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-accent">
+            <h3 className="text-lg font-semibold">Default Values</h3>
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${
+                defaultsOpen ? "rotate-180" : ""
+              }`}
+            />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-4 pt-4">
+            {formData.dbType === "varchar" && (
+              <div className="space-y-2">
+                <Label htmlFor="defaultStringValue">Default String Value</Label>
+                <Input
+                  id="defaultStringValue"
+                  value={formData.defaultStringValue}
+                  onChange={(e) =>
+                    handleChange("defaultStringValue", e.target.value)
+                  }
+                />
+              </div>
+            )}
 
-          {formData.dbType === "float" && (
-            <div className="space-y-2">
-              <Label htmlFor="defaultNumberValue">Default Number Value</Label>
-              <Input
-                id="defaultNumberValue"
-                type="number"
-                step="any"
-                value={formData.defaultNumberValue}
-                onChange={(e) =>
-                  handleChange(
-                    "defaultNumberValue",
-                    parseFloat(e.target.value) || 0
-                  )
-                }
-              />
-            </div>
-          )}
+            {formData.dbType === "float" && (
+              <div className="space-y-2">
+                <Label htmlFor="defaultNumberValue">Default Number Value</Label>
+                <Input
+                  id="defaultNumberValue"
+                  type="number"
+                  step="any"
+                  value={formData.defaultNumberValue}
+                  onChange={(e) =>
+                    handleChange(
+                      "defaultNumberValue",
+                      parseFloat(e.target.value) || 0
+                    )
+                  }
+                />
+              </div>
+            )}
 
-          {formData.dbType === "boolean" && (
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="defaultBooleanValue"
-                checked={formData.defaultBooleanValue}
-                onChange={(e) =>
-                  handleChange("defaultBooleanValue", e.target.checked)
-                }
-                className="h-4 w-4 rounded border-gray-300"
-              />
-              <Label htmlFor="defaultBooleanValue">Default Boolean Value</Label>
-            </div>
-          )}
+            {formData.dbType === "boolean" && (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="defaultBooleanValue"
+                  checked={formData.defaultBooleanValue}
+                  onChange={(e) =>
+                    handleChange("defaultBooleanValue", e.target.checked)
+                  }
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <Label htmlFor="defaultBooleanValue">
+                  Default Boolean Value
+                </Label>
+              </div>
+            )}
 
-          {formData.dbType === "timestamptz" && (
-            <div className="space-y-2">
-              <Label htmlFor="defaultDateValue">Default Date Value</Label>
-              <Input
-                id="defaultDateValue"
-                type="datetime-local"
-                value={formData.defaultDateValue}
-                onChange={(e) =>
-                  handleChange("defaultDateValue", e.target.value)
-                }
-              />
-            </div>
-          )}
-        </CollapsibleContent>
-      </Collapsible>
+            {formData.dbType === "timestamptz" && (
+              <div className="space-y-2">
+                <Label htmlFor="defaultDateValue">Default Date Value</Label>
+                <Input
+                  id="defaultDateValue"
+                  type="datetime-local"
+                  value={formData.defaultDateValue}
+                  onChange={(e) =>
+                    handleChange("defaultDateValue", e.target.value)
+                  }
+                />
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {/* API Configuration */}
       <Collapsible open={apiConfigOpen} onOpenChange={setApiConfigOpen}>

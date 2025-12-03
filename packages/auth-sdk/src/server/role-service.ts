@@ -1,6 +1,9 @@
 /**
  * Сервис для работы с ролями пользователей
- * Получает роли из таблицы admins в Supabase через RPC функцию
+ * Получает роли из таблицы project_admins в Supabase через RPC функцию
+ * Все админы хранятся в project_admins:
+ * - superAdmin имеет project_id = NULL (глобальный доступ)
+ * - projectSuperAdmin и projectAdmin имеют project_id = конкретный проект
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";

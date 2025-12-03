@@ -34,6 +34,45 @@ function getIcon(iconName?: string) {
 }
 
 /**
+ * Получает значение для отображения из связанного экземпляра
+ * Ищет поле для отображения в следующем порядке:
+ * 1. Стандартные поля: name, Name, title, Title
+ * 2. Первое строковое поле (кроме служебных)
+ * 3. ID
+ */
+function getRelatedInstanceDisplayValue(item: any): string {
+  if (!item || typeof item !== "object") return "-";
+
+  // Служебные поля, которые не должны использоваться для отображения
+  const systemFields = new Set([
+    "id",
+    "entityDefinitionId",
+    "projectId",
+    "createdAt",
+    "updatedAt",
+  ]);
+
+  // 1. Сначала ищем стандартные поля (с разными регистрами)
+  const standardFields = ["name", "Name", "title", "Title"];
+  for (const fieldName of standardFields) {
+    if (item[fieldName] !== undefined && item[fieldName] !== null) {
+      const value = String(item[fieldName]).trim();
+      if (value) return value;
+    }
+  }
+
+  // 2. Ищем первое строковое поле (кроме служебных)
+  for (const [key, value] of Object.entries(item)) {
+    if (!systemFields.has(key) && typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  // 3. В крайнем случае используем ID
+  return item.id || "-";
+}
+
+/**
  * Форматирует значение поля-связи для отображения в таблице
  *
  * @param value - Значение поля (объект или массив объектов)
@@ -51,17 +90,17 @@ function formatRelationValue(
     if (Array.isArray(value)) {
       const item = value[0];
       if (!item) return "-";
-      return item.name || item.title || item.id || "-";
+      return getRelatedInstanceDisplayValue(item);
     }
-    return value.name || value.title || value.id || "-";
+    return getRelatedInstanceDisplayValue(value);
   }
 
   // Для множественных связей (manyToMany, oneToMany) - массив объектов
   if (!Array.isArray(value) || value.length === 0) return "-";
 
   const names = value
-    .map((item: any) => item?.name || item?.title || item?.id)
-    .filter(Boolean);
+    .map((item: any) => getRelatedInstanceDisplayValue(item))
+    .filter((name) => name && name !== "-");
 
   if (names.length === 0) return "-";
 
@@ -268,8 +307,8 @@ export function generateColumnsFromConfig<TData extends { id: string }>(
                   // Пытаемся отформатировать как массив связей
                   return formatRelationValue(value, "manyToMany");
                 }
-                // Одиночный объект - пытаемся получить имя
-                return value.name || value.title || value.id || String(value);
+                // Одиночный объект - используем универсальную функцию для получения имени
+                return getRelatedInstanceDisplayValue(value);
               }
               return String(value);
           }

@@ -23,8 +23,8 @@ export function AdminsListClient({
   config,
   routing,
 }: AdminsListClientProps) {
-  // Создаем сервис через фабрику (Admins не привязаны к projectId)
-  const listService = useMemo(() => createAdminListService(), []);
+  // Создаем сервис через фабрику с projectId для фильтрации админов проекта
+  const listService = useMemo(() => createAdminListService(projectId), [projectId]);
 
   return (
     <UniversalEntityListClient<Admin>
