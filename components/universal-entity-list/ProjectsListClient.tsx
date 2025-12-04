@@ -22,7 +22,7 @@ import type { RoutingConfig } from "./types/list-types";
 import type { Project } from "@/lib/projects/types";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { clearCurrentProjectCookie } from "@/lib/projects/cookies";
-import { useUserRole } from "@/hooks/use-user-role";
+import { useRole } from "@/hooks/use-role";
 
 interface ProjectsListClientProps {
   config: EntityConfigFile;
@@ -35,7 +35,7 @@ export function ProjectsListClient({
 }: ProjectsListClientProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { isSuperAdmin } = useUserRole();
+  const { isSuperAdmin } = useRole();
 
   // Используем "global" как pseudo-projectId для React Query key
   const projectId = "global";
@@ -183,26 +183,37 @@ export function ProjectsListClient({
   }, []);
 
   // Генерируем колонки на основе конфигурации
-  const columns = generateColumnsFromConfig<Project>(
+  // Проверка прав на редактирование/удаление происходит внутри ActionsCell
+  const columns = useMemo(() => {
+    return generateColumnsFromConfig<Project>(
+      uiConfig.list.columns,
+      routing,
+      projectId,
+      (id) => {
+        // Переход на страницу редактирования проекта
+        const url = routing.editUrlTemplate
+          .replace("{projectId}", projectId)
+          .replace("{instanceId}", id);
+        router.push(url);
+      },
+      // Удаление проекта (проверка прав внутри ActionsCell)
+      handleDeleteRequest,
+      (id, additionalUrl) => {
+        // Navigate to details - переход внутрь проекта
+        const url = routing.detailsUrlTemplate
+          .replace("{projectId}", projectId)
+          .replace("{instanceId}", id);
+        router.push(additionalUrl ? `${url}/${additionalUrl}` : url);
+      },
+      false, // readOnly не применяется к списку проектов (проверка прав в ActionsCell)
+    );
+  }, [
     uiConfig.list.columns,
     routing,
     projectId,
-    (id) => {
-      // Edit action - переход на страницу настроек проекта
-      const url = routing.editUrlTemplate
-        .replace("{projectId}", projectId)
-        .replace("{instanceId}", id);
-      router.push(url);
-    },
     handleDeleteRequest,
-    (id, additionalUrl) => {
-      // Navigate to details - переход внутрь проекта
-      const url = routing.detailsUrlTemplate
-        .replace("{projectId}", projectId)
-        .replace("{instanceId}", id);
-      router.push(additionalUrl ? `${url}/${additionalUrl}` : url);
-    }
-  );
+    router,
+  ]);
 
   return (
     <>

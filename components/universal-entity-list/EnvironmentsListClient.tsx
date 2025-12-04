@@ -11,6 +11,7 @@ import { createEnvironmentListService } from "@/lib/universal-entity/list-servic
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { RoutingConfig } from "./types/list-types";
 import type { Environment } from "@/lib/environments/types";
+import { useRole } from "@/hooks/use-role";
 
 interface EnvironmentsListClientProps {
   projectId: string;
@@ -23,6 +24,8 @@ export function EnvironmentsListClient({
   config,
   routing,
 }: EnvironmentsListClientProps) {
+  const { isReadOnly } = useRole(projectId);
+  
   // Создаем сервис через фабрику
   const listService = useMemo(
     () => createEnvironmentListService(projectId),
@@ -37,6 +40,7 @@ export function EnvironmentsListClient({
       routing={routing}
       onLoadData={listService.onLoadData}
       onDelete={listService.onDelete}
+      readOnly={isReadOnly}
     />
   );
 }

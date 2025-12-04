@@ -6,6 +6,8 @@ export {
   getFieldName,
   setEnvironmentName,
   getEnvironmentName,
+  setAdminName,
+  getAdminName,
   updateBreadcrumbsCache,
   clearBreadcrumbsCache,
   subscribeToBreadcrumbsCache,

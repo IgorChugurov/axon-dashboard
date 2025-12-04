@@ -31,11 +31,18 @@ const authMiddleware = createAuthMiddleware({
     return `/login?redirect=${encodeURIComponent(pathname)}`;
   },
   onRoleCheck: (user, role, { pathname }) => {
-    // Если обычный пользователь (role: "user") пытается попасть в админ-панель,
-    // редиректим его на страницу /welcome (для обычных пользователей)
-    if (role === "user" && !pathname.startsWith("/welcome")) {
-      return "/welcome";
-    }
+    // ВАЖНО: Этот callback вызывается ТОЛЬКО если hasAccess = true
+    // Это означает, что пользователь уже прошел проверку is_any_admin()
+    // Поэтому даже если глобальная роль = "user" (для projectAdmin/projectSuperAdmin),
+    // у пользователя есть доступ к дашборду и не нужно редиректить на /welcome
+
+    // Редиректим на /welcome только если:
+    // 1. Роль = "user" (не superAdmin)
+    // 2. И пользователь пытается попасть на страницу, которая не /welcome
+    // 3. НО это не должно происходить, так как hasAccess уже проверен выше
+
+    // На самом деле, если мы дошли до этого места, значит hasAccess = true,
+    // поэтому не нужно редиректить на /welcome
     return null;
   },
   roleCacheTtl: 300, // 5 минут

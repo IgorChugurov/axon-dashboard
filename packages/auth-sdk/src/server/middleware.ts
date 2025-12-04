@@ -241,13 +241,26 @@ export function createAuthMiddleware(config: MiddlewareConfig) {
       }
     );
 
-    // Получаем роль пользователя с кэшированием
-    const userRole = await getUserRoleWithCache(
+    // Проверяем доступ к дашборду с кэшированием
+    const { hasAdminAccessWithCache } = await import("./role-service");
+    const hasAccess = await hasAdminAccessWithCache(
       supabaseForRole,
       user.id!,
       cookieHandler,
       config.roleCacheTtl
     );
+
+    // Если нет доступа - редиректим на /welcome
+    if (!hasAccess) {
+      const welcomeUrl = new URL("/welcome", request.url);
+      const welcomeResponse = NextResponse.redirect(welcomeUrl);
+      welcomeResponse.headers.set("x-pathname", pathname);
+      return welcomeResponse;
+    }
+
+    // Получаем роль для headers (superAdmin или user)
+    const { getUserRole } = await import("./role-service");
+    const userRole = await getUserRole(supabaseForRole, user.id!);
 
     // Устанавливаем headers для передачи данных в Server Components
     response.headers.set("x-user-id", user.id || "");
@@ -265,7 +278,7 @@ export function createAuthMiddleware(config: MiddlewareConfig) {
       response.headers.set("x-user-avatar", user.avatar);
     }
 
-    // Проверка ролей через callback
+    // Проверка ролей через callback (для обратной совместимости)
     if (config.onRoleCheck) {
       const roleRedirect = config.onRoleCheck(user, userRole, {
         url: request.url,

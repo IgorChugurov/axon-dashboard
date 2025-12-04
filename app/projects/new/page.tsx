@@ -6,6 +6,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isSuperAdmin } from "@/lib/auth/roles";
 import { ProjectFormNew } from "@/components/projects/ProjectFormNew";
 
 export default async function NewProjectPage() {
@@ -21,17 +22,9 @@ export default async function NewProjectPage() {
   }
 
   // Проверяем, является ли пользователь superAdmin
-  const { data: isSuperAdmin, error: checkError } = await supabase.rpc(
-    "is_super_admin",
-    { user_uuid: user.id }
-  );
+  const isSuperAdminUser = await isSuperAdmin(user.id);
 
-  if (checkError) {
-    console.error("[New Project Page] Check superAdmin error:", checkError);
-    redirect("/projects");
-  }
-
-  if (!isSuperAdmin) {
+  if (!isSuperAdminUser) {
     // Редиректим на список проектов, если не superAdmin
     redirect("/projects");
   }

@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { createClientSDK, type PublicAPIClient } from "@/lib/sdk/public-api";
-import type { SDKOptions } from "@/lib/sdk/public-api/types";
+import { createClientSDK, type PublicAPIClient } from "@axon-dashboard/public-api-sdk";
+import type { SDKOptions } from "@axon-dashboard/public-api-sdk";
 
 interface SDKContextType {
   sdk: PublicAPIClient;

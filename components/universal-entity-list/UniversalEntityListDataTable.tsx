@@ -61,6 +61,7 @@ interface UniversalEntityListDataTableProps<TData extends { id: string }> {
   onDelete?: (id: string) => void | Promise<void>;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onLink?: (id: string, additionalUrl?: string) => void;
+  readOnly?: boolean; // Если true, скрывает кнопку создания
 }
 
 export function UniversalEntityListDataTable<TData extends { id: string }>({
@@ -79,6 +80,7 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
   onDelete,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onLink,
+  readOnly = false,
 }: UniversalEntityListDataTableProps<TData>) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -328,7 +330,7 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
                 {msg}
               </p>
             ))}
-            {list.showCreateButton && (
+            {list.showCreateButton && !readOnly && (
               <Button onClick={handleCreate} className="mt-4">
                 <Plus className="mr-2 h-4 w-4" />
                 {list.createButtonText}
@@ -373,7 +375,7 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
           onFilterModesChange={(newModes) => {
             setParams({ filterModes: newModes, page: 1 }); // Сбрасываем на первую страницу при изменении режима
           }}
-          showCreateButton={list.showCreateButton}
+          showCreateButton={list.showCreateButton && !readOnly}
           createButtonText={list.createButtonText}
           onCreate={handleCreate}
         />

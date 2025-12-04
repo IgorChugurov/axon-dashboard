@@ -16,6 +16,7 @@ import {
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { Environment } from "@/lib/environments/types";
+import { useRole } from "@/hooks/use-role";
 
 // Импортируем конфиг напрямую (статический импорт)
 import environmentsConfig from "@/config/environments.json";
@@ -38,6 +39,8 @@ export function EnvironmentFormNew({
   environmentId,
   initialData,
 }: EnvironmentFormNewProps) {
+  const { isReadOnly } = useRole(projectId);
+  
   // Создаём entityDefinition и fields из JSON конфига
   const { entityDefinition, fields } = useMemo(
     () =>
@@ -119,6 +122,7 @@ export function EnvironmentFormNew({
       onDelete={handleDelete}
       redirectUrl={redirectUrl}
       queryKey={queryKey}
+      readOnly={isReadOnly}
     />
   );
 }

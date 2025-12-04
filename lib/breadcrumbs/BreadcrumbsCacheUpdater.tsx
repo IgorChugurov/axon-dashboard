@@ -28,6 +28,8 @@ export function BreadcrumbsCacheUpdater({
   fieldName,
   environmentId,
   environmentName,
+  adminId,
+  adminName,
 }: BreadcrumbsCacheUpdaterProps) {
   useEffect(() => {
     updateBreadcrumbsCache({
@@ -37,6 +39,8 @@ export function BreadcrumbsCacheUpdater({
       fieldName,
       environmentId,
       environmentName,
+      adminId,
+      adminName,
     });
   }, [
     entityDefinitionId,
@@ -45,6 +49,8 @@ export function BreadcrumbsCacheUpdater({
     fieldName,
     environmentId,
     environmentName,
+    adminId,
+    adminName,
   ]);
 
   // Компонент не рендерит ничего

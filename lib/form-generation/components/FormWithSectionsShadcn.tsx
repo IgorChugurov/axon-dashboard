@@ -51,6 +51,7 @@ interface FormWithSectionsShadcnProps {
   uiConfig?: EntityUIConfig;
   itemName?: string; // For delete confirmation modal
   entityInstanceId?: string; // ID экземпляра (для файлов)
+  readOnly?: boolean; // Если true, все поля disabled и скрыты кнопки сохранения/удаления
 }
 
 export function FormWithSectionsShadcn({
@@ -65,6 +66,7 @@ export function FormWithSectionsShadcn({
   uiConfig,
   itemName,
   entityInstanceId,
+  readOnly = false,
 }: FormWithSectionsShadcnProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -210,7 +212,8 @@ export function FormWithSectionsShadcn({
                     <FieldGroup className="gap-4">
                       {section.fields.map((field) => {
                         const isDisabled =
-                          mode === "edit" && field.forEditPageDisabled;
+                          readOnly ||
+                          (mode === "edit" && field.forEditPageDisabled);
 
                         return (
                           <GetInputForFieldShadcn
@@ -238,49 +241,70 @@ export function FormWithSectionsShadcn({
           </form>
         </CardContent>
         <CardFooter className="border-t flex justify-between items-center w-full">
-          {onDelete && deleteSection && (
-            <DeleteSection
-              onlyButton={true}
-              action={
-                deleteSection?.action || {
-                  action: "delete",
-                  title: "Delete",
-                  options: {
-                    modalText: "Are you sure you want to delete this item?",
-                    modalTitle: "Confirm deletion",
-                  },
-                }
-              }
-              onDelete={onDelete}
-              itemName={itemName}
-            />
+          {readOnly ? (
+            // В режиме readOnly показываем только кнопку Cancel
+            <div className="flex items-center gap-4 w-full justify-end">
+              {onCancel && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isSubmitting}
+                >
+                  {cancelButtonText ||
+                    uiConfig?.form?.cancelButtonLabel ||
+                    "Cancel"}
+                </Button>
+              )}
+            </div>
+          ) : (
+            // В режиме редактирования показываем все кнопки
+            <>
+              {onDelete && deleteSection && (
+                <DeleteSection
+                  onlyButton={true}
+                  action={
+                    deleteSection?.action || {
+                      action: "delete",
+                      title: "Delete",
+                      options: {
+                        modalText: "Are you sure you want to delete this item?",
+                        modalTitle: "Confirm deletion",
+                      },
+                    }
+                  }
+                  onDelete={onDelete}
+                  itemName={itemName}
+                />
+              )}
+              <div className="flex items-center gap-4 ">
+                {onCancel && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onCancel}
+                    disabled={isSubmitting}
+                  >
+                    {cancelButtonText ||
+                      uiConfig?.form?.cancelButtonLabel ||
+                      "Cancel"}
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  form="form-shadcn-sections"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting
+                    ? "Saving..."
+                    : submitButtonText ||
+                      (mode === "create"
+                        ? uiConfig?.form?.createButtonLabel || "Create"
+                        : uiConfig?.form?.updateButtonLabel || "Save")}
+                </Button>
+              </div>
+            </>
           )}
-          <div className="flex items-center gap-4 ">
-            {onCancel && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-                disabled={isSubmitting}
-              >
-                {cancelButtonText ||
-                  uiConfig?.form?.cancelButtonLabel ||
-                  "Cancel"}
-              </Button>
-            )}
-            <Button
-              type="submit"
-              form="form-shadcn-sections"
-              disabled={isSubmitting}
-            >
-              {isSubmitting
-                ? "Saving..."
-                : submitButtonText ||
-                  (mode === "create"
-                    ? uiConfig?.form?.createButtonLabel || "Create"
-                    : uiConfig?.form?.updateButtonLabel || "Save")}
-            </Button>
-          </div>
         </CardFooter>
       </Card>
     </FormProvider>

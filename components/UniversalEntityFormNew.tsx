@@ -69,6 +69,9 @@ interface UniversalEntityFormNewProps {
 
   // Опционально: кастомная обработка данных перед отправкой
   transformData?: (formData: Record<string, any>) => Record<string, any>;
+
+  // Опционально: если true, все поля disabled и скрыты кнопки сохранения/удаления
+  readOnly?: boolean;
 }
 
 export function UniversalEntityFormNew({
@@ -86,6 +89,7 @@ export function UniversalEntityFormNew({
   redirectUrl,
   queryKey,
   transformData,
+  readOnly = false,
 }: UniversalEntityFormNewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -116,7 +120,7 @@ export function UniversalEntityFormNew({
       // Инвалидируем все запросы списка (с любыми параметрами)
       if (queryKey && createdItem) {
         // Инвалидируем все запросы с этим префиксом (помечаем как устаревшие)
-        queryClient.invalidateQueries({ 
+        queryClient.invalidateQueries({
           queryKey,
           exact: false, // Инвалидируем все запросы с этим префиксом
         });
@@ -361,6 +365,7 @@ export function UniversalEntityFormNew({
         uiConfig={uiConfig}
         itemName={itemName}
         entityInstanceId={instanceId}
+        readOnly={readOnly}
       />
     </div>
   );

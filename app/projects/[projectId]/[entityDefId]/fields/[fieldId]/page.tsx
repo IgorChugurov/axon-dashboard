@@ -2,6 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/roles";
 import { FieldFormNew } from "@/components/entity-definition/FieldFormNew";
+import { FieldFormUniversal } from "@/components/entity-definition/FieldFormUniversal";
 import {
   getEntityDefinitionById,
   getEntityDefinitions,
@@ -16,10 +17,16 @@ interface EditFieldPageProps {
     entityDefId: string;
     fieldId: string;
   }>;
+  searchParams: Promise<{ useUniversal?: string }>;
 }
 
-export default async function EditFieldPage({ params }: EditFieldPageProps) {
+export default async function EditFieldPage({
+  params,
+  searchParams,
+}: EditFieldPageProps) {
   const { projectId, entityDefId, fieldId } = await params;
+  const { useUniversal } = await searchParams;
+  const useUniversalForm = useUniversal === "true";
 
   // Проверка прав доступа
   const supabase = await createClient();
@@ -65,17 +72,47 @@ export default async function EditFieldPage({ params }: EditFieldPageProps) {
         fieldName={field.label || field.name}
       />
 
+      <FieldFormUniversal
+        projectId={projectId}
+        entityDefinitionId={entityDefId}
+        mode="edit"
+        fieldId={fieldId}
+        initialData={field}
+        availableEntities={availableEntities}
+        availableFields={availableFields}
+      />
+
+      {/* <FieldFormSwitcher
+        useUniversal={useUniversalForm}
+        projectId={projectId}
+        entityDefId={entityDefId}
+        fieldId={fieldId}
+        mode="edit"
+      />
+
       <div className="rounded-lg border bg-card p-6">
-        <FieldFormNew
-          projectId={projectId}
-          entityDefinitionId={entityDefId}
-          mode="edit"
-          fieldId={fieldId}
-          initialData={field}
-          availableEntities={availableEntities}
-          availableFields={availableFields}
-        />
-      </div>
+        {useUniversalForm ? (
+          <FieldFormUniversal
+            projectId={projectId}
+            entityDefinitionId={entityDefId}
+            mode="edit"
+            fieldId={fieldId}
+            initialData={field}
+            availableEntities={availableEntities}
+            availableFields={availableFields}
+          />
+        ) : (
+          <FieldFormNew
+            projectId={projectId}
+            entityDefinitionId={entityDefId}
+            mode="edit"
+            fieldId={fieldId}
+            initialData={field}
+            availableEntities={availableEntities}
+            availableFields={availableFields}
+          />
+        )}
+      </div> */}
     </div>
   );
 }

@@ -3,7 +3,7 @@
  * Используется в useEntityOptions и других местах
  */
 
-import type { PublicAPIClient } from "@/lib/sdk/public-api";
+import type { PublicAPIClient } from "@axon-dashboard/public-api-sdk";
 
 export interface Option {
   id: string;

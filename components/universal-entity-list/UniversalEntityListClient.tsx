@@ -31,6 +31,7 @@ interface UniversalEntityListClientProps<
   routing: RoutingConfig;
   onLoadData: LoadDataFn<TData>;
   onDelete: (id: string) => Promise<void>;
+  readOnly?: boolean; // Опционально: если true, скрывает кнопки создания/удаления и заменяет edit на view
 }
 
 export function UniversalEntityListClient<
@@ -42,6 +43,7 @@ export function UniversalEntityListClient<
   routing,
   onLoadData,
   onDelete,
+  readOnly = false,
 }: UniversalEntityListClientProps<TData>) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -203,7 +205,8 @@ export function UniversalEntityListClient<
         .replace("{projectId}", projectId)
         .replace("{instanceId}", id);
       router.push(additionalUrl ? `${url}${additionalUrl}` : url);
-    }
+    },
+    readOnly
   );
 
   return (
@@ -230,6 +233,7 @@ export function UniversalEntityListClient<
             .replace("{instanceId}", id);
           router.push(additionalUrl ? `${url}${additionalUrl}` : url);
         }}
+        readOnly={readOnly}
       />
 
       {/* Диалог подтверждения удаления */}

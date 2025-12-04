@@ -17,10 +17,38 @@ export interface EntityDefinition {
   projectId: string;
 
   // Права доступа
-  createPermission: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
-  readPermission: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
-  updatePermission: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
-  deletePermission: "ALL" | "User" | "Admin" | "Admin|User" | "Owner" | "Owner|Admin" | "Owner|User";
+  createPermission:
+    | "ALL"
+    | "User"
+    | "Admin"
+    | "Admin|User"
+    | "Owner"
+    | "Owner|Admin"
+    | "Owner|User";
+  readPermission:
+    | "ALL"
+    | "User"
+    | "Admin"
+    | "Admin|User"
+    | "Owner"
+    | "Owner|Admin"
+    | "Owner|User";
+  updatePermission:
+    | "ALL"
+    | "User"
+    | "Admin"
+    | "Admin|User"
+    | "Owner"
+    | "Owner|Admin"
+    | "Owner|User";
+  deletePermission:
+    | "ALL"
+    | "User"
+    | "Admin"
+    | "Admin|User"
+    | "Owner"
+    | "Owner|Admin"
+    | "Owner|User";
 
   // Section titles for form organization
   titleSection0?: string | null;
@@ -113,6 +141,8 @@ export interface Field {
   // Информация о связанном поле (для отображения при редактировании)
   relationFieldName?: string | null; // Имя связанного поля
   relationFieldLabel?: string | null; // Лейбл связанного поля
+  relationFieldRequired?: boolean; // Обязательность связанного поля
+  relationFieldRequiredText?: string | null; // Текст ошибки для обязательного связанного поля
 
   // Значения по умолчанию
   defaultStringValue?: string | null;

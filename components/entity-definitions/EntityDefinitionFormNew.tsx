@@ -16,6 +16,7 @@ import {
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { EntityDefinition } from "@/lib/universal-entity/types";
+import { useRole } from "@/hooks/use-role";
 
 // Импортируем конфиг напрямую (статический импорт)
 import entityDefinitionConfig from "@/config/entity-definition.json";
@@ -49,6 +50,8 @@ export function EntityDefinitionFormNew({
   entityDefinitionId,
   initialData,
 }: EntityDefinitionFormNewProps) {
+  const { isReadOnly } = useRole(projectId);
+  
   // Создаём entityDefinition и fields из JSON конфига
   const { entityDefinition, fields } = useMemo(
     () =>
@@ -162,6 +165,7 @@ export function EntityDefinitionFormNew({
       onDelete={handleDelete}
       redirectUrl={redirectUrl}
       queryKey={queryKey}
+      readOnly={isReadOnly}
     />
   );
 }

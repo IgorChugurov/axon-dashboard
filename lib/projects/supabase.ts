@@ -6,13 +6,13 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ServerDataParams } from "@/lib/server-data/types";
-import type { Project, CreateProjectData } from "./types";
+import type { Project, CreateProjectData, ProjectRole } from "./types";
 
 /**
  * Преобразование данных из БД в типы TypeScript
  * Конвертирует snake_case из БД в camelCase для TypeScript
  */
-function transformProject(row: any): Project {
+function transformProject(row: any, role?: ProjectRole): Project {
   return {
     id: row.id,
     name: row.name,
@@ -23,7 +23,76 @@ function transformProject(row: any): Project {
     enableSignUp: row.enable_sign_up ?? true,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    role,
   };
+}
+
+/**
+ * Получение всех ролей пользователя в проектах одним запросом
+ * Оптимизация: вместо N+1 запросов делаем один запрос к project_admins
+ * @param supabase - Supabase клиент
+ * @param userId - ID пользователя
+ * @returns Map с ролями: projectId -> role
+ */
+async function getAllUserProjectRoles(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<Map<string, ProjectRole>> {
+  try {
+    // Проверяем, является ли пользователь superAdmin
+    const { data: isSuperAdmin } = await supabase.rpc("is_super_admin", {
+      user_uuid: userId,
+    } as unknown as undefined);
+
+    const rolesMap = new Map<string, ProjectRole>();
+
+    // Если superAdmin - для всех проектов роль будет 'superAdmin'
+    if (isSuperAdmin === true) {
+      // Получаем все проекты для superAdmin
+      const { data: allProjects } = await supabase
+        .from("projects")
+        .select("id");
+
+      if (allProjects) {
+        allProjects.forEach((project: { id: string }) => {
+          rolesMap.set(project.id, "superAdmin");
+        });
+      }
+    } else {
+      // Для остальных админов получаем роли из project_admins
+      const { data: projectAdmins, error } = await supabase
+        .from("project_admins")
+        .select("project_id, admin_roles(name)")
+        .eq("user_id", userId)
+        .not("project_id", "is", null);
+
+      if (error) {
+        console.error(
+          "[getAllUserProjectRoles] Error fetching project roles:",
+          error
+        );
+        return rolesMap;
+      }
+
+      if (projectAdmins) {
+        projectAdmins.forEach((pa: any) => {
+          const projectId = pa.project_id;
+          const roleName = pa.admin_roles?.name;
+          if (projectId && roleName) {
+            rolesMap.set(
+              projectId,
+              roleName as "projectSuperAdmin" | "projectAdmin"
+            );
+          }
+        });
+      }
+    }
+
+    return rolesMap;
+  } catch (error) {
+    console.error("[getAllUserProjectRoles] Error:", error);
+    return new Map();
+  }
 }
 
 export interface SupabaseProjectsResponse {
@@ -40,77 +109,21 @@ export interface SupabaseProjectsResponse {
 
 /**
  * Получение проектов из Supabase с пагинацией и поиском
- * Фильтрует проекты по доступным для текущего пользователя (использует get_accessible_project_ids)
+ * RLS политика автоматически фильтрует только доступные проекты
  */
 export async function getProjectsFromSupabase(
   params: ServerDataParams = {}
 ): Promise<SupabaseProjectsResponse> {
   const supabase = await createClient();
 
-  // Получаем текущего пользователя
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return {
-      data: [],
-      pagination: {
-        page: params.page || 1,
-        limit: params.limit || 10,
-        total: 0,
-        totalPages: 0,
-        hasPreviousPage: false,
-        hasNextPage: false,
-      },
-    };
-  }
-
-  // Получаем доступные проекты через RPC функцию
-  const { data: accessibleProjectIds, error: rpcError } = await supabase.rpc(
-    "get_accessible_project_ids",
-    { user_uuid: user.id }
-  );
-
-  if (rpcError) {
-    console.error("[Supabase Projects] RPC Error:", rpcError);
-    throw new Error(`Failed to get accessible projects: ${rpcError.message}`);
-  }
-
-  // Если нет доступных проектов, возвращаем пустой результат
-  if (!accessibleProjectIds || accessibleProjectIds.length === 0) {
-    return {
-      data: [],
-      pagination: {
-        page: params.page || 1,
-        limit: params.limit || 10,
-        total: 0,
-        totalPages: 0,
-        hasPreviousPage: false,
-        hasNextPage: false,
-      },
-    };
-  }
-
   // Настройки пагинации
   const page = params.page || 1;
   const limit = params.limit || 10;
   const offset = (page - 1) * limit;
 
-  console.log("[Supabase Projects] Getting projects with params:", {
-    page,
-    limit,
-    offset,
-    search: params.search,
-    filters: params.filters,
-    accessibleProjectsCount: accessibleProjectIds.length,
-  });
-
-  // Начинаем запрос с фильтрацией по доступным проектам
-  let query = supabase
-    .from("projects")
-    .select("*", { count: "exact" })
-    .in("id", accessibleProjectIds); // Фильтруем только доступные проекты
+  // RLS политика автоматически отфильтрует только доступные проекты
+  // superAdmin видит все, остальные админы - только свои проекты
+  let query = supabase.from("projects").select("*", { count: "exact" });
 
   // Поиск по имени (если указан)
   if (params.search) {
@@ -152,7 +165,7 @@ export async function getProjectsFromSupabase(
   });
 
   return {
-    data: (data || []).map(transformProject),
+    data: (data || []).map((row: any) => transformProject(row)),
     pagination: {
       page,
       limit,
@@ -181,7 +194,7 @@ export async function createProjectInSupabase(
   // Проверяем, является ли пользователь superAdmin
   const { data: isSuperAdmin, error: checkError } = await supabase.rpc(
     "is_super_admin",
-    { user_uuid: user.data.user.id }
+    { user_uuid: user.data.user.id } as unknown as undefined
   );
 
   if (checkError) {
@@ -271,10 +284,12 @@ export async function deleteProjectFromSupabase(id: string): Promise<void> {
 
 /**
  * Получение всех доступных проектов без пагинации (для сайдбара)
- * Фильтрует проекты по доступным для текущего пользователя (использует get_accessible_project_ids)
+ * RLS политика автоматически фильтрует только доступные проекты
+ * Оптимизация: получает роли одним запросом и кэширует их
  */
 export async function getAllProjectsFromSupabase(): Promise<Project[]> {
-  const supabase = await createClient();
+  const supabaseClient = await createClient();
+  const supabase = supabaseClient;
 
   // Получаем текущего пользователя
   const {
@@ -282,30 +297,25 @@ export async function getAllProjectsFromSupabase(): Promise<Project[]> {
   } = await supabase.auth.getUser();
 
   if (!user) {
+    console.log("[Supabase Projects] No user found");
     return [];
   }
 
-  // Получаем доступные проекты через RPC функцию
-  const { data: accessibleProjectIds, error: rpcError } = await supabase.rpc(
-    "get_accessible_project_ids",
-    { user_uuid: user.id }
-  );
+  // Получаем роли из БД напрямую
+  // ВАЖНО: Не используем кэш кук здесь, так как Server Components не могут устанавливать куки
+  // Кэширование ролей проектов происходит через React Query на клиенте
+  // или в middleware (если нужно)
+  console.log("[Supabase Projects] Fetching roles from DB");
+  const rolesMap = await getAllUserProjectRoles(supabase, user.id);
+  console.log("[Supabase Projects] Roles fetched from DB", {
+    projectCount: rolesMap.size,
+  });
 
-  if (rpcError) {
-    console.error("[Supabase Projects] RPC Error:", rpcError);
-    throw new Error(`Failed to get accessible projects: ${rpcError.message}`);
-  }
-
-  // Если нет доступных проектов, возвращаем пустой массив
-  if (!accessibleProjectIds || accessibleProjectIds.length === 0) {
-    return [];
-  }
-
-  // Загружаем проекты по доступным ID
+  // RLS политика автоматически отфильтрует только доступные проекты
+  // superAdmin видит все, остальные админы - только свои проекты
   const { data, error } = await supabase
     .from("projects")
     .select("*")
-    .in("id", accessibleProjectIds)
     .order("name", { ascending: true });
 
   if (error) {
@@ -313,5 +323,15 @@ export async function getAllProjectsFromSupabase(): Promise<Project[]> {
     throw new Error(`Failed to fetch projects: ${error.message}`);
   }
 
-  return (data || []).map(transformProject);
+  console.log("[Supabase Projects] Loaded projects:", {
+    count: data?.length || 0,
+    projectIds: (data as any[])?.map((p: any) => p.id),
+  });
+
+  // Добавляем роли к проектам
+  return (data || []).map((row: any): Project => {
+    const projectId = row.id;
+    const role = rolesMap.get(projectId) || null;
+    return transformProject(row, role);
+  });
 }

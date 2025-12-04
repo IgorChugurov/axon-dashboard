@@ -11,6 +11,7 @@ import { createFieldListService } from "@/lib/universal-entity/list-service-fact
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { RoutingConfig } from "./types/list-types";
 import type { Field } from "@/lib/universal-entity/types";
+import { useRole } from "@/hooks/use-role";
 
 interface FieldsListClientProps {
   projectId: string;
@@ -25,6 +26,8 @@ export function FieldsListClient({
   config,
   routing,
 }: FieldsListClientProps) {
+  const { isReadOnly } = useRole(projectId);
+  
   // Создаем сервис через фабрику
   const listService = useMemo(
     () => createFieldListService(entityDefinitionId, projectId),
@@ -57,6 +60,7 @@ export function FieldsListClient({
       routing={resolvedRouting}
       onLoadData={listService.onLoadData}
       onDelete={listService.onDelete}
+      readOnly={isReadOnly}
     />
   );
 }

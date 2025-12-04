@@ -1,6 +1,8 @@
 // Типы для проектов
 // Соответствуют структуре таблицы projects в Supabase
 
+export type ProjectRole = "superAdmin" | "projectSuperAdmin" | "projectAdmin" | null;
+
 export interface Project {
   id: string;
   name: string;
@@ -11,6 +13,7 @@ export interface Project {
   enableSignUp: boolean;
   createdAt: string;
   updatedAt: string;
+  role?: ProjectRole; // Роль пользователя в проекте (опционально, добавляется при загрузке списка)
 }
 
 export interface CreateProjectData {

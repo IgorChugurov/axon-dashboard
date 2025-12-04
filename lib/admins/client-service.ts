@@ -511,3 +511,235 @@ export async function createAdminFromClient(
     roleDescription: typedRoleDescription?.description || null,
   };
 }
+
+/**
+ * Получение администратора по ID
+ * Загружает данные из project_admins с JOIN к profiles и admin_roles
+ */
+export async function getAdminByIdFromClient(
+  id: string
+): Promise<Admin | null> {
+  const supabase = createClient();
+
+  // Шаг 1: Загружаем project_admins
+  type AdminRow = {
+    id: string;
+    project_id: string | null;
+    user_id: string;
+    role_id: string;
+    created_at: string;
+    updated_at: string;
+    created_by: string | null;
+  };
+  const { data: adminData, error: adminError } = await supabase
+    .from("project_admins")
+    .select(
+      `
+      id,
+      project_id,
+      user_id,
+      role_id,
+      created_at,
+      updated_at,
+      created_by
+    `
+    )
+    .eq("id", id)
+    .single();
+
+  if (adminError) {
+    if (adminError.code === "PGRST116") {
+      // Not found
+      return null;
+    }
+    console.error("[Admins Client Service] Get admin by id error:", adminError);
+    throw new Error(`Failed to fetch admin: ${adminError.message}`);
+  }
+
+  if (!adminData) {
+    return null;
+  }
+
+  const typedAdminData = adminData as AdminRow;
+
+  // Шаг 2: Загружаем admin_roles
+  type RoleRow = {
+    id: string;
+    name: string;
+    description: string | null;
+  };
+  const { data: roleData, error: roleError } = await supabase
+    .from("admin_roles")
+    .select("id, name, description")
+    .eq("id", typedAdminData.role_id)
+    .single();
+
+  if (roleError) {
+    console.error("[Admins Client Service] Get role error:", roleError);
+    // Продолжаем без роли
+  }
+
+  // Шаг 3: Загружаем profile
+  type ProfileRow = {
+    id: string;
+    email: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    avatar_url: string | null;
+  };
+  const { data: profileData, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, email, first_name, last_name, avatar_url")
+    .eq("id", typedAdminData.user_id)
+    .single();
+
+  if (profileError) {
+    console.error("[Admins Client Service] Get profile error:", profileError);
+    // Продолжаем без профиля
+  }
+
+  const typedRoleData = roleData as RoleRow | null;
+  const typedProfileData = profileData as ProfileRow | null;
+
+  return {
+    id: typedAdminData.id,
+    userId: typedAdminData.user_id,
+    roleId: typedAdminData.role_id,
+    projectId: typedAdminData.project_id,
+    createdAt: typedAdminData.created_at,
+    updatedAt: typedAdminData.updated_at,
+    createdBy: typedAdminData.created_by,
+    email: typedProfileData?.email || null,
+    firstName: typedProfileData?.first_name || null,
+    lastName: typedProfileData?.last_name || null,
+    avatarUrl: typedProfileData?.avatar_url || null,
+    roleName: (typedRoleData?.name as Admin["roleName"]) || "projectAdmin",
+    roleDescription: typedRoleData?.description || null,
+  };
+}
+
+/**
+ * Обновление администратора
+ * Обновляет только роль (role_id) в project_admins
+ *
+ * @param id - ID администратора в project_admins
+ * @param roleName - Имя новой роли ('superAdmin', 'projectSuperAdmin' или 'projectAdmin')
+ * @returns Обновленный админ
+ */
+export async function updateAdminFromClient(
+  id: string,
+  roleName: "superAdmin" | "projectSuperAdmin" | "projectAdmin"
+): Promise<Admin> {
+  const supabase = createClient();
+
+  // Шаг 1: Получаем текущего админа для проверки project_id
+  const currentAdmin = await getAdminByIdFromClient(id);
+  if (!currentAdmin) {
+    throw new Error("Admin not found");
+  }
+
+  // Валидация: superAdmin должен иметь project_id = NULL
+  if (roleName === "superAdmin" && currentAdmin.projectId !== null) {
+    throw new Error("superAdmin must have project_id = NULL");
+  }
+
+  // Валидация: проектные роли должны иметь project_id
+  if (roleName !== "superAdmin" && currentAdmin.projectId === null) {
+    throw new Error(`${roleName} must have project_id (cannot be NULL)`);
+  }
+
+  // Шаг 2: Получаем role_id по имени роли
+  type RoleRow = { id: string };
+  const { data: roleIdData, error: roleError } = await supabase
+    .from("admin_roles")
+    .select("id")
+    .eq("name", roleName)
+    .single();
+
+  if (roleError || !roleIdData) {
+    console.error("[Admins Client Service] Get role error:", roleError);
+    throw new Error(
+      `Failed to find role '${roleName}': ${
+        roleError?.message || "Role not found"
+      }`
+    );
+  }
+
+  const typedRoleData = roleIdData as RoleRow;
+
+  // Шаг 3: Обновляем role_id в project_admins
+  type AdminRow = {
+    id: string;
+    project_id: string | null;
+    user_id: string;
+    role_id: string;
+    created_at: string;
+    updated_at: string;
+    created_by: string | null;
+  };
+  const updatePayload: { role_id: string } = { role_id: typedRoleData.id };
+  const { data: updatedAdminData, error: updateError } = await supabase
+    .from("project_admins")
+    .update(updatePayload as never)
+    .eq("id", id)
+    .select(
+      `
+      id,
+      project_id,
+      user_id,
+      role_id,
+      created_at,
+      updated_at,
+      created_by
+    `
+    )
+    .single();
+
+  if (updateError) {
+    console.error("[Admins Client Service] Update admin error:", updateError);
+    throw new Error(`Failed to update admin: ${updateError.message}`);
+  }
+
+  const typedUpdatedAdminData = updatedAdminData as AdminRow;
+
+  // Шаг 4: Загружаем profile для возврата полных данных
+  type ProfileRow = {
+    email: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    avatar_url: string | null;
+  };
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("email, first_name, last_name, avatar_url")
+    .eq("id", typedUpdatedAdminData.user_id)
+    .single();
+
+  const typedProfileData = profileData as ProfileRow | null;
+
+  // Шаг 5: Загружаем описание роли
+  type RoleDescriptionRow = { description: string | null };
+  const { data: roleDescriptionData } = await supabase
+    .from("admin_roles")
+    .select("description")
+    .eq("id", typedRoleData.id)
+    .single();
+
+  const typedRoleDescription = roleDescriptionData as RoleDescriptionRow | null;
+
+  return {
+    id: typedUpdatedAdminData.id,
+    userId: typedUpdatedAdminData.user_id,
+    roleId: typedUpdatedAdminData.role_id,
+    projectId: typedUpdatedAdminData.project_id,
+    createdAt: typedUpdatedAdminData.created_at,
+    updatedAt: typedUpdatedAdminData.updated_at,
+    createdBy: typedUpdatedAdminData.created_by,
+    email: typedProfileData?.email || null,
+    firstName: typedProfileData?.first_name || null,
+    lastName: typedProfileData?.last_name || null,
+    avatarUrl: typedProfileData?.avatar_url || null,
+    roleName: roleName,
+    roleDescription: typedRoleDescription?.description || null,
+  };
+}

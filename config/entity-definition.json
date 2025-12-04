@@ -45,7 +45,8 @@
           {
             "action": "edit",
             "icon": "settings",
-            "link": true
+            "link": true,
+            "additionalUrl": "/edit"
           },
           {
             "action": "link",

@@ -2,7 +2,15 @@
  * Типы для системы авторизации
  */
 
-export type UserRole = "user" | "admin" | "superAdmin";
+/**
+ * Глобальная роль пользователя
+ *
+ * УПРОЩЕННАЯ АРХИТЕКТУРА:
+ * - Только две глобальные роли: 'user' или 'superAdmin'
+ * - Убрали промежуточный 'admin'
+ * - projectAdmin и projectSuperAdmin - это роли в проекте, получаются через get_user_project_role()
+ */
+export type UserRole = "user" | "superAdmin";
 
 export interface User {
   id?: string;
@@ -82,7 +90,9 @@ export interface ClientAuthConfig {
  */
 export interface CookieHandler {
   getAll: () => Array<{ name: string; value: string }>;
-  setAll: (cookies: Array<{ name: string; value: string; options?: CookieOptions }>) => void;
+  setAll: (
+    cookies: Array<{ name: string; value: string; options?: CookieOptions }>
+  ) => void;
 }
 
 export interface CookieOptions {
@@ -102,7 +112,10 @@ export interface MiddlewareConfig {
   supabaseAnonKey: string;
   publicRoutes?: string[];
   onAuthRequired?: (request: { url: string; pathname: string }) => string;
-  onRoleCheck?: (user: User, role: UserRole, request: { url: string; pathname: string }) => string | null;
+  onRoleCheck?: (
+    user: User,
+    role: UserRole,
+    request: { url: string; pathname: string }
+  ) => string | null;
   roleCacheTtl?: number; // TTL для кэша ролей в секундах (по умолчанию 5 минут)
 }
-

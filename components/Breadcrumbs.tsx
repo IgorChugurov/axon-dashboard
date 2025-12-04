@@ -20,6 +20,7 @@ import {
 import { useProjects } from "@/components/providers/ProjectsProvider";
 import { useBreadcrumbsData } from "@/lib/breadcrumbs";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useRole } from "@/hooks/use-role";
 import * as React from "react";
 
 export interface BreadcrumbItemData {
@@ -54,6 +55,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
   const pathname = usePathname();
   const { getProjectName } = useProjects();
   const isMobile = useIsMobile();
+  const { isSuperAdmin } = useRole();
 
   // Определяем, является ли экран планшетом или меньше (меньше 1024px)
   const [isTabletOrMobile, setIsTabletOrMobile] = React.useState<boolean>(false);
@@ -80,6 +82,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
   let fieldId: string | undefined;
   let instanceId: string | undefined;
   let environmentId: string | undefined;
+  let adminId: string | undefined;
 
   if (projectId && pathParts.length > 2) {
     const afterProjectId = pathParts[2]; // Сегмент после projectId
@@ -111,13 +114,22 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         environmentId = envSegment;
       }
     }
+    
+    // Admin ID из admins
+    if (afterProjectId === "admins" && pathParts.length > 3) {
+      const adminSegment = pathParts[3];
+      if (!["new"].includes(adminSegment)) {
+        adminId = adminSegment;
+      }
+    }
   }
 
   // Получаем имена из кеша
-  const { entityDefinitionName, fieldName, environmentName } = useBreadcrumbsData({
+  const { entityDefinitionName, fieldName, environmentName, adminName } = useBreadcrumbsData({
     entityDefinitionId,
     fieldId,
     environmentId,
+    adminId,
   });
 
   // Имя проекта из ProjectsProvider (всегда доступно)
@@ -181,23 +193,29 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
     };
 
     // Settings dropdown
+    const settingsDropdownItems = [
+      {
+        label: "Project Settings",
+        href: `/projects/${projectId}/settings`,
+      },
+      {
+        label: "Environments",
+        href: `/projects/${projectId}/settings/environments`,
+      },
+    ];
+
+    // Добавляем ссылку на админов только для суперадмина
+    if (isSuperAdmin) {
+      settingsDropdownItems.push({
+        label: "Administrators",
+        href: `/projects/${projectId}/admins`,
+      });
+    }
+
     const settingsDropdown: BreadcrumbItemData = {
       label: "Settings",
       dropdown: {
-        items: [
-          {
-            label: "Project Settings",
-            href: `/projects/${projectId}/settings`,
-          },
-          {
-            label: "Environments",
-            href: `/projects/${projectId}/settings/environments`,
-          },
-          {
-            label: "Administrators",
-            href: `/projects/${projectId}/admins`,
-          },
-        ],
+        items: settingsDropdownItems,
       },
     };
 
@@ -258,6 +276,18 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         href: `/projects/${projectId}/admins`,
       });
       breadcrumbItems.push({ label: "New" });
+      return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
+    }
+
+    // Edit Admin page: /projects/:projectId/admins/:adminId
+    if (adminId) {
+      breadcrumbItems.push(projectDropdown);
+      breadcrumbItems.push(settingsDropdown);
+      breadcrumbItems.push({
+        label: "Administrators",
+        href: `/projects/${projectId}/admins`,
+      });
+      breadcrumbItems.push({ label: adminName || "Edit" });
       return renderBreadcrumbs(breadcrumbItems, isMobile, isTabletOrMobile);
     }
 

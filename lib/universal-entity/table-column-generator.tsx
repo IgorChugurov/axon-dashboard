@@ -13,7 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Trash2, Edit, List, MoreVertical } from "lucide-react";
+import { Settings, Trash2, Edit, List, MoreVertical, Eye } from "lucide-react";
+import { ActionsCell } from "./actions-cell";
 
 /**
  * Получить иконку по имени
@@ -121,9 +122,11 @@ function formatRelationValue(
  * @param columnsConfig - Конфигурация колонок из EntityUIConfig
  * @param routing - Конфигурация роутинга для навигации
  * @param projectId - ID проекта
- * @param onEdit - Обработчик редактирования
+ * @param onEdit - Обработчик редактирования (может быть async)
  * @param onDelete - Обработчик удаления
  * @param onLink - Обработчик перехода по ссылке
+ * @param readOnly - Если true, скрывает delete действия и заменяет edit на view
+ * @param canEdit - Функция проверки прав на редактирование (опционально)
  */
 export function generateColumnsFromConfig<TData extends { id: string }>(
   columnsConfig: ColumnConfig[],
@@ -132,115 +135,35 @@ export function generateColumnsFromConfig<TData extends { id: string }>(
     detailsUrlTemplate: string;
   },
   projectId: string,
-  onEdit?: (id: string) => void,
-  onDelete?: (id: string) => void,
-  onLink?: (id: string, additionalUrl?: string) => void
+  onEdit?: (id: string) => void | Promise<void>,
+  onDelete?: (id: string) => void | Promise<void>,
+  onLink?: (id: string, additionalUrl?: string) => void,
+  readOnly?: boolean,
+  canEdit?: (id: string) => boolean | Promise<boolean>
 ): ColumnDef<TData>[] {
   return columnsConfig
     .map((col) => {
       // Колонка действий
       if (col.type === "actions" && col.actions) {
+        const isProjectList = projectId === "global";
+
         return {
           id: col.field,
           header: col.headerName || "",
           enableHiding: false,
           cell: ({ row }) => {
-            const instance = row.original as Record<string, unknown>;
             const instanceId = row.original.id;
-
-            // Фильтруем действия, которые должны быть отображены
-            const availableActions = col.actions?.filter((action) => {
-              // Проверяем наличие обработчиков
-              if (action.action === "edit" && !onEdit) return false;
-              if (action.action === "delete" && !onDelete) return false;
-              if (action.action === "link" && !onLink) return false;
-
-              // Проверяем условие hideIf
-              if (action.hideIf) {
-                const fieldValue = instance[action.hideIf.field];
-                if (fieldValue === action.hideIf.value) {
-                  return false; // Скрываем action
-                }
-              }
-
-              return true;
-            });
-
-            // Если нет доступных действий, не показываем dropdown (троеточие)
-            if (!availableActions || availableActions.length === 0) {
-              return null;
-            }
-
-            // Разделяем действия на группы: обычные и delete
-            const regularActions = availableActions.filter(
-              (action) => action.action !== "delete"
-            );
-            const deleteAction = availableActions.find(
-              (action) => action.action === "delete"
-            );
-
             return (
-              <div className="flex items-center justify-end">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {/* Обычные действия (edit, link) */}
-                    {regularActions.map((action: ActionConfig, idx: number) => {
-                      const ActionIcon = getIcon(action.icon);
-                      const actionKey = `${action.action}-${idx}`;
-
-                      if (action.action === "edit") {
-                        return (
-                          <DropdownMenuItem
-                            key={actionKey}
-                            onClick={() => onEdit?.(instanceId)}
-                          >
-                            <Edit className="h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                        );
-                      }
-
-                      if (action.action === "link") {
-                        return (
-                          <DropdownMenuItem
-                            key={actionKey}
-                            onClick={() =>
-                              onLink?.(instanceId, action.additionalUrl)
-                            }
-                          >
-                            <List className="h-4 w-4" />
-                            {action?.label || "View Details"}
-                          </DropdownMenuItem>
-                        );
-                      }
-
-                      return null;
-                    })}
-
-                    {/* Separator перед delete, если есть обычные действия */}
-                    {regularActions.length > 0 && deleteAction && (
-                      <DropdownMenuSeparator />
-                    )}
-
-                    {/* Delete действие */}
-                    {deleteAction && (
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => onDelete?.(instanceId)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <ActionsCell
+                instanceId={instanceId}
+                actions={col.actions || []}
+                readOnly={readOnly}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onLink={onLink}
+                canEdit={canEdit}
+                isProjectList={isProjectList}
+              />
             );
           },
         } as ColumnDef<TData>;

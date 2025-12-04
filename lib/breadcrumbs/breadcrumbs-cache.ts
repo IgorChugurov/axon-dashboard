@@ -19,6 +19,7 @@ interface CachedEntityData {
 const entityDefinitionsCache = new Map<string, CachedEntityData>();
 const fieldsCache = new Map<string, CachedEntityData>();
 const environmentsCache = new Map<string, CachedEntityData>();
+const adminsCache = new Map<string, CachedEntityData>();
 
 // TTL кеша - 5 минут (данные обновятся при навигации на страницу)
 const CACHE_TTL = 5 * 60 * 1000;
@@ -113,6 +114,31 @@ export function getEnvironmentName(id: string): string | undefined {
   return cached.name;
 }
 
+// --- Admin ---
+
+export function setAdminName(id: string, name: string): void {
+  const existing = adminsCache.get(id);
+  if (existing?.name === name) return;
+  
+  adminsCache.set(id, {
+    name,
+    updatedAt: Date.now(),
+  });
+  notifyListeners();
+}
+
+export function getAdminName(id: string): string | undefined {
+  const cached = adminsCache.get(id);
+  if (!cached) return undefined;
+  
+  if (Date.now() - cached.updatedAt > CACHE_TTL) {
+    adminsCache.delete(id);
+    return undefined;
+  }
+  
+  return cached.name;
+}
+
 // --- Batch update (для удобства) ---
 
 export interface BreadcrumbsCacheUpdate {
@@ -122,6 +148,8 @@ export interface BreadcrumbsCacheUpdate {
   fieldName?: string;
   environmentId?: string;
   environmentName?: string;
+  adminId?: string;
+  adminName?: string;
 }
 
 export function updateBreadcrumbsCache(data: BreadcrumbsCacheUpdate): void {
@@ -134,6 +162,9 @@ export function updateBreadcrumbsCache(data: BreadcrumbsCacheUpdate): void {
   if (data.environmentId && data.environmentName) {
     setEnvironmentName(data.environmentId, data.environmentName);
   }
+  if (data.adminId && data.adminName) {
+    setAdminName(data.adminId, data.adminName);
+  }
 }
 
 // --- Clear (для тестов или reset) ---
@@ -142,6 +173,7 @@ export function clearBreadcrumbsCache(): void {
   entityDefinitionsCache.clear();
   fieldsCache.clear();
   environmentsCache.clear();
+  adminsCache.clear();
   notifyListeners();
 }
 

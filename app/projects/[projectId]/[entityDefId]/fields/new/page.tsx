@@ -1,7 +1,8 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/roles";
-import { FieldFormNew } from "@/components/entity-definition/FieldFormNew";
+
+import { FieldFormUniversal } from "@/components/entity-definition/FieldFormUniversal";
 import {
   getEntityDefinitionById,
   getEntityDefinitions,
@@ -11,10 +12,16 @@ import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
 interface NewFieldPageProps {
   params: Promise<{ projectId: string; entityDefId: string }>;
+  searchParams: Promise<{ useUniversal?: string }>;
 }
 
-export default async function NewFieldPage({ params }: NewFieldPageProps) {
+export default async function NewFieldPage({
+  params,
+  searchParams,
+}: NewFieldPageProps) {
   const { projectId, entityDefId } = await params;
+  const { useUniversal } = await searchParams;
+  const useUniversalForm = useUniversal === "true";
 
   // Проверка прав доступа
   const supabase = await createClient();
@@ -51,15 +58,40 @@ export default async function NewFieldPage({ params }: NewFieldPageProps) {
         entityDefinitionName={entityDefinition.name}
       />
 
+      <FieldFormUniversal
+        projectId={projectId}
+        entityDefinitionId={entityDefId}
+        mode="create"
+        availableEntities={availableEntities}
+        availableFields={availableFields}
+      />
+
+      {/* <FieldFormSwitcher
+        useUniversal={useUniversalForm}
+        projectId={projectId}
+        entityDefId={entityDefId}
+        mode="create"
+      />
+
       <div className="rounded-lg border bg-card p-6">
-        <FieldFormNew
-          projectId={projectId}
-          entityDefinitionId={entityDefId}
-          mode="create"
-          availableEntities={availableEntities}
-          availableFields={availableFields}
-        />
-      </div>
+        {useUniversalForm ? (
+          <FieldFormUniversal
+            projectId={projectId}
+            entityDefinitionId={entityDefId}
+            mode="create"
+            availableEntities={availableEntities}
+            availableFields={availableFields}
+          />
+        ) : (
+          <FieldFormNew
+            projectId={projectId}
+            entityDefinitionId={entityDefId}
+            mode="create"
+            availableEntities={availableEntities}
+            availableFields={availableFields}
+          />
+        )}
+      </div> */}
     </div>
   );
 }

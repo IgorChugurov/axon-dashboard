@@ -10,7 +10,6 @@ import {
   FileText,
   Users,
   Tag,
-  Settings,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 
@@ -231,9 +230,11 @@ export function AppSidebar({ projects = [] }: AppSidebarProps) {
                         : user?.email || "Account"}
                     </span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="h-4 w-4 mr-2" />
-                    <span>Settings</span>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center">
+                      <User2 className="h-4 w-4 mr-2" />
+                      <span>Profile</span>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleLogout}

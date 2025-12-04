@@ -17,6 +17,7 @@ import { clearCurrentProjectCookie } from "@/lib/projects/cookies";
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { Project } from "@/lib/projects/types";
+import { useRole } from "@/hooks/use-role";
 
 // Импортируем конфиг напрямую (статический импорт)
 import projectsConfig from "@/config/projects.json";
@@ -38,6 +39,17 @@ export function ProjectFormNew({
   projectId,
   initialData,
 }: ProjectFormNewProps) {
+  // Для режима редактирования проверяем права на редактирование проекта
+  // Если нет прав на редактирование, форма будет в режиме readOnly
+  const {
+    isSuperAdmin,
+    canEdit: canEditProject,
+    isLoading: isCheckingProject,
+  } = useRole(mode === "edit" ? projectId : undefined);
+
+  // Определяем readOnly: true если это редактирование и нет прав на редактирование
+  const readOnly = mode === "edit" && !isCheckingProject && !canEditProject;
+
   // Создаём entityDefinition и fields из JSON конфига
   // Используем "global" как pseudo-projectId
   const { entityDefinition, fields } = useMemo(
@@ -118,9 +130,10 @@ export function ProjectFormNew({
       projectId="global"
       onCreate={handleCreate}
       onUpdate={handleUpdate}
-      onDelete={handleDelete}
+      onDelete={mode === "edit" && isSuperAdmin ? handleDelete : undefined}
       redirectUrl={redirectUrl}
       queryKey={queryKey}
+      readOnly={readOnly}
     />
   );
 }
