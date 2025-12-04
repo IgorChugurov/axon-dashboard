@@ -7,25 +7,7 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { ServerDataParams } from "@/lib/server-data/types";
 import type { Project, CreateProjectData, ProjectRole } from "./types";
-
-/**
- * Преобразование данных из БД в типы TypeScript
- * Конвертирует snake_case из БД в camelCase для TypeScript
- */
-function transformProject(row: any, role?: ProjectRole): Project {
-  return {
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    status: row.status,
-    createdBy: row.created_by,
-    enableSignIn: row.enable_sign_in ?? true,
-    enableSignUp: row.enable_sign_up ?? true,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    role,
-  };
-}
+import { transformProject } from "./transformers";
 
 /**
  * Получение всех ролей пользователя в проектах одним запросом

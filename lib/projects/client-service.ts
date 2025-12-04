@@ -5,6 +5,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import type { Project, CreateProjectData, UpdateProjectData } from "./types";
+import { transformProject } from "./transformers";
 
 export interface ProjectsResponse {
   data: Project[];
@@ -15,24 +16,6 @@ export interface ProjectsResponse {
     totalPages: number;
     hasPreviousPage: boolean;
     hasNextPage: boolean;
-  };
-}
-
-/**
- * Преобразование данных из БД в типы TypeScript
- * Конвертирует snake_case из БД в camelCase для TypeScript
- */
-function transformProject(row: any): Project {
-  return {
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    status: row.status,
-    createdBy: row.created_by,
-    enableSignIn: row.enable_sign_in ?? true,
-    enableSignUp: row.enable_sign_up ?? true,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
   };
 }
 
@@ -94,7 +77,7 @@ export async function getProjectsFromClient(
   const hasNextPage = page < totalPages;
 
   return {
-    data: (data || []).map(transformProject),
+    data: (data || []).map((row) => transformProject(row)),
     pagination: {
       page,
       limit,

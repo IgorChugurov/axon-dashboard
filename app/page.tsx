@@ -16,18 +16,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProjectFromCookies } from "@/lib/projects/cookies";
-import { getServerUserFromHeaders } from "@/lib/auth/headers";
 
 export default async function HomePage() {
   // Получаем пользователя из headers (установленных middleware)
   // Это избегает повторных запросов к Supabase и БД
-  const user = await getServerUserFromHeaders();
-
-  if (!user) {
-    // Не авторизован - middleware должен был редиректнуть
-    // Но на всякий случай делаем редирект
-    redirect("/login");
-  }
 
   // Middleware уже проверил роль и сделал редирект для обычных пользователей
   // Здесь мы можем быть уверены, что пользователь - админ
