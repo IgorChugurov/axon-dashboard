@@ -6,12 +6,12 @@
 
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { createServerSDK } from "@axon-dashboard/public-api-sdk/server";
+import { createServerSDK } from "@igorchugurov/public-api-sdk/server";
 import {
   NotFoundError,
   PermissionDeniedError,
   SDKError,
-} from "@axon-dashboard/public-api-sdk";
+} from "@igorchugurov/public-api-sdk";
 import { EntityInstanceFormNew } from "@/components/entity-instances/EntityInstanceFormNew";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 

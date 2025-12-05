@@ -19,9 +19,7 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"],
-      "@axon-dashboard/public-api-sdk": ["./packages/public-api-sdk/src/index.ts"],
-      "@axon-dashboard/public-api-sdk/server": ["./packages/public-api-sdk/src/server.ts"]
+      "@/*": ["./*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

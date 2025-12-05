@@ -5,7 +5,7 @@
 
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { createServerSDK } from "@axon-dashboard/public-api-sdk/server";
+import { createServerSDK } from "@igorchugurov/public-api-sdk/server";
 import { EntityInstancesListClient } from "@/components/universal-entity-list";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
 
