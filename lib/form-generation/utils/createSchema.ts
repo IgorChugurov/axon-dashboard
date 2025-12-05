@@ -3,7 +3,7 @@
  */
 
 import * as Yup from "yup";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field, FieldValue } from "@/lib/universal-entity/types";
 
 /**
  * Create Yup validation schema for form fields
@@ -161,9 +161,9 @@ function applyConditionalValidation(
  */
 export function createInitialFormData(
   fields: Field[],
-  existingData?: Record<string, any>
-): Record<string, any> {
-  const initialData: Record<string, any> = {};
+  existingData?: Record<string, FieldValue>
+): Record<string, FieldValue> {
+  const initialData: Record<string, FieldValue> = {};
 
   fields.forEach((field) => {
     // Use existing data if available

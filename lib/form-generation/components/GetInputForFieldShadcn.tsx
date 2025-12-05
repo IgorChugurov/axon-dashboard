@@ -6,7 +6,7 @@
 
 "use client";
 
-import { Control, useWatch } from "react-hook-form";
+import { Control } from "react-hook-form";
 import type { Field as FieldType } from "@/lib/universal-entity/types";
 import type { FormData } from "../types";
 import { InputTextShadcn } from "./inputs-shadcn/InputTextShadcn";

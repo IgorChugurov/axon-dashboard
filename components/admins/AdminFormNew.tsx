@@ -74,7 +74,7 @@ export function AdminFormNew({ projectId }: AdminFormNewProps) {
       // Создаем админа проекта с указанным projectId
       return createAdminFromClient(foundUser.id, role, projectId);
     },
-    onSuccess: (createdAdmin) => {
+    onSuccess: () => {
       // Инвалидируем все запросы списка админов (с любыми параметрами)
       queryClient.invalidateQueries({ 
         queryKey: ["list", projectId, "admin"],

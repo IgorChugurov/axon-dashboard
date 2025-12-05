@@ -8,7 +8,7 @@
  */
 
 import { createClient } from "@/lib/supabase/client";
-import type { Admin, AdminsResponse, AdminRoleName } from "./types";
+import type { Admin, AdminsResponse } from "./types";
 
 /**
  * Получение списка администраторов с пагинацией и поиском

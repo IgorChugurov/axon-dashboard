@@ -165,6 +165,9 @@ export interface Field {
   typeFieldName?: string | null; // Name of the field that determines the input type (default: "type")
   optionsFieldName?: string | null; // Name of the field that contains options for select type (default: "options")
 
+  // Additional field configuration
+  exclude?: string | null; // Entity ID to exclude from options (e.g., "parentEntityId" for relatedEntityDefinitionId)
+
   // File upload configuration (for type: "files" or "images")
   acceptFileTypes?: string | null; // "image/*", "application/pdf", etc.
   maxFileSize?: number | null; // в байтах (переопределяет лимит из EntityDefinition)

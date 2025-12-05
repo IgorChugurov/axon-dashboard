@@ -11,7 +11,7 @@ import { createEntityDefinitionAndFieldsFromConfig } from "@/lib/universal-entit
 import { updateAdminFromClient } from "@/lib/admins/client-service";
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
-import type { Field, FieldOption } from "@/lib/universal-entity/types";
+import type { FieldOption, FieldValue } from "@/lib/universal-entity/types";
 import type { Admin } from "@/lib/admins/types";
 
 // Импортируем конфиг напрямую (статический импорт)
@@ -68,7 +68,7 @@ export function AdminFormEdit({
   }, []);
 
   // Подготавливаем initialData для формы
-  const formInitialData: Record<string, any> = {
+  const formInitialData: Record<string, FieldValue> = {
     email: initialData.email || "",
     roleName: initialData.roleName,
   };
@@ -76,7 +76,7 @@ export function AdminFormEdit({
   // Функция обновления - адаптер для client-service
   const handleUpdate = async (
     id: string,
-    data: Record<string, any>
+    data: Record<string, FieldValue>
   ): Promise<Admin> => {
     const roleName = data.roleName as
       | "superAdmin"

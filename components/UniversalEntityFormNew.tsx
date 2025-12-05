@@ -18,8 +18,10 @@ import type {
   EntityDefinition,
   Field,
   EntityInstanceWithFields,
+  FieldValue,
 } from "@/lib/universal-entity/types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
+import type { FormData } from "@/lib/form-generation/types";
 import { FormWithSectionsShadcn } from "@/lib/form-generation";
 import { useToast } from "@/hooks/use-toast";
 import { showGlobalLoader, hideGlobalLoader } from "@/lib/global-loader/store";
@@ -27,16 +29,16 @@ import { showGlobalLoader, hideGlobalLoader } from "@/lib/global-loader/store";
 /**
  * Тип для функции создания
  */
-export type CreateFn<TData = any> = (
-  data: Record<string, any>
+export type CreateFn<TData = unknown> = (
+  data: Record<string, FieldValue>
 ) => Promise<TData>;
 
 /**
  * Тип для функции обновления
  */
-export type UpdateFn<TData = any> = (
+export type UpdateFn<TData = unknown> = (
   id: string,
-  data: Record<string, any>
+  data: Record<string, FieldValue>
 ) => Promise<TData>;
 
 /**
@@ -52,7 +54,7 @@ interface UniversalEntityFormNewProps {
 
   // Режим формы
   mode: "create" | "edit";
-  initialData?: Record<string, any>;
+  initialData?: Record<string, FieldValue>;
   instanceId?: string;
   projectId: string;
 
@@ -68,7 +70,9 @@ interface UniversalEntityFormNewProps {
   queryKey?: string[];
 
   // Опционально: кастомная обработка данных перед отправкой
-  transformData?: (formData: Record<string, any>) => Record<string, any>;
+  transformData?: (
+    formData: Record<string, FieldValue>
+  ) => Record<string, FieldValue>;
 
   // Опционально: если true, все поля disabled и скрыты кнопки сохранения/удаления
   readOnly?: boolean;
@@ -109,7 +113,7 @@ export function UniversalEntityFormNew({
 
   // Mutation для создания с добавлением в кэш
   const createMutation = useMutation({
-    mutationFn: async (data: Record<string, any>) => {
+    mutationFn: async (data: Record<string, FieldValue>) => {
       if (!onCreate) {
         throw new Error("onCreate function is not provided");
       }
@@ -160,7 +164,7 @@ export function UniversalEntityFormNew({
       data,
     }: {
       id: string;
-      data: Record<string, any>;
+      data: Record<string, FieldValue>;
     }) => {
       if (!onUpdate) {
         throw new Error("onUpdate function is not provided");
@@ -171,8 +175,22 @@ export function UniversalEntityFormNew({
     onSuccess: (updatedInstance) => {
       // Оптимистичное обновление кэша React Query вместо инвалидации
       // Это избегает повторной загрузки всего списка
-      if (queryKey && updatedInstance) {
+      // Type guard: проверяем, что updatedInstance является объектом с полем id
+      const hasId = (
+        obj: unknown
+      ): obj is EntityInstanceWithFields | { id: string } => {
+        return (
+          typeof obj === "object" &&
+          obj !== null &&
+          "id" in obj &&
+          typeof (obj as { id: unknown }).id === "string"
+        );
+      };
+
+      if (queryKey && updatedInstance && hasId(updatedInstance)) {
         // Получаем все query keys с префиксом queryKey (все страницы списка)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // any используется для pagination, так как структура может варьироваться в зависимости от сервиса
         const allQueries = queryClient.getQueriesData<{
           data: EntityInstanceWithFields[];
           pagination: any;
@@ -246,6 +264,8 @@ export function UniversalEntityFormNew({
       const previousQueries = queryClient.getQueriesData({ queryKey });
 
       // Оптимистично удаляем элемент из всех связанных запросов
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // any используется для old, так как структура query data может варьироваться
       queryClient.setQueriesData({ queryKey }, (old: any) => {
         if (!old) return old;
         return {
@@ -332,11 +352,42 @@ export function UniversalEntityFormNew({
     deleteMutation.mutate(instanceId);
   };
 
+  // Преобразуем initialData из Record<string, FieldValue> в FormData
+  // Убираем undefined значения, так как FormData не допускает undefined
+  // FieldValue из universal-entity и form-generation совместимы по структуре
+  const formInitialData = useMemo<FormData>(() => {
+    const result: FormData = {};
+    if (initialData) {
+      Object.entries(initialData).forEach(([key, value]) => {
+        // Пропускаем undefined значения
+        // Type assertion нужен, так как TypeScript видит разные типы FieldValue
+        // из-за разных путей импорта, хотя они структурно идентичны
+        if (value !== undefined) {
+          result[key] = value as FormData[string];
+        }
+      });
+    }
+    return result;
+  }, [initialData]);
+
   // Имя элемента для диалога подтверждения удаления
+  // Преобразуем FieldValue в string, так как itemName должен быть string | undefined
+  const getStringValue = (
+    value: FieldValue | undefined
+  ): string | undefined => {
+    if (value === null || value === undefined) return undefined;
+    if (typeof value === "string") return value;
+    if (typeof value === "number" || typeof value === "boolean")
+      return String(value);
+    if (value instanceof Date) return value.toISOString();
+    if (Array.isArray(value)) return value.join(", ");
+    return undefined;
+  };
+
   const itemName =
-    initialData?.name ||
-    initialData?.key ||
-    initialData?.title ||
+    getStringValue(initialData?.name) ||
+    getStringValue(initialData?.key) ||
+    getStringValue(initialData?.title) ||
     entityDefinition.name;
 
   // Ошибка (для отображения inline)
@@ -358,7 +409,7 @@ export function UniversalEntityFormNew({
       <FormWithSectionsShadcn
         fields={fields}
         mode={mode}
-        initialData={initialData}
+        initialData={formInitialData}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         onDelete={mode === "edit" && onDelete ? handleDelete : undefined}

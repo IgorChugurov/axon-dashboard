@@ -5,8 +5,6 @@
 
 import type {
   LoadDataFn,
-  LoadDataResult,
-  LoadParams,
 } from "@/components/universal-entity-list/types/list-types";
 import {
   getEnvironmentsFromClient,
@@ -49,7 +47,7 @@ export interface ListService<TData extends { id: string }> {
 export function createEnvironmentListService(
   projectId: string
 ): ListService<Environment> {
-  const onLoadData: LoadDataFn<Environment> = async (params, _signal) => {
+  const onLoadData: LoadDataFn<Environment> = async (params) => {
     const result = await getEnvironmentsFromClient(projectId, {
       page: params.page,
       limit: params.limit,
@@ -86,7 +84,7 @@ export function createEnvironmentListService(
 export function createEntityDefinitionListService(
   projectId: string
 ): ListService<EntityDefinition> {
-  const onLoadData: LoadDataFn<EntityDefinition> = async (params, _signal) => {
+  const onLoadData: LoadDataFn<EntityDefinition> = async (params) => {
     const result = await getEntityDefinitionsFromClient(projectId, {
       page: params.page,
       limit: params.limit,
@@ -124,7 +122,7 @@ export function createFieldListService(
   entityDefinitionId: string,
   _projectId: string
 ): ListService<Field> {
-  const onLoadData: LoadDataFn<Field> = async (params, _signal) => {
+  const onLoadData: LoadDataFn<Field> = async (params) => {
     const result = await getFieldsFromClient(entityDefinitionId, {
       page: params.page,
       limit: params.limit,
@@ -159,7 +157,7 @@ export function createFieldListService(
  * Примечание: Projects не привязаны к projectId, поэтому загружаем все проекты
  */
 export function createProjectListService(): ListService<Project> {
-  const onLoadData: LoadDataFn<Project> = async (params, _signal) => {
+  const onLoadData: LoadDataFn<Project> = async (params) => {
     const result = await getProjectsFromClient({
       page: params.page,
       limit: params.limit,
@@ -197,7 +195,7 @@ export function createProjectListService(): ListService<Project> {
  * Доступ контролируется RLS политиками (только superAdmin и projectSuperAdmin могут видеть/управлять)
  */
 export function createAdminListService(projectId: string): ListService<Admin> {
-  const onLoadData: LoadDataFn<Admin> = async (params, _signal) => {
+  const onLoadData: LoadDataFn<Admin> = async (params) => {
     const result = await getAdminsFromClient({
       page: params.page,
       limit: params.limit,

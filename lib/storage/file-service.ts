@@ -124,7 +124,7 @@ export async function uploadFiles(
       const arrayBuffer = await file.arrayBuffer();
 
       // Загружаем в Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from(bucket)
         .upload(filePath, arrayBuffer, {
           contentType: file.type,

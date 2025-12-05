@@ -6,99 +6,142 @@
    - Environments: .env.local, .env
 
    Creating an optimized production build ...
- ✓ Finished writing to disk in 202ms
- ✓ Compiled successfully in 3.0s
+ ✓ Finished writing to disk in 194ms
+ ✓ Compiled successfully in 21.9s
    Linting and checking validity of types ...
 
-./app/[projectId]/entities/[entityDefinitionId]/EntityFormClient.tsx
-17:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-31:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-66:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-135:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./app/[projectId]/entities/[entityDefinitionId]/EntityFormWithSections.tsx
-20:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-35:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-41:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./app/[projectId]/entities/[entityDefinitionId]/EntityListClient.tsx
-35:10  Warning: 'page' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-36:10  Warning: 'search' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-
-./app/[projectId]/entities/[entityDefinitionId]/RelationSelect.tsx
-24:3  Warning: 'fieldId' is defined but never used.  @typescript-eslint/no-unused-vars
-35:10  Warning: 'titleField' is assigned a value but never used.  @typescript-eslint/no-unused-vars
-39:6  Warning: React Hook useEffect has a missing dependency: 'loadOptions'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
-
-./app/[projectId]/entities/[entityDefinitionId]/[instanceId]/edit/page.tsx
-51:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./app/[projectId]/entities/[entityDefinitionId]/actions.ts
-27:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-74:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./app/[projectId]/entity-definition/actions.ts
-9:10  Warning: 'redirect' is defined but never used.  @typescript-eslint/no-unused-vars
-
-./app/[projectId]/entity-definition/new/page.tsx
-42:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./app/[projectId]/page.tsx
-4:10  Warning: 'useEntityDefinitions' is defined but never used.  @typescript-eslint/no-unused-vars
-
 ./app/layout.tsx
-48:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+68:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/profile/page.tsx
+25:11  Warning: 'displayRole' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./app/projects/[projectId]/[entityDefId]/RelationSelect.tsx
+17:12  Warning: '_fieldId' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/projects/[projectId]/[entityDefId]/[instanceId]/page.tsx
+93:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/projects/[projectId]/[entityDefId]/fields/[fieldId]/page.tsx
+24:3  Warning: 'searchParams' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/projects/[projectId]/[entityDefId]/fields/new/page.tsx
+20:3  Warning: 'searchParams' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/projects/[projectId]/settings/ProjectSettingsTab.tsx
+11:14  Warning: '_projectId' is defined but never used.  @typescript-eslint/no-unused-vars
 
 ./components/AppSidebar.tsx
-22:3  Warning: 'SidebarGroupAction' is defined but never used.  @typescript-eslint/no-unused-vars
+25:3  Warning: 'SidebarMenuSub' is defined but never used.  @typescript-eslint/no-unused-vars
+26:3  Warning: 'SidebarMenuSubButton' is defined but never used.  @typescript-eslint/no-unused-vars
+27:3  Warning: 'SidebarMenuSubItem' is defined but never used.  @typescript-eslint/no-unused-vars
 
-./components/PostsList.tsx
-60:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-63:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+./components/UniversalEntityFormForFields.tsx
+29:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+36:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+38:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+54:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+70:69  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+123:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+174:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+189:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+260:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+315:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./components/UniversalEntityList.tsx
-28:21  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-88:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+./components/UniversalEntityFormNew.tsx
+30:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+31:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+39:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+55:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+71:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+71:69  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+112:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+163:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+178:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+249:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+304:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./components/entity-definition/EntityDefinitionForm.tsx
-27:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-27:79  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-95:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+./components/admins/AdminFormEdit.tsx
+71:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+79:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/entity-definition/FieldForm.legacy.tsx
+36:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+69:14  Warning: '_projectId' is defined but never used.  @typescript-eslint/no-unused-vars
+147:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+218:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
 ./components/entity-definition/FieldForm.tsx
-30:20  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-30:79  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-111:6  Warning: React Hook useEffect has a missing dependency: 'formData.type'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
-120:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-182:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+36:11  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+69:14  Warning: '_projectId' is defined but never used.  @typescript-eslint/no-unused-vars
+147:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+218:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./components/forms/AuthorForm.tsx
-10:23  Warning: 'CreateAuthorData' is defined but never used.  @typescript-eslint/no-unused-vars
-10:41  Warning: 'UpdateAuthorData' is defined but never used.  @typescript-eslint/no-unused-vars
+./components/entity-definition/FieldFormNew.legacy.tsx
+57:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+96:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+135:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+203:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+251:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./components/forms/EntityForm.tsx
-14:77  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-21:53  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+./components/entity-definition/FieldFormNew.tsx
+57:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+96:56  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+135:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+203:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+251:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./components/forms/PostForm.tsx
-9:10  Warning: 'TagsSelect' is defined but never used.  @typescript-eslint/no-unused-vars
-12:21  Warning: 'CreatePostData' is defined but never used.  @typescript-eslint/no-unused-vars
-12:37  Warning: 'UpdatePostData' is defined but never used.  @typescript-eslint/no-unused-vars
+./components/entity-definition/FieldFormUniversal.tsx
+64:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+103:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+103:60  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+120:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+164:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./components/forms/TagForm.tsx
-10:20  Warning: 'CreateTagData' is defined but never used.  @typescript-eslint/no-unused-vars
-10:35  Warning: 'UpdateTagData' is defined but never used.  @typescript-eslint/no-unused-vars
+./components/entity-definitions/EntityDefinitionFormNew.tsx
+73:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+95:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+121:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./lib/entities/posts/service.ts
-102:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-110:23  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-110:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-129:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-131:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-225:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+./components/entity-instances/EntityInstanceFormNew.tsx
+26:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+56:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+58:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+78:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+94:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
-./lib/entities/projects/service.ts
-44:35  Warning: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
+./components/environments/EnvironmentFormNew.tsx
+62:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+73:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+88:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/projects/ProjectFormNew.tsx
+72:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+83:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+97:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/universal-entity-list/ProjectsListClient.tsx
+125:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/universal-entity-list/UniversalEntityListClient.tsx
+127:15  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./components/universal-entity-list/UniversalEntityListDataTable.tsx
+74:3  Warning: 'onEdit' is defined but never used.  @typescript-eslint/no-unused-vars
+75:3  Warning: 'onDelete' is defined but never used.  @typescript-eslint/no-unused-vars
+76:3  Warning: 'onLink' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/universal-entity-list/hooks/use-list-params.ts
+42:3  Warning: 'projectId' is defined but never used.  @typescript-eslint/no-unused-vars
+43:3  Warning: 'serviceType' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./lib/admins/client-service.ts
+446:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
 ./lib/entity-service/base.ts
 37:27  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
@@ -113,25 +156,37 @@
 ./lib/entity-service/types.ts
 13:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
+./lib/environments/transformers.ts
+12:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/form-generation/components/FormWithSectionsForFields.tsx
+61:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+160:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+187:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/form-generation/components/inputs-shadcn/InputArrayShadcn.tsx
+71:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+110:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/form-generation/components/inputs-shadcn/InputDateShadcn.tsx
+37:44  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
 ./lib/form-generation/utils/createSchema.ts
 12:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-92:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-96:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-99:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-134:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-160:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-161:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-162:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/form-generation/utils/fieldHelpers.ts
-149:38  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+100:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+104:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+104:67  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+138:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+164:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+165:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+166:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
 ./lib/form-generation/utils/generateUIConfig.ts
-190:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-214:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-215:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-216:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-219:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+237:45  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+261:40  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+262:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+263:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+266:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
 ./lib/form-generation/utils/getItemForEdit.ts
 16:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
@@ -139,127 +194,136 @@
 18:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 39:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 39:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-78:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-109:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-111:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-112:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+86:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+120:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+122:19  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+123:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/projects/supabase.ts
+59:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+149:34  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+309:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+309:42  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+313:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/projects/transformers.ts
+14:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
 ./lib/server-data/base.ts
-59:20  Warning: '_data' is defined but never used.  @typescript-eslint/no-unused-vars
+59:20  Warning: '_' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./lib/storage/file-service.ts
+222:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+302:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+354:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/universal-entity/config-loader.ts
+9:46  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
 ./lib/universal-entity/config-service.ts
-21:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-49:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-287:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+22:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+51:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+308:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/universal-entity/entity-definition-client-service.ts
+12:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+246:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+281:36  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
 ./lib/universal-entity/entity-definition-service.ts
-130:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-174:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-211:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-400:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-442:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-462:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-604:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-626:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/universal-entity/instance-service.ts
-14:3  Warning: 'DbType' is defined but never used.  @typescript-eslint/no-unused-vars
-22:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-22:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-77:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-81:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-111:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-117:59  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-119:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-140:68  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-141:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-142:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-171:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-411:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-463:16  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-487:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-494:63  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-590:65  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-593:25  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-598:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-622:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/universal-entity/relation-service.ts
-31:26  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-167:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-198:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-256:64  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/universal-entity/table-utils.ts
-78:32  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-
-./lib/universal-entity/types.ts
-130:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-172:18  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
-181:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+125:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+172:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 192:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+448:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+513:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+586:33  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+606:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+717:58  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+718:26  Warning: '_removed' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+756:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+826:41  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+851:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/universal-entity/field-client-service.ts
+12:30  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+295:12  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+358:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+419:39  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/universal-entity/form-service-types.ts
+2:24  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./lib/universal-entity/list-service-factory.ts
+123:3  Warning: '_projectId' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./lib/universal-entity/table-column-generator.tsx
+7:29  Warning: 'ActionConfig' is defined but never used.  @typescript-eslint/no-unused-vars
+8:10  Warning: 'Button' is defined but never used.  @typescript-eslint/no-unused-vars
+10:3  Warning: 'DropdownMenu' is defined but never used.  @typescript-eslint/no-unused-vars
+11:3  Warning: 'DropdownMenuContent' is defined but never used.  @typescript-eslint/no-unused-vars
+12:3  Warning: 'DropdownMenuItem' is defined but never used.  @typescript-eslint/no-unused-vars
+13:3  Warning: 'DropdownMenuSeparator' is defined but never used.  @typescript-eslint/no-unused-vars
+14:3  Warning: 'DropdownMenuTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+16:40  Warning: 'MoreVertical' is defined but never used.  @typescript-eslint/no-unused-vars
+16:54  Warning: 'Eye' is defined but never used.  @typescript-eslint/no-unused-vars
+22:10  Warning: 'getIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+44:47  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+84:10  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+103:17  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+178:54  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+213:52  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
 
 info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
    Collecting page data ...
-   Generating static pages (0/23) ...
-   Generating static pages (5/23) 
-   Generating static pages (11/23) 
-   Generating static pages (17/23) 
- ✓ Generating static pages (23/23)
+   Generating static pages (0/14) ...
+   Generating static pages (3/14) 
+   Generating static pages (6/14) 
+   Generating static pages (10/14) 
+ ✓ Generating static pages (14/14)
    Finalizing page optimization ...
    Collecting build traces ...
 
-Route (app)                                                                       Size  First Load JS
-┌ ƒ /                                                                              0 B         229 kB
-├ ƒ /_not-found                                                                    0 B         229 kB
-├ ƒ /[projectId]                                                                   0 B         229 kB
-├ ƒ /[projectId]/entities/[entityDefinitionId]                                 1.16 kB         231 kB
-├ ƒ /[projectId]/entities/[entityDefinitionId]/[instanceId]                    1.24 kB         231 kB
-├ ƒ /[projectId]/entities/[entityDefinitionId]/[instanceId]/edit                   0 B         265 kB
-├ ƒ /[projectId]/entities/[entityDefinitionId]/new                                 0 B         265 kB
-├ ƒ /[projectId]/entity-definition/[entityDefinitionId]/edit                       0 B         240 kB
-├ ƒ /[projectId]/entity-definition/[entityDefinitionId]/fields                 1.87 kB         231 kB
-├ ƒ /[projectId]/entity-definition/[entityDefinitionId]/fields/[fieldId]/edit      0 B         242 kB
-├ ƒ /[projectId]/entity-definition/[entityDefinitionId]/fields/new                 0 B         242 kB
-├ ƒ /[projectId]/entity-definition/new                                             0 B         240 kB
-├ ƒ /api/[entity]                                                                  0 B            0 B
-├ ƒ /api/auth/login                                                                0 B            0 B
-├ ƒ /api/auth/logout                                                               0 B            0 B
-├ ƒ /api/auth/me                                                                   0 B            0 B
-├ ƒ /api/auth/refresh-token                                                        0 B            0 B
-├ ƒ /api/entities/[entityDefinitionId]                                             0 B            0 B
-├ ƒ /api/entities/[entityDefinitionId]/[instanceId]                                0 B            0 B
-├ ƒ /api/entities/[entityDefinitionId]/options                                     0 B            0 B
-├ ƒ /api/entity-instances/all                                                      0 B            0 B
-├ ƒ /api/projects                                                                  0 B            0 B
-├ ƒ /auth/callback                                                                 0 B            0 B
-├ ƒ /authors                                                                   1.93 kB         231 kB
-├ ƒ /authors/[id]/edit                                                          2.6 kB         232 kB
-├ ƒ /authors/new                                                               2.22 kB         232 kB
-├ ƒ /login                                                                     2.16 kB         232 kB
-├ ƒ /logout                                                                      522 B         230 kB
-├ ƒ /posts                                                                     2.33 kB         232 kB
-├ ƒ /posts/[id]/edit                                                           3.23 kB         233 kB
-├ ƒ /posts/new                                                                 2.88 kB         232 kB
-├ ƒ /projects                                                                  1.81 kB         231 kB
-├ ƒ /signup                                                                    2.68 kB         232 kB
-├ ƒ /tags                                                                      1.94 kB         231 kB
-├ ƒ /tags/[id]/edit                                                            2.64 kB         232 kB
-├ ƒ /tags/new                                                                  2.27 kB         232 kB
-└ ƒ /welcome                                                                     716 B         230 kB
-+ First Load JS shared by all                                                   245 kB
-  ├ chunks/0cfaf8f2631ce4e7.js                                                 11.8 kB
-  ├ chunks/3122bab7c995ccd5.js                                                 17.2 kB
-  ├ chunks/463c4c7ddcfe2979.js                                                 12.8 kB
-  ├ chunks/70f1480f48979e11.js                                                 59.2 kB
-  ├ chunks/954a376d7cd82f36.js                                                   22 kB
-  ├ chunks/c611fd99d4bdd721.js                                                 20.2 kB
-  ├ chunks/ee3dcec8519fccdb.js                                                 50.9 kB
-  ├ chunks/2c75777d505f8a8d.css                                                15.1 kB
-  └ other shared chunks (total)                                                35.4 kB
+Route (app)                                                         Size  First Load JS
+┌ ƒ /                                                                0 B         253 kB
+├ ƒ /_not-found                                                      0 B         253 kB
+├ ƒ /auth/callback                                                   0 B            0 B
+├ ƒ /auth/reset-password                                         5.03 kB         258 kB
+├ ƒ /login                                                        2.9 kB         256 kB
+├ ƒ /logout                                                        669 B         254 kB
+├ ƒ /profile                                                     2.99 kB         256 kB
+├ ƒ /projects                                                    19.9 kB         306 kB
+├ ƒ /projects/[projectId]                                        2.68 kB         308 kB
+├ ƒ /projects/[projectId]/[entityDefId]                              0 B         307 kB
+├ ƒ /projects/[projectId]/[entityDefId]/[instanceId]                 0 B         317 kB
+├ ƒ /projects/[projectId]/[entityDefId]/edit                         0 B         321 kB
+├ ƒ /projects/[projectId]/[entityDefId]/fields                       0 B         307 kB
+├ ƒ /projects/[projectId]/[entityDefId]/fields/[fieldId]             0 B         324 kB
+├ ƒ /projects/[projectId]/[entityDefId]/fields/new                   0 B         324 kB
+├ ƒ /projects/[projectId]/[entityDefId]/new                          0 B         317 kB
+├ ƒ /projects/[projectId]/admins                                 1.37 kB         306 kB
+├ ƒ /projects/[projectId]/admins/[adminId]                       12.5 kB         321 kB
+├ ƒ /projects/[projectId]/admins/new                              5.5 kB         275 kB
+├ ƒ /projects/[projectId]/new                                        0 B         321 kB
+├ ƒ /projects/[projectId]/settings                               10.7 kB         319 kB
+├ ƒ /projects/[projectId]/settings/environments                   1.4 kB         306 kB
+├ ƒ /projects/[projectId]/settings/environments/[environmentId]      0 B         319 kB
+├ ƒ /projects/[projectId]/settings/environments/new                  0 B         319 kB
+├ ƒ /projects/new                                                  18 kB         319 kB
+├ ƒ /signup                                                         3 kB         256 kB
+└ ƒ /welcome                                                       725 B         254 kB
++ First Load JS shared by all                                     272 kB
+  ├ chunks/30fa8083623db1a1.js                                   13.9 kB
+  ├ chunks/3debfea1804f151b.js                                   22.4 kB
+  ├ chunks/94a1c17275f5d978.js                                   54.3 kB
+  ├ chunks/94e477b3d102358f.js                                   59.2 kB
+  ├ chunks/c3f6e79ff1416ab7.js                                     13 kB
+  ├ chunks/ef0e95ba7092d15b.js                                   17.2 kB
+  ├ chunks/f4ed4d294cb821e7.js                                   24.7 kB
+  ├ chunks/b1de20d70d7895a4.css                                  17.6 kB
+  └ other shared chunks (total)                                  49.6 kB
 
 
-ƒ Middleware                                                                   88.9 kB
+ƒ Middleware                                                     85.1 kB
 
 ƒ  (Dynamic)  server-rendered on demand
 

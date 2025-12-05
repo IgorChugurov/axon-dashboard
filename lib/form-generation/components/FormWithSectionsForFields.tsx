@@ -17,22 +17,20 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Field,
   FieldSet,
   FieldLegend,
   FieldGroup,
-  FieldDescription,
   FieldError,
 } from "@/components/ui/field";
 import type {
   Field as FieldType,
   FieldOption,
+  FieldValue,
 } from "@/lib/universal-entity/types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { FormData } from "../types";
@@ -61,7 +59,7 @@ const FIELD_TYPE_BY_DB_TYPE: Record<string, string[]> = {
 interface DynamicOptionsProvider {
   (
     fieldName: string,
-    formData: Record<string, any>,
+    formData: Record<string, FieldValue>,
     allFields: FieldType[]
   ): FieldOption[];
 }
@@ -187,7 +185,7 @@ export function FormWithSectionsForFields({
     if (field.name === "relatedEntityDefinitionId") {
       // Filter out parent entity if exclude is set
       let filtered = availableEntities;
-      if (parentEntityId && (field as any).exclude === "parentEntityId") {
+      if (parentEntityId && field.exclude === "parentEntityId") {
         filtered = availableEntities.filter((e) => e.id !== parentEntityId);
       }
       return filtered.map((e) => ({ id: e.id, name: e.name }));

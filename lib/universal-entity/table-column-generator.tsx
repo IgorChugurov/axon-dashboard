@@ -4,35 +4,9 @@
 
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import type { ColumnConfig, ActionConfig } from "./ui-config-types";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Settings, Trash2, Edit, List, MoreVertical, Eye } from "lucide-react";
+import type { ColumnConfig } from "./ui-config-types";
 import { ActionsCell } from "./actions-cell";
 
-/**
- * Получить иконку по имени
- */
-function getIcon(iconName?: string) {
-  switch (iconName) {
-    case "settings":
-      return Settings;
-    case "trash":
-      return Trash2;
-    case "edit":
-      return Edit;
-    case "list":
-      return List;
-    default:
-      return Edit;
-  }
-}
 
 /**
  * Получает значение для отображения из связанного экземпляра

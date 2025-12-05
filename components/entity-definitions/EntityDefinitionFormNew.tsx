@@ -15,7 +15,7 @@ import {
 } from "@/lib/universal-entity/entity-definition-client-service";
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
-import type { EntityDefinition } from "@/lib/universal-entity/types";
+import type { EntityDefinition, FieldValue } from "@/lib/universal-entity/types";
 import { useRole } from "@/hooks/use-role";
 
 // Импортируем конфиг напрямую (статический импорт)
@@ -70,7 +70,7 @@ export function EntityDefinitionFormNew({
   }, []);
 
   // Подготавливаем initialData для формы
-  const formInitialData: Record<string, any> = initialData
+  const formInitialData: Record<string, FieldValue> = initialData
     ? {
         name: initialData.name,
         description: initialData.description,
@@ -92,24 +92,24 @@ export function EntityDefinitionFormNew({
 
   // Функция создания - адаптер для client-service
   const handleCreate = async (
-    data: Record<string, any>
+    data: Record<string, FieldValue>
   ): Promise<EntityDefinition> => {
     const createData = {
-      name: data.name,
-      description: data.description || null,
-      tableName: data.tableName,
-      type: data.type as "primary" | "secondary" | "tertiary",
-      createPermission: data.createPermission,
-      readPermission: data.readPermission,
-      updatePermission: data.updatePermission,
-      deletePermission: data.deletePermission,
-      titleSection0: data.titleSection0 || null,
-      titleSection1: data.titleSection1 || null,
-      titleSection2: data.titleSection2 || null,
-      titleSection3: data.titleSection3 || null,
-      enablePagination: data.enablePagination ?? true,
-      pageSize: data.pageSize ?? 20,
-      enableFilters: data.enableFilters ?? false,
+      name: typeof data.name === "string" ? data.name : String(data.name ?? ""),
+      description: typeof data.description === "string" || data.description === null ? data.description : null,
+      tableName: typeof data.tableName === "string" ? data.tableName : String(data.tableName ?? ""),
+      type: (typeof data.type === "string" ? data.type : "primary") as "primary" | "secondary" | "tertiary",
+      createPermission: typeof data.createPermission === "string" ? data.createPermission : undefined,
+      readPermission: typeof data.readPermission === "string" ? data.readPermission : undefined,
+      updatePermission: typeof data.updatePermission === "string" ? data.updatePermission : undefined,
+      deletePermission: typeof data.deletePermission === "string" ? data.deletePermission : undefined,
+      titleSection0: typeof data.titleSection0 === "string" || data.titleSection0 === null ? data.titleSection0 : null,
+      titleSection1: typeof data.titleSection1 === "string" || data.titleSection1 === null ? data.titleSection1 : null,
+      titleSection2: typeof data.titleSection2 === "string" || data.titleSection2 === null ? data.titleSection2 : null,
+      titleSection3: typeof data.titleSection3 === "string" || data.titleSection3 === null ? data.titleSection3 : null,
+      enablePagination: typeof data.enablePagination === "boolean" || data.enablePagination === null ? data.enablePagination : true,
+      pageSize: typeof data.pageSize === "number" || data.pageSize === null ? data.pageSize : 20,
+      enableFilters: typeof data.enableFilters === "boolean" || data.enableFilters === null ? data.enableFilters : false,
     };
 
     return createEntityDefinitionFromClient(projectId, createData);
@@ -118,23 +118,23 @@ export function EntityDefinitionFormNew({
   // Функция обновления - адаптер для client-service
   const handleUpdate = async (
     id: string,
-    data: Record<string, any>
+    data: Record<string, FieldValue>
   ): Promise<EntityDefinition> => {
     const updateData = {
-      name: data.name,
-      description: data.description || null,
-      type: data.type as "primary" | "secondary" | "tertiary",
-      createPermission: data.createPermission,
-      readPermission: data.readPermission,
-      updatePermission: data.updatePermission,
-      deletePermission: data.deletePermission,
-      titleSection0: data.titleSection0 || null,
-      titleSection1: data.titleSection1 || null,
-      titleSection2: data.titleSection2 || null,
-      titleSection3: data.titleSection3 || null,
-      enablePagination: data.enablePagination ?? true,
-      pageSize: data.pageSize ?? 20,
-      enableFilters: data.enableFilters ?? false,
+      name: typeof data.name === "string" ? data.name : undefined,
+      description: typeof data.description === "string" || data.description === null ? data.description : undefined,
+      type: typeof data.type === "string" ? (data.type as "primary" | "secondary" | "tertiary") : undefined,
+      createPermission: typeof data.createPermission === "string" ? data.createPermission : undefined,
+      readPermission: typeof data.readPermission === "string" ? data.readPermission : undefined,
+      updatePermission: typeof data.updatePermission === "string" ? data.updatePermission : undefined,
+      deletePermission: typeof data.deletePermission === "string" ? data.deletePermission : undefined,
+      titleSection0: typeof data.titleSection0 === "string" || data.titleSection0 === null ? data.titleSection0 : undefined,
+      titleSection1: typeof data.titleSection1 === "string" || data.titleSection1 === null ? data.titleSection1 : undefined,
+      titleSection2: typeof data.titleSection2 === "string" || data.titleSection2 === null ? data.titleSection2 : undefined,
+      titleSection3: typeof data.titleSection3 === "string" || data.titleSection3 === null ? data.titleSection3 : undefined,
+      enablePagination: typeof data.enablePagination === "boolean" || data.enablePagination === null ? data.enablePagination : undefined,
+      pageSize: typeof data.pageSize === "number" || data.pageSize === null ? data.pageSize : undefined,
+      enableFilters: typeof data.enableFilters === "boolean" || data.enableFilters === null ? data.enableFilters : undefined,
     };
 
     return updateEntityDefinitionFromClient(id, updateData);

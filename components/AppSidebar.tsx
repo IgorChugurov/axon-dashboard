@@ -7,9 +7,6 @@ import {
   Projector,
   User2,
   LogOut,
-  FileText,
-  Users,
-  Tag,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 
@@ -18,7 +15,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,

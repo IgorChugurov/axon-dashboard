@@ -12,7 +12,7 @@ import { InputTextShadcn } from "./InputTextShadcn";
 import { InputNumberShadcn } from "./InputNumberShadcn";
 import { InputSwitchShadcn } from "./InputSwitchShadcn";
 import { InputSelectShadcn } from "./InputSelectShadcn";
-import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import type { Field as FieldType } from "@/lib/universal-entity/types";
 import type { FormData } from "../../types";
 

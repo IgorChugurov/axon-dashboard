@@ -3,7 +3,7 @@
  * Получает роли из таблицы admins в Supabase
  *
  * ОБЕРТКА над SDK для удобства использования в Next.js
- * Внутри использует packages/auth-sdk/src/server/role-service
+ * Внутри использует @igorchugurov/auth-sdk/server
  */
 
 import { createClient } from "@/lib/supabase/server";
@@ -12,8 +12,8 @@ import {
   isAdmin as sdkIsAdmin,
   isSuperAdmin as sdkIsSuperAdmin,
   canManageAdmins as sdkCanManageAdmins,
-} from "@/packages/auth-sdk/src/server/role-service";
-import type { UserRole } from "@/packages/auth-sdk/src/types";
+} from "@igorchugurov/auth-sdk/server";
+import type { UserRole } from "@igorchugurov/auth-sdk";
 
 /**
  * Получение роли пользователя из базы данных

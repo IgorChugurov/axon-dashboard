@@ -14,7 +14,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/components/providers/AuthProvider";
-import type { UserRole } from "@/packages/auth-sdk/src/types";
+import type { UserRole } from "@igorchugurov/auth-sdk";
 
 /**
  * Хук для получения роли текущего пользователя

@@ -32,6 +32,7 @@ export function loadUIConfigFromFile(
     return null;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { fields: _fields, ...uiConfig } = config;
   return uiConfig as EntityUIConfig;
 }

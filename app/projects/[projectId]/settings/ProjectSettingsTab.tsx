@@ -8,7 +8,7 @@ interface ProjectSettingsTabProps {
 }
 
 export async function ProjectSettingsTab({
-  projectId,
+  projectId: _projectId,
 }: ProjectSettingsTabProps) {
   return (
     <div className="rounded-lg border bg-card p-6">
@@ -18,4 +18,3 @@ export async function ProjectSettingsTab({
     </div>
   );
 }
-

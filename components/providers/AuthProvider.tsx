@@ -2,13 +2,13 @@
 
 import { ReactNode, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import type { User } from "@/packages/auth-sdk/src/types";
+import type { User } from "@igorchugurov/auth-sdk";
 import {
   AuthProvider as SDKAuthProvider,
   useAuth as useSDKAuth,
   createClientAuthClient,
   createBrowserSupabaseClient,
-} from "@/packages/auth-sdk/src/client";
+} from "@igorchugurov/auth-sdk/client";
 
 /**
  * Обертка над SDK AuthProvider для совместимости с текущим кодом

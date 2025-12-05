@@ -66,7 +66,7 @@ const FIELD_TYPE_BY_DB_TYPE: Record<DbType, FieldType[]> = {
 };
 
 export function FieldForm({
-  projectId,
+  projectId: _projectId,
   entityDefinitionId,
   mode,
   initialData,
@@ -135,7 +135,7 @@ export function FieldForm({
     if (isRelationType(formData.dbType) && mode === "create") {
       setRelationsOpen(true);
     }
-  }, [formData.dbType, mode]);
+  }, [formData.dbType, formData.type, mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -14,6 +14,7 @@ import type {
   EntityDefinition,
   Field,
   EntityInstanceWithFields,
+  FieldValue,
 } from "@/lib/universal-entity/types";
 
 interface EntityInstanceFormNewProps {
@@ -23,7 +24,7 @@ interface EntityInstanceFormNewProps {
   uiConfig: EntityUIConfig;
   mode: "create" | "edit";
   instanceId?: string;
-  initialData?: Record<string, any>;
+  initialData?: Record<string, FieldValue>;
 }
 
 export function EntityInstanceFormNew({
@@ -53,14 +54,20 @@ export function EntityInstanceFormNew({
 
   // Функция для разделения данных формы на data и relations
   const separateDataAndRelations = useCallback(
-    (formData: Record<string, any>) => {
+    (formData: Record<string, FieldValue>) => {
       const relations: Record<string, string[]> = {};
-      const data: Record<string, any> = {};
+      const data: Record<string, FieldValue> = {};
 
       for (const [key, value] of Object.entries(formData)) {
         if (relationFieldNames.includes(key)) {
           // Поле связи - преобразуем в массив ID
-          relations[key] = Array.isArray(value) ? value : value ? [value] : [];
+          if (Array.isArray(value)) {
+            relations[key] = value.map(v => String(v ?? "")).filter(Boolean);
+          } else if (value) {
+            relations[key] = [String(value)];
+          } else {
+            relations[key] = [];
+          }
         } else {
           // Обычное поле для JSONB
           data[key] = value;
@@ -75,7 +82,7 @@ export function EntityInstanceFormNew({
   // Функция создания - использует SDK
   const handleCreate = useCallback(
     async (
-      formData: Record<string, any>
+      formData: Record<string, FieldValue>
     ): Promise<EntityInstanceWithFields> => {
       const { data, relations } = separateDataAndRelations(formData);
 
@@ -91,7 +98,7 @@ export function EntityInstanceFormNew({
   const handleUpdate = useCallback(
     async (
       id: string,
-      formData: Record<string, any>
+      formData: Record<string, FieldValue>
     ): Promise<EntityInstanceWithFields> => {
       const { data, relations } = separateDataAndRelations(formData);
 

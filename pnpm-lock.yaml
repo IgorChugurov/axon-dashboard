@@ -11,6 +11,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.66.1(react@19.1.0))
+      '@igorchugurov/auth-sdk':
+        specifier: ^1.0.3
+        version: 1.0.3(@supabase/ssr@0.7.0(@supabase/supabase-js@2.81.1))(@supabase/supabase-js@2.81.1)(next@15.5.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@radix-ui/react-avatar':
         specifier: ^1.1.10
         version: 1.1.10(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -377,6 +380,15 @@ packages:
   '@humanwhocodes/retry@0.4.3':
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
+
+  '@igorchugurov/auth-sdk@1.0.3':
+    resolution: {integrity: sha512-RG4Wb6HDTWiI2CveGih1QA2OoRkBM1QV747MW7pXOl7D/Yk/6Vx8nIV1baIp9Oyc4yRg3I0L3UL0l6Gl2r5a+A==}
+    peerDependencies:
+      '@supabase/ssr': ^0.7.0
+      '@supabase/supabase-js': ^2.81.1
+      next: ^14.0.0 || ^15.0.0
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
 
   '@img/colour@1.0.0':
     resolution: {integrity: sha512-A5P/LfWGFSl6nsckYtjw9da+19jB8hkJ6ACTGcDfEJ0aE+l2n2El7dsVM7UVHZQ9s2lmYMWlrS21YLy2IR1LUw==}
@@ -3138,6 +3150,14 @@ snapshots:
   '@humanwhocodes/module-importer@1.0.1': {}
 
   '@humanwhocodes/retry@0.4.3': {}
+
+  '@igorchugurov/auth-sdk@1.0.3(@supabase/ssr@0.7.0(@supabase/supabase-js@2.81.1))(@supabase/supabase-js@2.81.1)(next@15.5.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@supabase/ssr': 0.7.0(@supabase/supabase-js@2.81.1)
+      '@supabase/supabase-js': 2.81.1
+      next: 15.5.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   '@img/colour@1.0.0':
     optional: true

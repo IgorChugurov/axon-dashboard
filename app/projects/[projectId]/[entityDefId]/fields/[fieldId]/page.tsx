@@ -1,7 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/roles";
-import { FieldFormNew } from "@/components/entity-definition/FieldFormNew";
 import { FieldFormUniversal } from "@/components/entity-definition/FieldFormUniversal";
 import {
   getEntityDefinitionById,
@@ -25,8 +24,6 @@ export default async function EditFieldPage({
   searchParams,
 }: EditFieldPageProps) {
   const { projectId, entityDefId, fieldId } = await params;
-  const { useUniversal } = await searchParams;
-  const useUniversalForm = useUniversal === "true";
 
   // Проверка прав доступа
   const supabase = await createClient();

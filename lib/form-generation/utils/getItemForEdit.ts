@@ -3,7 +3,7 @@
  * Normalizes null values and applies defaults
  */
 
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field, FieldValue } from "@/lib/universal-entity/types";
 
 /**
  * Transform server data for form editing
@@ -13,9 +13,9 @@ import type { Field } from "@/lib/universal-entity/types";
  */
 export function getItemForEdit(
   fields: Field[],
-  serverData?: Record<string, any>
-): Record<string, any> {
-  const formData: Record<string, any> = {};
+  serverData?: Record<string, unknown>
+): Record<string, FieldValue> {
+  const formData: Record<string, FieldValue> = {};
 
   fields.forEach((field) => {
     const serverValue = serverData?.[field.name];
@@ -36,7 +36,7 @@ export function getItemForEdit(
 /**
  * Normalize a value from server based on field type
  */
-function normalizeValue(value: any, field: Field): any {
+function normalizeValue(value: unknown, field: Field): FieldValue {
   //console.log("normalizeValue", value, field);
   switch (field.type) {
     case "select":
@@ -44,7 +44,8 @@ function normalizeValue(value: any, field: Field): any {
       if (value === null || value === "none") {
         return null;
       }
-      return value;
+      // For select, value should be a string
+      return typeof value === "string" ? value : String(value);
 
     case "multipleSelect":
     case "array":
@@ -52,9 +53,12 @@ function normalizeValue(value: any, field: Field): any {
     case "images":
       // Ensure array
       if (!Array.isArray(value)) {
-        return value ? [value] : [];
+        // Convert single value to array, ensuring it's a string
+        if (value === null || value === undefined) return [];
+        return [String(value)];
       }
-      return value;
+      // Type assertion: value is already checked as array
+      return value as string[];
 
     case "number":
       if (value === null || value === undefined) return 0;
@@ -66,11 +70,22 @@ function normalizeValue(value: any, field: Field): any {
 
     case "date":
       if (value === null) return null;
-      return value;
+      // Date can be string (ISO) or Date object
+      if (value instanceof Date) return value;
+      if (typeof value === "string") return value;
+      return String(value);
 
     case "dynamicValue":
       // Для dynamicValue возвращаем значение как есть - тип определяется динамически
-      return value;
+      // Преобразуем unknown в FieldValue с проверкой типов
+      if (value === null) return null;
+      if (typeof value === "string") return value;
+      if (typeof value === "number") return value;
+      if (typeof value === "boolean") return value;
+      if (value instanceof Date) return value;
+      if (Array.isArray(value)) return value as string[];
+      // Fallback: преобразуем в строку
+      return String(value);
 
     case "text":
     case "textarea":
@@ -83,7 +98,7 @@ function normalizeValue(value: any, field: Field): any {
 /**
  * Get default value for null server value
  */
-function getDefaultForNull(field: Field): any {
+function getDefaultForNull(field: Field): FieldValue {
   switch (field.type) {
     case "select":
       return null;
@@ -117,10 +132,10 @@ function getDefaultForNull(field: Field): any {
  * - Handles relation fields
  */
 export function cleanFormDataForSubmit(
-  formData: Record<string, any>,
+  formData: Record<string, FieldValue>,
   fields: Field[]
-): Record<string, any> {
-  const cleaned: Record<string, any> = {};
+): Record<string, FieldValue> {
+  const cleaned: Record<string, FieldValue> = {};
 
   fields.forEach((field) => {
     const value = formData[field.name];

@@ -20,8 +20,6 @@ export default async function NewFieldPage({
   searchParams,
 }: NewFieldPageProps) {
   const { projectId, entityDefId } = await params;
-  const { useUniversal } = await searchParams;
-  const useUniversalForm = useUniversal === "true";
 
   // Проверка прав доступа
   const supabase = await createClient();

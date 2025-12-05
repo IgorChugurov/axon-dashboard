@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Field,
-  FieldLabel,
   FieldDescription,
   FieldError,
   FieldSet,
@@ -68,7 +67,6 @@ export function InputArrayShadcn({
     name: "value",
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { fields, append, remove } = useFieldArray({
     control: control as any,
     name: field.name,

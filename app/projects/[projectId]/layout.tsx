@@ -1,5 +1,4 @@
 import React, { type ReactNode } from "react";
-import { notFound } from "next/navigation";
 
 import { ProjectCookieSetter } from "@/components/providers/ProjectCookieSetter";
 import { SDKProviderWrapper } from "@/components/providers/SDKProviderWrapper";

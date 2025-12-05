@@ -5,6 +5,7 @@
 
 import { notFound } from "next/navigation";
 import { ProjectFormNew } from "@/components/projects/ProjectFormNew";
+import { ProjectIdDisplay } from "@/components/projects/ProjectIdDisplay";
 import { projectsService } from "@/lib/entities/projects/service";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -29,11 +30,12 @@ export default async function ProjectSettingsPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="space-y-2">
           <h1 className="text-2xl font-semibold">Project Settings</h1>
           <p className="text-muted-foreground">
             Manage your project configuration
           </p>
+          <ProjectIdDisplay projectId={projectId} />
         </div>
         <Button asChild variant="outline">
           <Link href={`/projects/${projectId}/settings/environments`}>

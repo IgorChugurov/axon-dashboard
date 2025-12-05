@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Upload, X, File, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import {
   uploadFiles,
   deleteFiles,
@@ -242,10 +242,11 @@ export function FileUpload({
             >
               {displayMode === "images" && isImage(file.fileType) ? (
                 <>
-                  <img
+                  <Image
                     src={file.fileUrl}
                     alt={file.fileName}
-                    className="w-full h-full object-cover rounded"
+                    fill
+                    className="object-cover rounded"
                   />
                   {!disabled && (
                     <Button

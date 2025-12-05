@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SignUpForm } from "@/packages/auth-sdk/src/components/SignUpForm";
+import { SignUpForm } from "@igorchugurov/auth-sdk/components";
 import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function SignUpPage() {

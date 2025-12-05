@@ -3,7 +3,7 @@
  * Использует универсальную систему BaseEntityService
  */
 
-import { createEntityService } from "@/lib/entity-service";
+import { createEntityService, parseFiltersFromUrl } from "@/lib/entity-service";
 import { getServerUserFromHeaders } from "@/lib/auth/headers";
 import type { Project } from "./types";
 
@@ -40,9 +40,6 @@ export const projectsService = createEntityService<Project>({
 export function parseProjectFilters(
   searchParams: Record<string, string | string[] | undefined>
 ) {
-  // Импортируем parseFiltersFromUrl внутри функции
-  const { parseFiltersFromUrl } = require("@/lib/entity-service");
-
   return parseFiltersFromUrl(searchParams, {
     simpleFilters: [
       {

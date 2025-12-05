@@ -1,7 +1,8 @@
 # Индекс документации проекта
 
-**Обновлено:** 15 ноября 2025  
-**Версия проекта:** 3.0
+**Обновлено:** 30 января 2025  
+**Версия проекта:** 3.0  
+**Статус:** ✅ Документация реорганизована
 
 ---
 
@@ -9,44 +10,30 @@
 
 ### Для новых разработчиков
 
-1. **[QUICK_START.md](guides/QUICK_START.md)** - Начало работы с проектом
-2. **[QUICK_START_ENTITY.md](implementation/QUICK_START_ENTITY.md)** - Создание новой сущности за 15 минут
+1. **[QUICK_START.md](getting-started/QUICK_START.md)** - Установка и запуск проекта
+2. **[QUICK_START_ENTITY.md](getting-started/QUICK_START_ENTITY.md)** - Создание новой сущности за 15 минут
+3. **[SUPABASE_SETUP.md](getting-started/SUPABASE_SETUP.md)** - Настройка Supabase
 
 ### Для понимания архитектуры
 
-1. **[CURRENT_AUTH_FLOW.md](architecture/CURRENT_AUTH_FLOW.md)** - Авторизация (Supabase SSR)
-2. **[HYBRID_ARCHITECTURE_GUIDE.md](implementation/HYBRID_ARCHITECTURE_GUIDE.md)** - Гибридный подход (SSR + Client)
-3. **[DEVELOPMENT_GUIDE.md](architecture/DEVELOPMENT_GUIDE.md)** - Общее руководство разработчика
+1. **[DEVELOPMENT_GUIDE.md](architecture/DEVELOPMENT_GUIDE.md)** 🌟 - Главное руководство разработчика
+2. **[CURRENT_AUTH_FLOW.md](architecture/auth/CURRENT_AUTH_FLOW.md)** - Авторизация (Supabase SSR)
+3. **[HYBRID_ARCHITECTURE.md](architecture/HYBRID_ARCHITECTURE.md)** - Гибридный подход (SSR + Client)
+4. **[ROLES_AND_PERMISSIONS.md](architecture/auth/ROLES_AND_PERMISSIONS.md)** - Система ролей и прав
 
 ---
 
 ## 📚 Основная документация
 
-### Entity Service System (текущая)
+### 🏗️ Архитектура
 
 | Документ | Описание | Статус |
 |----------|----------|--------|
-| **[ENTITY_SERVICE_FINAL.md](implementation/ENTITY_SERVICE_FINAL.md)** | Полное описание Entity Service 3.0 | ✅ Актуально |
-| **[PROJECT_STATUS_2025_11_15.md](implementation/PROJECT_STATUS_2025_11_15.md)** | Текущее состояние проекта | ✅ Актуально |
-| **[QUICK_START_ENTITY.md](implementation/QUICK_START_ENTITY.md)** | Быстрый старт (создание сущности) | ✅ Актуально |
-
-**Основные концепции:**
-- Функциональный подход (`createEntityService`)
-- Сложная фильтрация (simple, relation, many-to-many)
-- URL State Management
-- Hooks для кастомизации
-- Manual Server Actions (временное решение)
-
----
-
-### Архитектура
-
-| Документ | Описание | Статус |
-|----------|----------|--------|
-| **[CURRENT_AUTH_FLOW.md](architecture/CURRENT_AUTH_FLOW.md)** | Supabase SSR авторизация | ✅ Актуально |
-| **[HYBRID_ARCHITECTURE_GUIDE.md](implementation/HYBRID_ARCHITECTURE_GUIDE.md)** | SSR + Browser Client подход | ✅ Актуально |
-| **[DEVELOPMENT_GUIDE.md](architecture/DEVELOPMENT_GUIDE.md)** | Руководство разработчика | ✅ Актуально |
-| [FINAL_IMPLEMENTATION_SUMMARY.md](implementation/FINAL_IMPLEMENTATION_SUMMARY.md) | Итоговая архитектура | ⚠️ Частично устарело |
+| **[DEVELOPMENT_GUIDE.md](architecture/DEVELOPMENT_GUIDE.md)** | Полное руководство по разработке | ✅ Актуально |
+| **[CURRENT_AUTH_FLOW.md](architecture/auth/CURRENT_AUTH_FLOW.md)** | Supabase SSR авторизация | ✅ Актуально |
+| **[HYBRID_ARCHITECTURE.md](architecture/HYBRID_ARCHITECTURE.md)** | SSR + Browser Client подход | ✅ Актуально |
+| **[ROLES_AND_PERMISSIONS.md](architecture/auth/ROLES_AND_PERMISSIONS.md)** | Система ролей и прав | ✅ Актуально |
+| **[MIDDLEWARE.md](architecture/MIDDLEWARE.md)** | Как работает middleware | ✅ Актуально |
 
 **Ключевые принципы:**
 - SSR First (первая загрузка на сервере)
@@ -57,56 +44,81 @@
 
 ---
 
-### SQL Миграции
-
-| Файл | Описание | Статус |
-|------|----------|--------|
-| **[POSTS_MIGRATION_SIMPLE.sql](implementation/POSTS_MIGRATION_SIMPLE.sql)** | Блог (authors, tags, posts) | ✅ Применено |
-| **[POSTS_RLS_FIX.sql](implementation/POSTS_RLS_FIX.sql)** | Исправление RLS политик | ✅ Применено |
-| [SUPABASE_MIGRATION.sql](implementation/SUPABASE_MIGRATION.sql) | Первая миграция (profiles, admins) | ✅ Применено |
-| [SUPABASE_PROJECTS_MIGRATION.sql](implementation/SUPABASE_PROJECTS_MIGRATION.sql) | Проекты | ✅ Применено |
-
----
-
-## 🛠️ Реализация и гайды
-
-### Entity Service (новая система)
-
-- **[ENTITY_SERVICE_FINAL.md](implementation/ENTITY_SERVICE_FINAL.md)** - главный документ
-- **[QUICK_START_ENTITY.md](implementation/QUICK_START_ENTITY.md)** - пошаговая инструкция
-- ⚠️ [UNIVERSAL_ENTITY_SYSTEM.md](implementation/UNIVERSAL_ENTITY_SYSTEM.md) - устарело (class approach)
-
-### Суммари и отчеты
-
-- **[PROJECT_STATUS_2025_11_15.md](implementation/PROJECT_STATUS_2025_11_15.md)** - текущий статус
-- [SUPABASE_MIGRATION_COMPLETE.md](implementation/SUPABASE_MIGRATION_COMPLETE.md) - Supabase миграция
-- [ROLES_SUMMARY.md](implementation/ROLES_SUMMARY.md) - Система ролей
-- [IMPLEMENTATION_STATUS.md](implementation/IMPLEMENTATION_STATUS.md) - история реализации
-
-### Специфичные темы
-
-- [RACE_CONDITIONS_PROTECTION.md](implementation/RACE_CONDITIONS_PROTECTION.md) - Защита от race conditions
-- [MIDDLEWARE_EXPLANATION.md](implementation/MIDDLEWARE_EXPLANATION.md) - Как работает middleware
-- [TOKEN_REFRESH_FIX.md](implementation/TOKEN_REFRESH_FIX.md) - Исправление refresh токенов
-
----
-
-## 📖 Руководства (Guides)
+### 📐 Структуры проекта
 
 | Документ | Описание |
 |----------|----------|
-| [QUICK_START.md](guides/QUICK_START.md) | Быстрый старт с проектом |
-| **[UNIVERSAL_LISTS_GUIDE.md](guides/UNIVERSAL_LISTS_GUIDE.md)** | ⭐ Руководство по универсальным спискам |
-| **[UNIVERSAL_FORMS_GUIDE.md](guides/UNIVERSAL_FORMS_GUIDE.md)** | ⭐ Руководство по универсальным формам |
-| [TESTING_GUIDE.md](guides/TESTING_GUIDE.md) | Руководство по тестированию |
-| [DEBUG_TIPS.md](guides/DEBUG_TIPS.md) | Советы по отладке |
-| [BACKEND_DATA_FORMAT.md](guides/BACKEND_DATA_FORMAT.md) | Формат данных backend |
-| [RECOMMENDATIONS.md](guides/RECOMMENDATIONS.md) | Рекомендации |
-| [CHANGELOG.md](guides/CHANGELOG.md) | История изменений |
+| **[CONFIG_FILES.md](structure/CONFIG_FILES.md)** | Структура конфигурационных файлов |
+| **[FORMS_STRUCTURE.md](structure/FORMS_STRUCTURE.md)** | Структура форм |
+| **[LISTS_STRUCTURE.md](structure/LISTS_STRUCTURE.md)** | Структура списков |
+| **[NAVIGATION.md](structure/NAVIGATION.md)** | Навигация в приложении |
+| **[ROUTING.md](structure/ROUTING.md)** | Структура роутинга |
 
 ---
 
-## 🎨 UI Компоненты
+### 🔄 Потоки данных (Flows)
+
+| Документ | Описание |
+|----------|----------|
+| **[TOKEN_FLOW.md](flows/TOKEN_FLOW.md)** | Поток работы с токенами |
+| **[REQUEST_FLOW.md](flows/REQUEST_FLOW.md)** | Поток запросов |
+| **[DATA_FLOW.md](flows/DATA_FLOW.md)** | Поток данных |
+| **[PASSWORD_RESET_FLOW.md](flows/PASSWORD_RESET_FLOW.md)** | Восстановление пароля |
+| **[OAUTH_FLOW.md](flows/OAUTH_FLOW.md)** | OAuth поток |
+
+---
+
+### 📖 Практические руководства (Guides)
+
+#### Формы и списки
+- **[UNIVERSAL_FORMS.md](guides/forms/UNIVERSAL_FORMS.md)** - Руководство по универсальным формам
+- **[UNIVERSAL_LISTS.md](guides/lists/UNIVERSAL_LISTS.md)** - Руководство по универсальным спискам
+
+#### Деплой
+- **[VERCEL_DEPLOYMENT.md](guides/deployment/VERCEL_DEPLOYMENT.md)** - Деплой на Vercel
+- **[VERCEL_VS_OWN_SERVER.md](guides/deployment/VERCEL_VS_OWN_SERVER.md)** - Сравнение вариантов
+
+#### Отладка
+- **[ROLES_DEBUG.md](guides/debugging/ROLES_DEBUG.md)** - Отладка системы ролей
+- **[DEBUG_TIPS.md](guides/debugging/DEBUG_TIPS.md)** - Советы по отладке
+
+#### Тестирование
+- **[TESTING_GUIDE.md](guides/testing/TESTING_GUIDE.md)** - Руководство по тестированию
+
+#### Другие гайды
+- **[BACKEND_DATA_FORMAT.md](guides/BACKEND_DATA_FORMAT.md)** - Формат данных backend
+- **[RECOMMENDATIONS.md](guides/RECOMMENDATIONS.md)** - Рекомендации
+- **[CHANGELOG.md](guides/CHANGELOG.md)** - История изменений
+
+---
+
+### 🔧 Реализация
+
+#### Features (Реализованные фичи)
+
+| Документ | Описание |
+|----------|----------|
+| **[ENTITY_SERVICE.md](implementation/features/ENTITY_SERVICE.md)** | Универсальная система Entity Service |
+| **[UNIVERSAL_ENTITY.md](implementation/features/UNIVERSAL_ENTITY.md)** | Universal Entity система |
+| **[FORM_GENERATION.md](implementation/features/FORM_GENERATION.md)** | Генерация форм |
+
+#### Миграции
+
+| Документ | Описание |
+|----------|----------|
+| **[MIGRATIONS_INSTRUCTIONS.md](implementation/migrations/MIGRATIONS_INSTRUCTIONS.md)** | Инструкции по выполнению миграций |
+| **[HOW_TO_RUN.md](implementation/migrations/HOW_TO_RUN.md)** | Как запустить миграции |
+| **[SQL/*.sql](implementation/migrations/SQL/)** | SQL файлы миграций |
+
+#### Статус проекта
+
+| Документ | Описание |
+|----------|----------|
+| **[PROJECT_STATUS.md](implementation/PROJECT_STATUS.md)** | Текущее состояние проекта |
+
+---
+
+### 🧩 UI Компоненты
 
 | Документ | Описание |
 |----------|----------|
@@ -116,36 +128,20 @@
 
 ---
 
-## 🔄 Flow диаграммы
+### 🎨 Дизайн-система
 
 | Документ | Описание |
 |----------|----------|
-| [FLOW_DIAGRAM.md](flows/FLOW_DIAGRAM.md) | Диаграммы потоков |
-| [REQUEST_FLOW_EXPLANATION.md](flows/REQUEST_FLOW_EXPLANATION.md) | Объяснение потока запросов |
-| [TOKEN_FLOW_SUMMARY.md](flows/TOKEN_FLOW_SUMMARY.md) | Поток токенов |
+| **[SPACING_GUIDE.md](design-system/SPACING_GUIDE.md)** | Гайд по отступам |
 
 ---
 
-## 📊 Отчеты и анализ
+### 🗺️ Roadmap
 
 | Документ | Описание |
 |----------|----------|
-| **[ROUTES_ANALYSIS.md](reports/ROUTES_ANALYSIS.md)** | ⭐ Анализ использования универсальных компонентов |
-| [AUTH_CLEANUP_REPORT.md](reports/AUTH_CLEANUP_REPORT.md) | Отчет о чистке авторизации |
-| [CLEANUP_RECOMMENDATIONS.md](reports/CLEANUP_RECOMMENDATIONS.md) | Рекомендации по чистке |
-| [ORGANIZATION_REPORT.md](reports/ORGANIZATION_REPORT.md) | Отчет об организации |
-| [PUBLIC_FILES_ANALYSIS.md](reports/PUBLIC_FILES_ANALYSIS.md) | Анализ публичных файлов |
-| [USAGE_ANALYSIS.md](reports/USAGE_ANALYSIS.md) | Анализ использования |
-
----
-
-## ⚠️ Устаревшие документы
-
-Эти документы сохранены для истории, но информация в них устарела:
-
-- ⚠️ [UNIVERSAL_ENTITY_SYSTEM.md](implementation/UNIVERSAL_ENTITY_SYSTEM.md) - описывает class approach (вместо этого читайте ENTITY_SERVICE_FINAL.md)
-- ⚠️ [FINAL_IMPLEMENTATION_SUMMARY.md](implementation/FINAL_IMPLEMENTATION_SUMMARY.md) - частично устарело
-- ⚠️ Документы в `architecture/` (кроме CURRENT_AUTH_FLOW.md, DEVELOPMENT_GUIDE.md) - могут содержать устаревшую информацию
+| **[ROADMAP.md](roadmap/ROADMAP.md)** | Дорожная карта развития проекта |
+| **[PHASE_2_CONTENT_TYPES_BUILDER.md](roadmap/PHASE_2_CONTENT_TYPES_BUILDER.md)** | Фаза 2: Content Types Builder |
 
 ---
 
@@ -153,26 +149,27 @@
 
 ### Если вы новый разработчик:
 
-1. **[QUICK_START.md](guides/QUICK_START.md)** - установка и запуск
-2. **[CURRENT_AUTH_FLOW.md](architecture/CURRENT_AUTH_FLOW.md)** - как работает авторизация
-3. **[HYBRID_ARCHITECTURE_GUIDE.md](implementation/HYBRID_ARCHITECTURE_GUIDE.md)** - архитектура приложения
-4. **[ENTITY_SERVICE_FINAL.md](implementation/ENTITY_SERVICE_FINAL.md)** - Entity Service система
-5. **[DEVELOPMENT_GUIDE.md](architecture/DEVELOPMENT_GUIDE.md)** - руководство разработчика
+1. **[QUICK_START.md](getting-started/QUICK_START.md)** - установка и запуск
+2. **[CURRENT_AUTH_FLOW.md](architecture/auth/CURRENT_AUTH_FLOW.md)** - как работает авторизация
+3. **[HYBRID_ARCHITECTURE.md](architecture/HYBRID_ARCHITECTURE.md)** - архитектура приложения
+4. **[DEVELOPMENT_GUIDE.md](architecture/DEVELOPMENT_GUIDE.md)** - руководство разработчика
+5. **[ENTITY_SERVICE.md](implementation/features/ENTITY_SERVICE.md)** - Entity Service система
 
 ### Если нужно создать новую сущность:
 
-1. **[QUICK_START_ENTITY.md](implementation/QUICK_START_ENTITY.md)** - пошаговая инструкция
+1. **[QUICK_START_ENTITY.md](getting-started/QUICK_START_ENTITY.md)** - пошаговая инструкция
 2. Посмотрите примеры в `lib/entities/posts/` (самый сложный пример)
 3. Посмотрите примеры в `lib/entities/tags/` (hooks)
 
 ### Если нужно понять текущее состояние проекта:
 
-1. **[PROJECT_STATUS_2025_11_15.md](implementation/PROJECT_STATUS_2025_11_15.md)** - полный отчет
+1. **[PROJECT_STATUS.md](implementation/PROJECT_STATUS.md)** - полный отчет
 
 ### Если нужно сделать миграцию БД:
 
-1. **[POSTS_MIGRATION_SIMPLE.sql](implementation/POSTS_MIGRATION_SIMPLE.sql)** - пример миграции
-2. **[POSTS_RLS_FIX.sql](implementation/POSTS_RLS_FIX.sql)** - RLS политики
+1. **[MIGRATIONS_INSTRUCTIONS.md](implementation/migrations/MIGRATIONS_INSTRUCTIONS.md)** - инструкции
+2. **[HOW_TO_RUN.md](implementation/migrations/HOW_TO_RUN.md)** - как запустить
+3. SQL файлы в `implementation/migrations/SQL/`
 
 ---
 
@@ -180,35 +177,81 @@
 
 ```
 docs/
-├── INDEX.md                          # ← Вы здесь
-├── README.md                         # Общее описание
+├── README.md                          # Главная точка входа
+├── INDEX.md                           # ← Вы здесь (полный индекс)
 │
-├── guides/                           # Руководства
-│   ├── QUICK_START.md               # Быстрый старт
-│   ├── TESTING_GUIDE.md
-│   └── ...
+├── getting-started/                    # 🚀 Быстрый старт
+│   ├── QUICK_START.md
+│   ├── QUICK_START_ENTITY.md
+│   └── SUPABASE_SETUP.md
 │
-├── architecture/                     # Архитектура
-│   ├── CURRENT_AUTH_FLOW.md         # ⭐ Авторизация
-│   ├── DEVELOPMENT_GUIDE.md         # ⭐ Руководство
-│   └── ...
+├── architecture/                       # 🏗️ Архитектура
+│   ├── DEVELOPMENT_GUIDE.md          # ⭐ Главный гайд
+│   ├── HYBRID_ARCHITECTURE.md        # ⭐ Гибридный подход
+│   ├── MIDDLEWARE.md                 # Middleware
+│   └── auth/
+│       ├── CURRENT_AUTH_FLOW.md      # ⭐ Авторизация
+│       └── ROLES_AND_PERMISSIONS.md  # ⭐ Роли
 │
-├── implementation/                   # Реализация
-│   ├── ENTITY_SERVICE_FINAL.md      # ⭐ Entity Service
-│   ├── PROJECT_STATUS_2025_11_15.md # ⭐ Текущий статус
-│   ├── QUICK_START_ENTITY.md        # ⭐ Быстрый старт
-│   ├── HYBRID_ARCHITECTURE_GUIDE.md # ⭐ Гибридный подход
-│   ├── POSTS_MIGRATION_SIMPLE.sql   # SQL миграция
-│   └── ...
+├── structure/                          # 📐 Структуры проекта
+│   ├── CONFIG_FILES.md
+│   ├── FORMS_STRUCTURE.md
+│   ├── LISTS_STRUCTURE.md
+│   ├── NAVIGATION.md
+│   └── ROUTING.md
 │
-├── components/                       # UI Компоненты
-│   └── CONFIRMATION_DIALOG.md       # ⭐ Окно подтверждения
+├── flows/                              # 🔄 Потоки данных
+│   ├── TOKEN_FLOW.md
+│   ├── REQUEST_FLOW.md
+│   ├── DATA_FLOW.md
+│   ├── PASSWORD_RESET_FLOW.md
+│   └── OAUTH_FLOW.md
 │
-├── flows/                            # Диаграммы потоков
-│   └── ...
+├── guides/                             # 📖 Руководства
+│   ├── forms/
+│   │   └── UNIVERSAL_FORMS.md
+│   ├── lists/
+│   │   └── UNIVERSAL_LISTS.md
+│   ├── deployment/
+│   │   ├── VERCEL_DEPLOYMENT.md
+│   │   └── VERCEL_VS_OWN_SERVER.md
+│   ├── debugging/
+│   │   ├── ROLES_DEBUG.md
+│   │   └── DEBUG_TIPS.md
+│   ├── testing/
+│   │   └── TESTING_GUIDE.md
+│   └── [другие гайды]
 │
-└── reports/                          # Отчеты и анализ
-    └── ...
+├── implementation/                     # 🔧 Реализация
+│   ├── PROJECT_STATUS.md             # ⭐ Текущий статус
+│   ├── features/
+│   │   ├── ENTITY_SERVICE.md        # ⭐ Entity Service
+│   │   ├── UNIVERSAL_ENTITY.md
+│   │   └── FORM_GENERATION.md
+│   └── migrations/
+│       ├── MIGRATIONS_INSTRUCTIONS.md
+│       ├── HOW_TO_RUN.md
+│       └── SQL/
+│           └── *.sql
+│
+├── components/                          # 🧩 UI Компоненты
+│   └── CONFIRMATION_DIALOG.md
+│
+├── design-system/                      # 🎨 Дизайн-система
+│   └── SPACING_GUIDE.md
+│
+├── roadmap/                            # 🗺️ Планы развития
+│   ├── ROADMAP.md
+│   └── PHASE_2_CONTENT_TYPES_BUILDER.md
+│
+├── work-in-progress/                   # 🔨 Текущая работа
+│   └── README.md                      # Правила работы с WIP
+│
+└── archive/                            # 📦 Архив устаревших документов
+    ├── legacy/                        # Устаревшие документы
+    ├── plans/                         # Старые планы
+    ├── reports/                       # Старые отчеты
+    └── [другие категории]
 ```
 
 ---
@@ -231,25 +274,25 @@ docs/
   - `lib/entities/projects/` - миграция со старой системы
 
 - **Компоненты:**
-  - `components/EntityList.tsx` - универсальный список
-  - `components/forms/EntityForm.tsx` - универсальная форма
-  - `app/posts/` - полный пример CRUD
+  - `components/universal-entity-list/` - универсальный список
+  - `components/UniversalEntityFormNew.tsx` - универсальная форма
+  - `app/projects/` - полный пример CRUD
 
 ---
 
 ## 💡 Частые вопросы
 
 ### Как создать новую сущность?
-→ **[QUICK_START_ENTITY.md](implementation/QUICK_START_ENTITY.md)**
+→ **[QUICK_START_ENTITY.md](getting-started/QUICK_START_ENTITY.md)**
 
 ### Как работает авторизация?
-→ **[CURRENT_AUTH_FLOW.md](architecture/CURRENT_AUTH_FLOW.md)**
+→ **[CURRENT_AUTH_FLOW.md](architecture/auth/CURRENT_AUTH_FLOW.md)**
 
 ### Почему Server Actions пишутся вручную?
-→ **[ENTITY_SERVICE_FINAL.md](implementation/ENTITY_SERVICE_FINAL.md)** (раздел "Server Actions")
+→ **[ENTITY_SERVICE.md](implementation/features/ENTITY_SERVICE.md)** (раздел "Server Actions")
 
 ### Как добавить сложные фильтры?
-→ **[ENTITY_SERVICE_FINAL.md](implementation/ENTITY_SERVICE_FINAL.md)** (раздел "Фильтрация")
+→ **[ENTITY_SERVICE.md](implementation/features/ENTITY_SERVICE.md)** (раздел "Фильтрация")
 
 ### Где примеры кода?
 → `lib/entities/posts/service.ts` (самый сложный)
@@ -258,21 +301,20 @@ docs/
 → **[CONFIRMATION_DIALOG.md](components/CONFIRMATION_DIALOG.md)** - используйте `ConfirmationDialog` компонент
 
 ### Как создать универсальный список?
-→ **[UNIVERSAL_LISTS_GUIDE.md](guides/UNIVERSAL_LISTS_GUIDE.md)** - полное руководство по спискам
+→ **[UNIVERSAL_LISTS.md](guides/lists/UNIVERSAL_LISTS.md)** - полное руководство по спискам
 
 ### Как создать универсальную форму?
-→ **[UNIVERSAL_FORMS_GUIDE.md](guides/UNIVERSAL_FORMS_GUIDE.md)** - полное руководство по формам
+→ **[UNIVERSAL_FORMS.md](guides/forms/UNIVERSAL_FORMS.md)** - полное руководство по формам
 
 ---
 
 ## 📞 Контакты
 
 Если документация не помогла:
-1. Проверьте **[PROJECT_STATUS_2025_11_15.md](implementation/PROJECT_STATUS_2025_11_15.md)** - возможно, там есть ответ
+1. Проверьте **[PROJECT_STATUS.md](implementation/PROJECT_STATUS.md)** - возможно, там есть ответ
 2. Посмотрите примеры в `lib/entities/`
 3. Проверьте существующие issue в проекте
 
 ---
 
-**Документация обновляется регулярно. Последнее обновление: 15 ноября 2025**
-
+**Документация обновляется регулярно. Последнее обновление: 30 января 2025**

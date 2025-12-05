@@ -17,85 +17,162 @@ let cachedConfig: {
 const CACHE_TTL = 5 * 60 * 1000; // 5 минут
 
 /**
+ * Type guard для проверки структуры данных EntityDefinition из Supabase
+ */
+function isEntityDefinitionRow(row: unknown): row is Record<string, unknown> {
+  return (
+    typeof row === "object" &&
+    row !== null &&
+    "id" in row &&
+    "name" in row &&
+    "table_name" in row
+  );
+}
+
+/**
  * Преобразование данных из БД в типы TypeScript
  */
-function transformEntityDefinition(row: any): EntityDefinition {
+function transformEntityDefinition(row: unknown): EntityDefinition {
+  if (!isEntityDefinitionRow(row)) {
+    throw new Error("Invalid entity definition row structure");
+  }
   return {
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    tableName: row.table_name,
-    type: row.type,
-    projectId: row.project_id,
-    createPermission: row.create_permission,
-    readPermission: row.read_permission,
-    updatePermission: row.update_permission,
-    deletePermission: row.delete_permission,
-    titleSection0: row.title_section_0,
-    titleSection1: row.title_section_1,
-    titleSection2: row.title_section_2,
-    titleSection3: row.title_section_3,
+    id: asString(row.id),
+    name: asString(row.name),
+    description: asStringOrNull(row.description),
+    tableName: asString(row.table_name),
+    type: row.type as EntityDefinition["type"],
+    projectId: asString(row.project_id),
+    createPermission:
+      row.create_permission as EntityDefinition["createPermission"],
+    readPermission: row.read_permission as EntityDefinition["readPermission"],
+    updatePermission:
+      row.update_permission as EntityDefinition["updatePermission"],
+    deletePermission:
+      row.delete_permission as EntityDefinition["deletePermission"],
+    titleSection0: asStringOrNull(row.title_section_0),
+    titleSection1: asStringOrNull(row.title_section_1),
+    titleSection2: asStringOrNull(row.title_section_2),
+    titleSection3: asStringOrNull(row.title_section_3),
     // UI Configuration
-    uiConfig: row.ui_config,
-    enablePagination: row.enable_pagination,
-    pageSize: row.page_size,
-    enableFilters: row.enable_filters,
+    uiConfig: row.ui_config as EntityDefinition["uiConfig"],
+    enablePagination:
+      row.enable_pagination === null || row.enable_pagination === undefined
+        ? null
+        : asBoolean(row.enable_pagination),
+    pageSize: asNumberOrNull(row.page_size),
+    enableFilters:
+      row.enable_filters === null || row.enable_filters === undefined
+        ? null
+        : asBoolean(row.enable_filters),
     // File upload limits
-    maxFileSizeMb: row.max_file_size_mb,
-    maxFilesCount: row.max_files_count,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    maxFileSizeMb: asNumberOrNull(row.max_file_size_mb),
+    maxFilesCount: asNumberOrNull(row.max_files_count),
+    createdAt: asString(row.created_at),
+    updatedAt: asString(row.updated_at),
   };
 }
 
-function transformField(row: any): Field {
+/**
+ * Type guard для проверки структуры данных Field из Supabase
+ */
+function isFieldRow(row: unknown): row is Record<string, unknown> {
+  return (
+    typeof row === "object" &&
+    row !== null &&
+    "id" in row &&
+    "name" in row &&
+    "db_type" in row &&
+    "type" in row
+  );
+}
+
+/**
+ * Вспомогательные функции для безопасного преобразования типов из unknown
+ */
+function asString(value: unknown): string {
+  return String(value ?? "");
+}
+
+function asStringOrNull(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  return String(value);
+}
+
+function asBoolean(value: unknown): boolean {
+  return Boolean(value);
+}
+
+function asNumber(value: unknown): number {
+  return Number(value ?? 0);
+}
+
+function asNumberOrNull(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  return Number(value);
+}
+
+function transformField(row: unknown): Field {
+  if (!isFieldRow(row)) {
+    throw new Error("Invalid field row structure");
+  }
   return {
-    id: row.id,
-    entityDefinitionId: row.entity_definition_id,
-    name: row.name,
-    dbType: row.db_type,
-    type: row.type,
-    label: row.label,
-    placeholder: row.placeholder,
-    description: row.description,
-    forEditPage: row.for_edit_page,
-    forCreatePage: row.for_create_page,
-    required: row.required,
-    requiredText: row.required_text,
-    forEditPageDisabled: row.for_edit_page_disabled,
-    displayIndex: row.display_index,
-    displayInTable: row.display_in_table,
-    sectionIndex: row.section_index ?? 0,
-    isOptionTitleField: row.is_option_title_field,
-    searchable: row.searchable,
-    filterableInList: row.filterable_in_list,
-    relatedEntityDefinitionId: row.related_entity_definition_id,
-    relationFieldId: row.relation_field_id,
-    isRelationSource: row.is_relation_source,
-    selectorRelationId: row.selector_relation_id,
-    relationFieldName: row.relation_field_name,
-    relationFieldLabel: row.relation_field_label,
-    defaultStringValue: row.default_string_value,
-    defaultNumberValue: row.default_number_value,
-    defaultBooleanValue: row.default_boolean_value,
-    defaultDateValue: row.default_date_value,
-    autoPopulate: row.auto_populate,
-    includeInSinglePma: row.include_in_single_pma,
-    includeInListPma: row.include_in_list_pma,
-    includeInSingleSa: row.include_in_single_sa,
-    includeInListSa: row.include_in_list_sa,
-    foreignKey: row.foreign_key,
-    foreignKeyValue: row.foreign_key_value,
+    id: asString(row.id),
+    entityDefinitionId: asString(row.entity_definition_id),
+    name: asString(row.name),
+    dbType: row.db_type as Field["dbType"],
+    type: row.type as Field["type"],
+    label: asString(row.label),
+    placeholder: asStringOrNull(row.placeholder),
+    description: asStringOrNull(row.description),
+    forEditPage: asBoolean(row.for_edit_page),
+    forCreatePage: asBoolean(row.for_create_page),
+    required: asBoolean(row.required),
+    requiredText: asStringOrNull(row.required_text),
+    forEditPageDisabled: asBoolean(row.for_edit_page_disabled),
+    displayIndex: asNumber(row.display_index),
+    displayInTable: asBoolean(row.display_in_table),
+    sectionIndex:
+      row.section_index !== null && row.section_index !== undefined
+        ? asNumber(row.section_index)
+        : 0,
+    isOptionTitleField: asBoolean(row.is_option_title_field),
+    searchable: asBoolean(row.searchable),
+    filterableInList:
+      row.filterable_in_list !== null && row.filterable_in_list !== undefined
+        ? asBoolean(row.filterable_in_list)
+        : undefined,
+    relatedEntityDefinitionId: asStringOrNull(row.related_entity_definition_id),
+    relationFieldId: asStringOrNull(row.relation_field_id),
+    isRelationSource: asBoolean(row.is_relation_source),
+    selectorRelationId: asStringOrNull(row.selector_relation_id),
+    relationFieldName: asStringOrNull(row.relation_field_name),
+    relationFieldLabel: asStringOrNull(row.relation_field_label),
+    defaultStringValue: asStringOrNull(row.default_string_value),
+    defaultNumberValue: asNumberOrNull(row.default_number_value),
+    defaultBooleanValue:
+      row.default_boolean_value !== null &&
+      row.default_boolean_value !== undefined
+        ? asBoolean(row.default_boolean_value)
+        : undefined,
+    defaultDateValue: asStringOrNull(row.default_date_value),
+    autoPopulate: asBoolean(row.auto_populate),
+    includeInSinglePma: asBoolean(row.include_in_single_pma),
+    includeInListPma: asBoolean(row.include_in_list_pma),
+    includeInSingleSa: asBoolean(row.include_in_single_sa),
+    includeInListSa: asBoolean(row.include_in_list_sa),
+    foreignKey: asStringOrNull(row.foreign_key),
+    foreignKeyValue: asStringOrNull(row.foreign_key_value),
     // File upload configuration
-    acceptFileTypes: row.accept_file_types,
-    maxFileSize: row.max_file_size,
-    maxFiles: row.max_files,
-    storageBucket: row.storage_bucket,
+    acceptFileTypes: asStringOrNull(row.accept_file_types),
+    maxFileSize: asNumberOrNull(row.max_file_size),
+    maxFiles: asNumberOrNull(row.max_files),
+    storageBucket: asStringOrNull(row.storage_bucket),
     // Dynamic value field configuration
-    typeFieldName: row.type_field_name,
-    optionsFieldName: row.options_field_name,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    typeFieldName: asStringOrNull(row.type_field_name),
+    optionsFieldName: asStringOrNull(row.options_field_name),
+    createdAt: asString(row.created_at),
+    updatedAt: asString(row.updated_at),
   };
 }
 

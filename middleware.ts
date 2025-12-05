@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { createAuthMiddleware } from "@/packages/auth-sdk/src/server/middleware";
+import { createAuthMiddleware } from "@igorchugurov/auth-sdk/server";
 
 /**
  * Next.js Middleware

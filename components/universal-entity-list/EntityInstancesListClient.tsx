@@ -47,7 +47,7 @@ export function EntityInstancesListClient({
 
   // Функция загрузки данных через SDK
   const onLoadData = useCallback<LoadDataFn<EntityInstanceWithFields>>(
-    async (params: LoadParams, _signal?: AbortSignal) => {
+    async (params: LoadParams) => {
       // Передаем режимы фильтрации для каждого relation-поля отдельно
       const relationFilterModes = params.filterModes || {};
 

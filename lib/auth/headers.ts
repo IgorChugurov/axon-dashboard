@@ -19,7 +19,7 @@
  */
 
 import { headers } from "next/headers";
-import type { User, UserRole } from "@/packages/auth-sdk/src/types";
+import type { User, UserRole } from "@igorchugurov/auth-sdk";
 
 /**
  * Получение пользователя из headers (установленных middleware)

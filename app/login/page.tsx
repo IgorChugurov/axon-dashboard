@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LoginForm } from "@/packages/auth-sdk/src/components/LoginForm";
+import { LoginForm } from "@igorchugurov/auth-sdk/components";
 import { useAuth } from "@/components/providers/AuthProvider";
 
 export default function LoginPage() {

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEntityOptions, type Option } from "@/hooks/use-entity-options";
+import { useEntityOptions } from "@/hooks/use-entity-options";
 import { X } from "lucide-react";
 
 interface RelationSelectProps {
-  fieldId: string;
+  fieldId: string; // Передается, но не используется в текущей реализации
   relatedEntityDefinitionId: string;
   value: string[];
   onChange: (ids: string[]) => void;
@@ -14,7 +14,7 @@ interface RelationSelectProps {
 }
 
 export function RelationSelect({
-  fieldId,
+  fieldId: _fieldId, // Не используется в текущей реализации
   relatedEntityDefinitionId,
   value,
   onChange,
@@ -31,7 +31,6 @@ export function RelationSelect({
   } = useEntityOptions(relatedEntityDefinitionId);
 
   const options = data?.options || [];
-  const titleField = data?.titleField || "id";
 
   const handleToggle = (id: string) => {
     if (multiple) {

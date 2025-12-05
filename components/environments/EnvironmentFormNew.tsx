@@ -16,6 +16,7 @@ import {
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { Environment } from "@/lib/environments/types";
+import type { FieldValue } from "@/lib/universal-entity/types";
 import { useRole } from "@/hooks/use-role";
 
 // Импортируем конфиг напрямую (статический импорт)
@@ -59,7 +60,7 @@ export function EnvironmentFormNew({
   }, []);
 
   // Подготавливаем initialData для формы
-  const formInitialData: Record<string, any> = initialData
+  const formInitialData: Record<string, FieldValue> = initialData
     ? {
         key: initialData.key,
         type: initialData.type,
@@ -70,12 +71,12 @@ export function EnvironmentFormNew({
 
   // Функция создания - адаптер для client-service
   const handleCreate = async (
-    data: Record<string, any>
+    data: Record<string, FieldValue>
   ): Promise<Environment> => {
     const createData = {
-      key: data.key,
-      type: data.type as "string" | "number" | "boolean" | "select",
-      value: data.value ?? null,
+      key: typeof data.key === "string" ? data.key : String(data.key ?? ""),
+      type: (typeof data.type === "string" ? data.type : "string") as "string" | "number" | "boolean" | "select",
+      value: (typeof data.value === "string" || typeof data.value === "number" || typeof data.value === "boolean" || data.value === null) ? data.value : null,
       options: Array.isArray(data.options) ? data.options : [],
     };
 
@@ -85,13 +86,13 @@ export function EnvironmentFormNew({
   // Функция обновления - адаптер для client-service
   const handleUpdate = async (
     id: string,
-    data: Record<string, any>
+    data: Record<string, FieldValue>
   ): Promise<Environment> => {
     const updateData = {
-      key: data.key,
-      type: data.type as "string" | "number" | "boolean" | "select",
-      value: data.value ?? null,
-      options: Array.isArray(data.options) ? data.options : [],
+      key: typeof data.key === "string" ? data.key : undefined,
+      type: typeof data.type === "string" ? (data.type as "string" | "number" | "boolean" | "select") : undefined,
+      value: (typeof data.value === "string" || typeof data.value === "number" || typeof data.value === "boolean" || data.value === null) ? data.value : undefined,
+      options: Array.isArray(data.options) ? data.options : undefined,
     };
 
     return updateEnvironmentFromClient(id, updateData);

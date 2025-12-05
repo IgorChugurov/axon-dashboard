@@ -8,6 +8,8 @@ import type { EntityDefinition } from "./types";
 
 /**
  * Преобразование данных из БД в типы TypeScript
+ * eslint-disable-next-line @typescript-eslint/no-explicit-any
+ * any используется для row, так как данные приходят из Supabase без строгой типизации
  */
 function transformEntityDefinition(row: any): EntityDefinition {
   return {
@@ -278,6 +280,8 @@ export async function updateEntityDefinitionFromClient(
   }
 
   // Подготовка данных для обновления
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // any используется для updateData, так как структура данных для Supabase может варьироваться
   const updateData: Record<string, any> = {};
 
   if (data.name !== undefined) updateData.name = data.name;

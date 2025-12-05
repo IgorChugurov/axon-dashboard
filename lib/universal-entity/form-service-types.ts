@@ -1,5 +1,7 @@
+import type { FieldValue } from "./types";
+
 export interface FormServicePayload {
-  data: Record<string, any>;
+  data: Record<string, FieldValue>;
   relations: Record<string, string[]>;
 }
 

@@ -4,7 +4,7 @@
  */
 
 import { cookies } from "next/headers";
-import type { User } from "@/packages/auth-sdk/src/types";
+import type { User } from "@igorchugurov/auth-sdk";
 
 const COOKIE_NAMES = {
   ACCESS_TOKEN: "accessToken",

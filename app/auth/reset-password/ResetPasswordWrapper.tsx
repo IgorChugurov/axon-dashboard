@@ -1,6 +1,6 @@
 "use client";
 
-import { ResetPasswordClient } from "@/packages/auth-sdk/src/components";
+import { ResetPasswordClient } from "@igorchugurov/auth-sdk/components";
 import { clearCurrentProjectCookie } from "@/lib/projects/cookies";
 
 /**

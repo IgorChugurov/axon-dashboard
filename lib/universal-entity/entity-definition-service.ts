@@ -4,7 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
-import type { EntityDefinition, Field } from "./types";
+import type { EntityDefinition, Field, FieldValue } from "./types";
 import { clearCache } from "./config-service";
 
 // =====================================================
@@ -714,8 +714,8 @@ async function removeFieldFromInstances(
     id: string;
     data: unknown;
   }>) {
-    const currentData = (instance.data as Record<string, any>) || {};
-    const { [fieldName]: removed, ...updatedData } = currentData;
+    const currentData = (instance.data as Record<string, FieldValue>) || {};
+    const { [fieldName]: _removed, ...updatedData } = currentData;
 
     const { error: updateError } = await supabase
       .from("entity_instance")

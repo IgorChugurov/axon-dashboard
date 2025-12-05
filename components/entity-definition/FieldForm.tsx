@@ -32,8 +32,11 @@ interface FieldFormProps {
   initialData?: Field;
   availableEntities: EntityDefinition[];
   availableFields: Field[]; // Для relationFieldId
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // any используется для data, так как структура данных формы может варьироваться в зависимости от типа поля
   onSubmit: (
     data: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) => Promise<{ success: boolean; error?: string; data?: any }>;
   onDelete?: () => void;
   onCancel?: () => void;
@@ -66,7 +69,7 @@ const FIELD_TYPE_BY_DB_TYPE: Record<DbType, FieldType[]> = {
 };
 
 export function FieldForm({
-  projectId,
+  projectId: _projectId,
   entityDefinitionId,
   mode,
   initialData,
@@ -135,7 +138,7 @@ export function FieldForm({
     if (isRelationType(formData.dbType) && mode === "create") {
       setRelationsOpen(true);
     }
-  }, [formData.dbType, mode]);
+  }, [formData.dbType, formData.type, mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,6 +147,8 @@ export function FieldForm({
     startTransition(async () => {
       try {
         // Подготовка данных для отправки
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // any используется для submitData, так как структура данных может варьироваться в зависимости от типа поля
         const submitData: any = {
           name: formData.name,
           dbType: formData.dbType,
@@ -215,6 +220,8 @@ export function FieldForm({
     });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // any используется для value, так как значение поля может быть разных типов (string, number, boolean, array и т.д.)
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };

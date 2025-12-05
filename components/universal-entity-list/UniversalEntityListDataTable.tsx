@@ -55,11 +55,8 @@ interface UniversalEntityListDataTableProps<TData extends { id: string }> {
   onLoadData: LoadDataFn<TData>;
   routing: RoutingConfig;
   // Эти пропсы используются в UniversalEntityListClient через generateColumnsFromConfig
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onEdit?: (id: string) => void;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onDelete?: (id: string) => void | Promise<void>;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onLink?: (id: string, additionalUrl?: string) => void;
   readOnly?: boolean; // Если true, скрывает кнопку создания
 }
@@ -74,11 +71,8 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
   onLoadData,
   routing,
   // Эти пропсы используются в UniversalEntityListClient через generateColumnsFromConfig
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onEdit,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onDelete,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onLink,
   readOnly = false,
 }: UniversalEntityListDataTableProps<TData>) {
@@ -262,9 +256,6 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
     setParams({});
   };
 
-  const handleClearSearch = () => {
-    setSearchInput("");
-  };
 
   const handleClearFilters = () => {
     setSearchInput("");

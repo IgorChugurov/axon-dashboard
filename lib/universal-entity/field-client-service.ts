@@ -8,6 +8,8 @@ import type { Field } from "./types";
 
 /**
  * Преобразование данных из БД в типы TypeScript
+ * eslint-disable-next-line @typescript-eslint/no-explicit-any
+ * any используется для row, так как данные приходят из Supabase без строгой типизации
  */
 function transformField(row: any): Field {
   return {
@@ -416,6 +418,8 @@ export async function updateFieldFromClient(
   }
 
   // Подготовка данных для обновления
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // any используется для updatePayload, так как структура данных для Supabase может варьироваться
   const updatePayload: Record<string, any> = {};
 
   if (data.name !== undefined) updatePayload.name = data.name;

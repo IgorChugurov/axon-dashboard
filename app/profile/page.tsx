@@ -5,7 +5,6 @@ import { useRole } from "@/hooks/use-role";
 import { useProjectsWithRoles } from "@/hooks/use-projects-with-roles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function formatRole(role: string | null | undefined): string {
@@ -57,7 +56,6 @@ export default function ProfilePage() {
     );
   }
 
-  const roleToDisplay = displayRole || "user";
   const projectsWithRoles = projects.filter((p) => p.role);
 
   return (
