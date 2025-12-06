@@ -23,7 +23,7 @@ import type {
   EntityDefinition,
   DbType,
   FieldType,
-} from "@/lib/universal-entity/types";
+} from "@igorchugurov/public-api-sdk";
 
 interface FieldFormProps {
   projectId: string;

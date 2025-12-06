@@ -6,7 +6,13 @@
 
 "use client";
 
-import { useFieldArray, Control, Controller, useWatch, useFormContext } from "react-hook-form";
+import {
+  useFieldArray,
+  Control,
+  Controller,
+  useWatch,
+  useFormContext,
+} from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,7 +25,7 @@ import {
   FieldContent,
 } from "@/components/ui/field";
 import { XIcon, PlusIcon } from "lucide-react";
-import type { Field as FieldType } from "@/lib/universal-entity/types";
+import type { Field as FieldType } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputArrayShadcnProps {
@@ -35,7 +41,7 @@ interface InputArrayShadcnProps {
 /**
  * Component for array fields using useFieldArray
  * Supports dynamic add/remove of items
- * 
+ *
  * Example usage:
  * - Array of email addresses
  * - Array of phone numbers
@@ -52,7 +58,13 @@ export function InputArrayShadcn({
 }: InputArrayShadcnProps) {
   // Получаем setValue из FormContext (если доступен)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let setValue: ((name: string, value: any, options?: { shouldValidate?: boolean }) => void) | undefined;
+  let setValue:
+    | ((
+        name: string,
+        value: any,
+        options?: { shouldValidate?: boolean }
+      ) => void)
+    | undefined;
   try {
     const formContext = useFormContext();
     setValue = formContext.setValue;
@@ -84,15 +96,20 @@ export function InputArrayShadcn({
   // Обработчик удаления опции
   const handleRemove = (index: number) => {
     // Если это поле options в environments, проверяем, выбрана ли удаляемая опция в value
-    if (field.name === "options" && valueField && Array.isArray(currentOptions) && setValue) {
+    if (
+      field.name === "options" &&
+      valueField &&
+      Array.isArray(currentOptions) &&
+      setValue
+    ) {
       const optionToRemove = currentOptions[index];
-      
+
       // Если удаляемая опция выбрана в value, сбрасываем value
       if (optionToRemove && String(valueField) === optionToRemove) {
         setValue("value", null, { shouldValidate: false });
       }
     }
-    
+
     remove(index);
   };
 
@@ -126,7 +143,9 @@ export function InputArrayShadcn({
                       value={stringValue}
                       onChange={(e) => formField.onChange(e.target.value)}
                       id={`${field.name}-${index}`}
-                      placeholder={field.placeholder || itemLabel || "Enter value"}
+                      placeholder={
+                        field.placeholder || itemLabel || "Enter value"
+                      }
                       disabled={disabled}
                       aria-invalid={fieldState.invalid}
                     />
@@ -174,4 +193,3 @@ export function InputArrayShadcn({
     </FieldSet>
   );
 }
-

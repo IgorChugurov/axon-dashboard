@@ -22,7 +22,7 @@ import {
   FieldContent,
   FieldGroup,
 } from "@/components/ui/field";
-import type { Field as FieldType } from "@/lib/universal-entity/types";
+import type { Field as FieldType } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface SelectOption {
@@ -71,8 +71,13 @@ export function InputSelectShadcn({
                   onValueChange={formField.onChange}
                   disabled={disabled}
                 >
-                  <SelectTrigger id={field.name} aria-invalid={fieldState.invalid}>
-                    <SelectValue placeholder={field.placeholder || "Select..."} />
+                  <SelectTrigger
+                    id={field.name}
+                    aria-invalid={fieldState.invalid}
+                  >
+                    <SelectValue
+                      placeholder={field.placeholder || "Select..."}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {!field.required && (
@@ -219,4 +224,3 @@ export function InputSelectShadcn({
     />
   );
 }
-

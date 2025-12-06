@@ -8,7 +8,7 @@
 import { Controller, Control } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputNumberProps {
@@ -45,9 +45,7 @@ export function InputNumber({ field, control, disabled }: InputNumberProps) {
           />
 
           {field.description && (
-            <p className="text-xs text-muted-foreground">
-              {field.description}
-            </p>
+            <p className="text-xs text-muted-foreground">{field.description}</p>
           )}
 
           {error && (
@@ -58,4 +56,3 @@ export function InputNumber({ field, control, disabled }: InputNumberProps) {
     />
   );
 }
-

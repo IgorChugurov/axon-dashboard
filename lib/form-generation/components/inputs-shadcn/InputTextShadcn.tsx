@@ -15,7 +15,7 @@ import {
   FieldError,
   FieldContent,
 } from "@/components/ui/field";
-import type { Field as FieldType } from "@/lib/universal-entity/types";
+import type { Field as FieldType } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputTextShadcnProps {
@@ -44,7 +44,9 @@ export function InputTextShadcn({
           <Field data-invalid={fieldState.invalid ? "true" : undefined}>
             <FieldLabel htmlFor={field.name}>
               {field.label}
-              {field.required && <span className="text-destructive ml-1">*</span>}
+              {field.required && (
+                <span className="text-destructive ml-1">*</span>
+              )}
             </FieldLabel>
 
             <FieldContent>
@@ -76,9 +78,7 @@ export function InputTextShadcn({
                 <FieldDescription>{field.description}</FieldDescription>
               )}
 
-              {fieldState.invalid && (
-                <FieldError errors={[fieldState.error]} />
-              )}
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </FieldContent>
           </Field>
         );
@@ -86,4 +86,3 @@ export function InputTextShadcn({
     />
   );
 }
-

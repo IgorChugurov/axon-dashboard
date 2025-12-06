@@ -3,7 +3,7 @@
  * Normalizes null values and applies defaults
  */
 
-import type { Field, FieldValue } from "@/lib/universal-entity/types";
+import type { Field, FieldValue } from "@igorchugurov/public-api-sdk";
 
 /**
  * Transform server data for form editing

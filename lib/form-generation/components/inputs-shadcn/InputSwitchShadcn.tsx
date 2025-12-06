@@ -14,7 +14,7 @@ import {
   FieldError,
   FieldContent,
 } from "@/components/ui/field";
-import type { Field as FieldType } from "@/lib/universal-entity/types";
+import type { Field as FieldType } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputSwitchShadcnProps {
@@ -63,9 +63,7 @@ export function InputSwitchShadcn({
                 <FieldDescription>{field.description}</FieldDescription>
               )}
 
-              {fieldState.invalid && (
-                <FieldError errors={[fieldState.error]} />
-              )}
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </FieldContent>
           </Field>
         );
@@ -73,4 +71,3 @@ export function InputSwitchShadcn({
     />
   );
 }
-

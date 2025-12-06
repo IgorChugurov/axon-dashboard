@@ -2,7 +2,7 @@
  * Helper functions for field operations
  */
 
-import type { Field, DbType, FieldType } from "@/lib/universal-entity/types";
+import type { Field, DbType, FieldType } from "@igorchugurov/public-api-sdk";
 import type { FieldValue } from "../types";
 
 /**

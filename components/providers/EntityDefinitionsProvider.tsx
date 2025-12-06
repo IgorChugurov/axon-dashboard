@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext } from "react";
-import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
+import type { EntityDefinition, Field } from "@igorchugurov/public-api-sdk";
 
 interface EntityDefinitionsContextValue {
   entityDefinitions: EntityDefinition[];
@@ -50,7 +50,9 @@ export function useEntityDefinitions() {
  */
 export function useEntityDefinition(entityDefinitionId: string) {
   const { entityDefinitions, fields } = useEntityDefinitions();
-  const entityDefinition = entityDefinitions.find((e) => e.id === entityDefinitionId);
+  const entityDefinition = entityDefinitions.find(
+    (e) => e.id === entityDefinitionId
+  );
   const entityFields = fields.filter(
     (f) => f.entityDefinitionId === entityDefinitionId
   );
@@ -60,4 +62,3 @@ export function useEntityDefinition(entityDefinitionId: string) {
     fields: entityFields,
   };
 }
-

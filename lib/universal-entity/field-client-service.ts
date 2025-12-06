@@ -4,7 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/client";
-import type { Field } from "./types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 
 /**
  * Преобразование данных из БД в типы TypeScript

@@ -21,12 +21,12 @@ import { getAllProjectsFromSupabase } from "@/lib/projects/supabase";
 
 const GeistSans = Geist({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-geist-sans",
 });
 
 const GeistMono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-mono",
+  variable: "--font-geist-mono",
 });
 
 const MontserratSerif = Montserrat({

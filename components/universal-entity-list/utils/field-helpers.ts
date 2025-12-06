@@ -2,7 +2,7 @@
  * Утилиты для работы с полями в списках
  */
 
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 
 /**
  * Определяет, является ли поле relation-полем

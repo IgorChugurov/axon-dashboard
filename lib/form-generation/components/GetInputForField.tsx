@@ -6,7 +6,7 @@
 "use client";
 
 import { Control } from "react-hook-form";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../types";
 import { InputText } from "./inputs/InputText";
 import { InputNumber } from "./inputs/InputNumber";
@@ -39,7 +39,9 @@ export function GetInputForField({
 
   // Relation fields
   if (isRelationField(field)) {
-    return <InputRelation field={field} control={control} disabled={disabled} />;
+    return (
+      <InputRelation field={field} control={control} disabled={disabled} />
+    );
   }
 
   // Regular fields by type
@@ -49,10 +51,14 @@ export function GetInputForField({
       return <InputText field={field} control={control} disabled={disabled} />;
 
     case "number":
-      return <InputNumber field={field} control={control} disabled={disabled} />;
+      return (
+        <InputNumber field={field} control={control} disabled={disabled} />
+      );
 
     case "boolean":
-      return <InputSwitch field={field} control={control} disabled={disabled} />;
+      return (
+        <InputSwitch field={field} control={control} disabled={disabled} />
+      );
 
     case "date":
       return <InputDate field={field} control={control} disabled={disabled} />;
@@ -99,4 +105,3 @@ export function GetInputForField({
       );
   }
 }
-

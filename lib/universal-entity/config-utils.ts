@@ -4,9 +4,10 @@
  * И обратное преобразование из БД данных в EntityConfigFile
  */
 
-import type { EntityDefinition, Field } from "./types";
+import type { EntityDefinition, Field } from "@igorchugurov/public-api-sdk";
 import type { EntityConfigFile, FieldFromConfig } from "./config-file-types";
 import { generateUIConfig } from "@/lib/form-generation/utils/generateUIConfig";
+import { generateSlug } from "@/lib/utils/slug";
 
 /**
  * Создает EntityDefinition и Fields из конфига
@@ -27,6 +28,7 @@ export function createEntityDefinitionAndFieldsFromConfig(
   const entityDefinition: EntityDefinition = {
     id: `${config.tableName}-form`,
     name: config.entityName,
+    slug: generateSlug(config.entityName),
     description: config.description || null,
     tableName: config.tableName,
     type: config.type || "secondary",

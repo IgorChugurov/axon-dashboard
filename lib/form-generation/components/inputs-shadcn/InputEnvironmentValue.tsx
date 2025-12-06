@@ -13,7 +13,7 @@ import { InputNumberShadcn } from "./InputNumberShadcn";
 import { InputSwitchShadcn } from "./InputSwitchShadcn";
 import { InputSelectShadcn } from "./InputSelectShadcn";
 import { Field, FieldLabel } from "@/components/ui/field";
-import type { Field as FieldType } from "@/lib/universal-entity/types";
+import type { Field as FieldType } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputEnvironmentValueProps {

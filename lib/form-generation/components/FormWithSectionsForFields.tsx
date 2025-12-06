@@ -31,7 +31,7 @@ import type {
   Field as FieldType,
   FieldOption,
   FieldValue,
-} from "@/lib/universal-entity/types";
+} from "@igorchugurov/public-api-sdk";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { FormData } from "../types";
 import { createSchema, createInitialFormData } from "../utils/createSchema";

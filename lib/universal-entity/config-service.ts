@@ -4,7 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
-import type { EntityDefinition, Field } from "./types";
+import type { EntityDefinition, Field } from "@igorchugurov/public-api-sdk";
 import { generateUIConfig } from "@/lib/form-generation/utils/generateUIConfig";
 
 // Кэш конфигурации
@@ -39,6 +39,7 @@ function transformEntityDefinition(row: unknown): EntityDefinition {
   return {
     id: asString(row.id),
     name: asString(row.name),
+    slug: asString(row.slug),
     description: asStringOrNull(row.description),
     tableName: asString(row.table_name),
     type: row.type as EntityDefinition["type"],

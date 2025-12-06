@@ -15,7 +15,7 @@ import {
   type CreateEntityDefinitionData,
   type UpdateEntityDefinitionData,
 } from "@/lib/universal-entity/entity-definition-service";
-import type { EntityDefinition } from "@/lib/universal-entity/types";
+import type { EntityDefinition } from "@igorchugurov/public-api-sdk";
 
 export type ActionResult<T = void> =
   | { success: true; data: T }
@@ -185,4 +185,3 @@ export async function deleteEntityDefinitionAction(
     };
   }
 }
-

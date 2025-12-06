@@ -14,7 +14,7 @@ import {
   FieldError,
   FieldContent,
 } from "@/components/ui/field";
-import type { Field as FieldType } from "@/lib/universal-entity/types";
+import type { Field as FieldType } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputDateShadcnProps {
@@ -54,7 +54,9 @@ export function InputDateShadcn({
           <Field data-invalid={fieldState.invalid ? "true" : undefined}>
             <FieldLabel htmlFor={field.name}>
               {field.label}
-              {field.required && <span className="text-destructive ml-1">*</span>}
+              {field.required && (
+                <span className="text-destructive ml-1">*</span>
+              )}
             </FieldLabel>
 
             <FieldContent>
@@ -67,7 +69,9 @@ export function InputDateShadcn({
                 value={formatDateForInput(formField.value)}
                 onChange={(e) => {
                   const value = e.target.value;
-                  formField.onChange(value ? new Date(value).toISOString() : null);
+                  formField.onChange(
+                    value ? new Date(value).toISOString() : null
+                  );
                 }}
                 aria-invalid={fieldState.invalid}
               />
@@ -84,4 +88,3 @@ export function InputDateShadcn({
     />
   );
 }
-

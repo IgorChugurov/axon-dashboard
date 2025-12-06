@@ -16,7 +16,11 @@ import {
 } from "@/lib/universal-entity/field-client-service";
 import { useToast } from "@/hooks/use-toast";
 import { showGlobalLoader, hideGlobalLoader } from "@/lib/global-loader/store";
-import type { Field, EntityDefinition, FieldValue } from "@/lib/universal-entity/types";
+import type {
+  Field,
+  EntityDefinition,
+  FieldValue,
+} from "@igorchugurov/public-api-sdk";
 
 // Импортируем конфиг для messages
 import fieldsConfig from "@/config/fields.json";
@@ -58,36 +62,131 @@ export function FieldFormNew({
       showGlobalLoader();
       return createFieldFromClient({
         entityDefinitionId,
-        name: typeof data.name === "string" ? data.name : String(data.name ?? ""),
-        dbType: typeof data.dbType === "string" ? data.dbType : String(data.dbType ?? "varchar"),
-        type: typeof data.type === "string" ? data.type : String(data.type ?? "text"),
-        label: typeof data.label === "string" ? data.label : String(data.label ?? ""),
-        placeholder: typeof data.placeholder === "string" || data.placeholder === null ? data.placeholder : null,
-        description: typeof data.description === "string" || data.description === null ? data.description : null,
-        forEditPage: typeof data.forEditPage === "boolean" ? data.forEditPage : Boolean(data.forEditPage),
-        forCreatePage: typeof data.forCreatePage === "boolean" ? data.forCreatePage : Boolean(data.forCreatePage),
-        required: typeof data.required === "boolean" ? data.required : Boolean(data.required),
-        requiredText: typeof data.requiredText === "string" || data.requiredText === null ? data.requiredText : null,
-        forEditPageDisabled: typeof data.forEditPageDisabled === "boolean" ? data.forEditPageDisabled : Boolean(data.forEditPageDisabled),
-        displayIndex: typeof data.displayIndex === "number" ? data.displayIndex : Number(data.displayIndex ?? 0),
-        displayInTable: typeof data.displayInTable === "boolean" ? data.displayInTable : Boolean(data.displayInTable),
-        sectionIndex: typeof data.sectionIndex === "number" ? data.sectionIndex : Number(data.sectionIndex ?? 0),
-        isOptionTitleField: typeof data.isOptionTitleField === "boolean" ? data.isOptionTitleField : Boolean(data.isOptionTitleField),
-        searchable: typeof data.searchable === "boolean" ? data.searchable : Boolean(data.searchable),
-        filterableInList: typeof data.filterableInList === "boolean" ? data.filterableInList : Boolean(data.filterableInList),
-        relatedEntityDefinitionId: typeof data.relatedEntityDefinitionId === "string" || data.relatedEntityDefinitionId === null ? data.relatedEntityDefinitionId : null,
-        relationFieldId: typeof data.relationFieldId === "string" || data.relationFieldId === null ? data.relationFieldId : null,
-        isRelationSource: typeof data.isRelationSource === "boolean" ? data.isRelationSource : Boolean(data.isRelationSource),
-        selectorRelationId: typeof data.selectorRelationId === "string" || data.selectorRelationId === null ? data.selectorRelationId : null,
-        defaultStringValue: typeof data.defaultStringValue === "string" || data.defaultStringValue === null ? data.defaultStringValue : null,
-        defaultNumberValue: typeof data.defaultNumberValue === "number" || data.defaultNumberValue === null ? data.defaultNumberValue : null,
-        defaultBooleanValue: typeof data.defaultBooleanValue === "boolean" || data.defaultBooleanValue === null ? data.defaultBooleanValue : null,
-        defaultDateValue: typeof data.defaultDateValue === "string" || data.defaultDateValue === null ? data.defaultDateValue : null,
-        autoPopulate: typeof data.autoPopulate === "boolean" ? data.autoPopulate : Boolean(data.autoPopulate),
-        includeInSinglePma: typeof data.includeInSinglePma === "boolean" ? data.includeInSinglePma : Boolean(data.includeInSinglePma),
-        includeInListPma: typeof data.includeInListPma === "boolean" ? data.includeInListPma : Boolean(data.includeInListPma),
-        includeInSingleSa: typeof data.includeInSingleSa === "boolean" ? data.includeInSingleSa : Boolean(data.includeInSingleSa),
-        includeInListSa: typeof data.includeInListSa === "boolean" ? data.includeInListSa : Boolean(data.includeInListSa),
+        name:
+          typeof data.name === "string" ? data.name : String(data.name ?? ""),
+        dbType:
+          typeof data.dbType === "string"
+            ? data.dbType
+            : String(data.dbType ?? "varchar"),
+        type:
+          typeof data.type === "string"
+            ? data.type
+            : String(data.type ?? "text"),
+        label:
+          typeof data.label === "string"
+            ? data.label
+            : String(data.label ?? ""),
+        placeholder:
+          typeof data.placeholder === "string" || data.placeholder === null
+            ? data.placeholder
+            : null,
+        description:
+          typeof data.description === "string" || data.description === null
+            ? data.description
+            : null,
+        forEditPage:
+          typeof data.forEditPage === "boolean"
+            ? data.forEditPage
+            : Boolean(data.forEditPage),
+        forCreatePage:
+          typeof data.forCreatePage === "boolean"
+            ? data.forCreatePage
+            : Boolean(data.forCreatePage),
+        required:
+          typeof data.required === "boolean"
+            ? data.required
+            : Boolean(data.required),
+        requiredText:
+          typeof data.requiredText === "string" || data.requiredText === null
+            ? data.requiredText
+            : null,
+        forEditPageDisabled:
+          typeof data.forEditPageDisabled === "boolean"
+            ? data.forEditPageDisabled
+            : Boolean(data.forEditPageDisabled),
+        displayIndex:
+          typeof data.displayIndex === "number"
+            ? data.displayIndex
+            : Number(data.displayIndex ?? 0),
+        displayInTable:
+          typeof data.displayInTable === "boolean"
+            ? data.displayInTable
+            : Boolean(data.displayInTable),
+        sectionIndex:
+          typeof data.sectionIndex === "number"
+            ? data.sectionIndex
+            : Number(data.sectionIndex ?? 0),
+        isOptionTitleField:
+          typeof data.isOptionTitleField === "boolean"
+            ? data.isOptionTitleField
+            : Boolean(data.isOptionTitleField),
+        searchable:
+          typeof data.searchable === "boolean"
+            ? data.searchable
+            : Boolean(data.searchable),
+        filterableInList:
+          typeof data.filterableInList === "boolean"
+            ? data.filterableInList
+            : Boolean(data.filterableInList),
+        relatedEntityDefinitionId:
+          typeof data.relatedEntityDefinitionId === "string" ||
+          data.relatedEntityDefinitionId === null
+            ? data.relatedEntityDefinitionId
+            : null,
+        relationFieldId:
+          typeof data.relationFieldId === "string" ||
+          data.relationFieldId === null
+            ? data.relationFieldId
+            : null,
+        isRelationSource:
+          typeof data.isRelationSource === "boolean"
+            ? data.isRelationSource
+            : Boolean(data.isRelationSource),
+        selectorRelationId:
+          typeof data.selectorRelationId === "string" ||
+          data.selectorRelationId === null
+            ? data.selectorRelationId
+            : null,
+        defaultStringValue:
+          typeof data.defaultStringValue === "string" ||
+          data.defaultStringValue === null
+            ? data.defaultStringValue
+            : null,
+        defaultNumberValue:
+          typeof data.defaultNumberValue === "number" ||
+          data.defaultNumberValue === null
+            ? data.defaultNumberValue
+            : null,
+        defaultBooleanValue:
+          typeof data.defaultBooleanValue === "boolean" ||
+          data.defaultBooleanValue === null
+            ? data.defaultBooleanValue
+            : null,
+        defaultDateValue:
+          typeof data.defaultDateValue === "string" ||
+          data.defaultDateValue === null
+            ? data.defaultDateValue
+            : null,
+        autoPopulate:
+          typeof data.autoPopulate === "boolean"
+            ? data.autoPopulate
+            : Boolean(data.autoPopulate),
+        includeInSinglePma:
+          typeof data.includeInSinglePma === "boolean"
+            ? data.includeInSinglePma
+            : Boolean(data.includeInSinglePma),
+        includeInListPma:
+          typeof data.includeInListPma === "boolean"
+            ? data.includeInListPma
+            : Boolean(data.includeInListPma),
+        includeInSingleSa:
+          typeof data.includeInSingleSa === "boolean"
+            ? data.includeInSingleSa
+            : Boolean(data.includeInSingleSa),
+        includeInListSa:
+          typeof data.includeInListSa === "boolean"
+            ? data.includeInListSa
+            : Boolean(data.includeInListSa),
       });
     },
     onSuccess: (createdItem) => {
@@ -136,36 +235,121 @@ export function FieldFormNew({
     }) => {
       showGlobalLoader();
       return updateFieldFromClient(id, {
-        name: typeof data.name === "string" ? data.name : String(data.name ?? ""),
-        dbType: typeof data.dbType === "string" ? data.dbType : String(data.dbType ?? "varchar"),
-        type: typeof data.type === "string" ? data.type : String(data.type ?? "text"),
-        label: typeof data.label === "string" ? data.label : String(data.label ?? ""),
-        placeholder: typeof data.placeholder === "string" || data.placeholder === null ? data.placeholder : null,
-        description: typeof data.description === "string" || data.description === null ? data.description : null,
-        forEditPage: typeof data.forEditPage === "boolean" ? data.forEditPage : undefined,
-        forCreatePage: typeof data.forCreatePage === "boolean" ? data.forCreatePage : undefined,
-        required: typeof data.required === "boolean" ? data.required : undefined,
-        requiredText: typeof data.requiredText === "string" || data.requiredText === null ? data.requiredText : undefined,
-        forEditPageDisabled: typeof data.forEditPageDisabled === "boolean" ? data.forEditPageDisabled : undefined,
-        displayIndex: typeof data.displayIndex === "number" ? data.displayIndex : undefined,
-        displayInTable: typeof data.displayInTable === "boolean" ? data.displayInTable : undefined,
-        sectionIndex: typeof data.sectionIndex === "number" ? data.sectionIndex : undefined,
-        isOptionTitleField: typeof data.isOptionTitleField === "boolean" ? data.isOptionTitleField : undefined,
-        searchable: typeof data.searchable === "boolean" ? data.searchable : undefined,
-        filterableInList: typeof data.filterableInList === "boolean" ? data.filterableInList : undefined,
-        relatedEntityDefinitionId: typeof data.relatedEntityDefinitionId === "string" || data.relatedEntityDefinitionId === null ? data.relatedEntityDefinitionId : undefined,
-        relationFieldId: typeof data.relationFieldId === "string" || data.relationFieldId === null ? data.relationFieldId : undefined,
-        isRelationSource: typeof data.isRelationSource === "boolean" ? data.isRelationSource : undefined,
-        selectorRelationId: typeof data.selectorRelationId === "string" || data.selectorRelationId === null ? data.selectorRelationId : undefined,
-        defaultStringValue: typeof data.defaultStringValue === "string" || data.defaultStringValue === null ? data.defaultStringValue : undefined,
-        defaultNumberValue: typeof data.defaultNumberValue === "number" || data.defaultNumberValue === null ? data.defaultNumberValue : undefined,
-        defaultBooleanValue: typeof data.defaultBooleanValue === "boolean" || data.defaultBooleanValue === null ? data.defaultBooleanValue : undefined,
-        defaultDateValue: typeof data.defaultDateValue === "string" || data.defaultDateValue === null ? data.defaultDateValue : undefined,
-        autoPopulate: typeof data.autoPopulate === "boolean" ? data.autoPopulate : undefined,
-        includeInSinglePma: typeof data.includeInSinglePma === "boolean" ? data.includeInSinglePma : undefined,
-        includeInListPma: typeof data.includeInListPma === "boolean" ? data.includeInListPma : undefined,
-        includeInSingleSa: typeof data.includeInSingleSa === "boolean" ? data.includeInSingleSa : undefined,
-        includeInListSa: typeof data.includeInListSa === "boolean" ? data.includeInListSa : undefined,
+        name:
+          typeof data.name === "string" ? data.name : String(data.name ?? ""),
+        dbType:
+          typeof data.dbType === "string"
+            ? data.dbType
+            : String(data.dbType ?? "varchar"),
+        type:
+          typeof data.type === "string"
+            ? data.type
+            : String(data.type ?? "text"),
+        label:
+          typeof data.label === "string"
+            ? data.label
+            : String(data.label ?? ""),
+        placeholder:
+          typeof data.placeholder === "string" || data.placeholder === null
+            ? data.placeholder
+            : null,
+        description:
+          typeof data.description === "string" || data.description === null
+            ? data.description
+            : null,
+        forEditPage:
+          typeof data.forEditPage === "boolean" ? data.forEditPage : undefined,
+        forCreatePage:
+          typeof data.forCreatePage === "boolean"
+            ? data.forCreatePage
+            : undefined,
+        required:
+          typeof data.required === "boolean" ? data.required : undefined,
+        requiredText:
+          typeof data.requiredText === "string" || data.requiredText === null
+            ? data.requiredText
+            : undefined,
+        forEditPageDisabled:
+          typeof data.forEditPageDisabled === "boolean"
+            ? data.forEditPageDisabled
+            : undefined,
+        displayIndex:
+          typeof data.displayIndex === "number" ? data.displayIndex : undefined,
+        displayInTable:
+          typeof data.displayInTable === "boolean"
+            ? data.displayInTable
+            : undefined,
+        sectionIndex:
+          typeof data.sectionIndex === "number" ? data.sectionIndex : undefined,
+        isOptionTitleField:
+          typeof data.isOptionTitleField === "boolean"
+            ? data.isOptionTitleField
+            : undefined,
+        searchable:
+          typeof data.searchable === "boolean" ? data.searchable : undefined,
+        filterableInList:
+          typeof data.filterableInList === "boolean"
+            ? data.filterableInList
+            : undefined,
+        relatedEntityDefinitionId:
+          typeof data.relatedEntityDefinitionId === "string" ||
+          data.relatedEntityDefinitionId === null
+            ? data.relatedEntityDefinitionId
+            : undefined,
+        relationFieldId:
+          typeof data.relationFieldId === "string" ||
+          data.relationFieldId === null
+            ? data.relationFieldId
+            : undefined,
+        isRelationSource:
+          typeof data.isRelationSource === "boolean"
+            ? data.isRelationSource
+            : undefined,
+        selectorRelationId:
+          typeof data.selectorRelationId === "string" ||
+          data.selectorRelationId === null
+            ? data.selectorRelationId
+            : undefined,
+        defaultStringValue:
+          typeof data.defaultStringValue === "string" ||
+          data.defaultStringValue === null
+            ? data.defaultStringValue
+            : undefined,
+        defaultNumberValue:
+          typeof data.defaultNumberValue === "number" ||
+          data.defaultNumberValue === null
+            ? data.defaultNumberValue
+            : undefined,
+        defaultBooleanValue:
+          typeof data.defaultBooleanValue === "boolean" ||
+          data.defaultBooleanValue === null
+            ? data.defaultBooleanValue
+            : undefined,
+        defaultDateValue:
+          typeof data.defaultDateValue === "string" ||
+          data.defaultDateValue === null
+            ? data.defaultDateValue
+            : undefined,
+        autoPopulate:
+          typeof data.autoPopulate === "boolean"
+            ? data.autoPopulate
+            : undefined,
+        includeInSinglePma:
+          typeof data.includeInSinglePma === "boolean"
+            ? data.includeInSinglePma
+            : undefined,
+        includeInListPma:
+          typeof data.includeInListPma === "boolean"
+            ? data.includeInListPma
+            : undefined,
+        includeInSingleSa:
+          typeof data.includeInSingleSa === "boolean"
+            ? data.includeInSingleSa
+            : undefined,
+        includeInListSa:
+          typeof data.includeInListSa === "boolean"
+            ? data.includeInListSa
+            : undefined,
       });
     },
     onSuccess: () => {

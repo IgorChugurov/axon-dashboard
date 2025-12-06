@@ -16,7 +16,7 @@ import {
 } from "@/lib/universal-entity/field-client-service";
 import { useToast } from "@/hooks/use-toast";
 import { showGlobalLoader, hideGlobalLoader } from "@/lib/global-loader/store";
-import type { Field, EntityDefinition } from "@/lib/universal-entity/types";
+import type { Field, EntityDefinition } from "@igorchugurov/public-api-sdk";
 
 // Импортируем конфиг для messages
 import fieldsConfig from "@/config/fields.json";

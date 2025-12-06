@@ -9,7 +9,7 @@ import type {
   EntityInstanceWithFields,
   RelationsData,
   EntityInstance,
-} from "./types";
+} from "@igorchugurov/public-api-sdk";
 import { getFields, getFieldById } from "./config-service";
 
 /**
@@ -169,6 +169,7 @@ export async function updateRelations(
 function transformEntityInstance(row: any): EntityInstance {
   return {
     id: row.id,
+    slug: row.slug,
     entityDefinitionId: row.entity_definition_id,
     projectId: row.project_id,
     data: row.data || {},

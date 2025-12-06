@@ -18,7 +18,7 @@ import type {
   Field,
   EntityInstanceWithFields,
   FieldValue,
-} from "@/lib/universal-entity/types";
+} from "@igorchugurov/public-api-sdk";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { FormData } from "@/lib/form-generation/types";
 import { FormWithSectionsForFields } from "@/lib/form-generation/components/FormWithSectionsForFields";
@@ -69,7 +69,9 @@ interface UniversalEntityFormForFieldsProps {
   queryKey?: string[];
 
   // Опционально: кастомная обработка данных перед отправкой
-  transformData?: (formData: Record<string, FieldValue>) => Record<string, FieldValue>;
+  transformData?: (
+    formData: Record<string, FieldValue>
+  ) => Record<string, FieldValue>;
 
   // Расширенные пропсы для Fields формы
   availableEntities?: Array<{ id: string; name: string }>;
@@ -381,10 +383,13 @@ export function UniversalEntityFormForFields({
 
   // Имя элемента для диалога подтверждения удаления
   // Преобразуем FieldValue в string, так как itemName должен быть string | undefined
-  const getStringValue = (value: FieldValue | undefined): string | undefined => {
+  const getStringValue = (
+    value: FieldValue | undefined
+  ): string | undefined => {
     if (value === null || value === undefined) return undefined;
     if (typeof value === "string") return value;
-    if (typeof value === "number" || typeof value === "boolean") return String(value);
+    if (typeof value === "number" || typeof value === "boolean")
+      return String(value);
     if (value instanceof Date) return value.toISOString();
     if (Array.isArray(value)) return value.join(", ");
     return undefined;

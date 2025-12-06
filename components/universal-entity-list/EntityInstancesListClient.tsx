@@ -17,7 +17,7 @@ import type {
   EntityDefinition,
   Field,
   EntityInstanceWithFields,
-} from "@/lib/universal-entity/types";
+} from "@igorchugurov/public-api-sdk";
 
 interface EntityInstancesListClientProps {
   projectId: string;

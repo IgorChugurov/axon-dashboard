@@ -4,7 +4,7 @@
  */
 
 import type { EntityUIConfig } from "./ui-config-types";
-import type { Field, EntityDefinition } from "./types";
+import type { Field, EntityDefinition } from "@igorchugurov/public-api-sdk";
 
 function loadConfigFile(configName: string): any | null {
   try {

@@ -8,7 +8,7 @@
 import { Controller, Control } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputTextProps {
@@ -26,10 +26,9 @@ export function InputText({ field, control, disabled }: InputTextProps) {
       control={control}
       render={({ field: formField, fieldState: { error } }) => {
         // Normalize value to string
-        const stringValue = typeof formField.value === "string" 
-          ? formField.value 
-          : "";
-        
+        const stringValue =
+          typeof formField.value === "string" ? formField.value : "";
+
         return (
           <div className="space-y-2 w-full">
             <Label htmlFor={field.name} className="text-sm font-medium">
@@ -68,7 +67,9 @@ export function InputText({ field, control, disabled }: InputTextProps) {
             )}
 
             {error && (
-              <p className="text-xs text-red-500 font-medium">{error.message}</p>
+              <p className="text-xs text-red-500 font-medium">
+                {error.message}
+              </p>
             )}
           </div>
         );
@@ -76,4 +77,3 @@ export function InputText({ field, control, disabled }: InputTextProps) {
     />
   );
 }
-

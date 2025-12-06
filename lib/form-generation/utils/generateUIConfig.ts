@@ -8,7 +8,7 @@
  * 3. Генерируем колонки таблицы из полей с displayInTable: true
  */
 
-import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
+import type { EntityDefinition, Field } from "@igorchugurov/public-api-sdk";
 import type {
   EntityUIConfig,
   ListPageConfig,

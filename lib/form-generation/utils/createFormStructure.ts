@@ -2,7 +2,7 @@
  * Create form structure with sections from fields
  */
 
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import type { FormSection, FormStructure } from "../types";
 import { getSectionTitle } from "./fieldHelpers";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";

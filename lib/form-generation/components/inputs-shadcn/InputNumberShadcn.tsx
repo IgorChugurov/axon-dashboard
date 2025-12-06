@@ -14,7 +14,7 @@ import {
   FieldError,
   FieldContent,
 } from "@/components/ui/field";
-import type { Field as FieldType } from "@/lib/universal-entity/types";
+import type { Field as FieldType } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputNumberShadcnProps {
@@ -67,4 +67,3 @@ export function InputNumberShadcn({
     />
   );
 }
-

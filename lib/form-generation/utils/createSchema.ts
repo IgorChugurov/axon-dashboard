@@ -3,7 +3,7 @@
  */
 
 import * as Yup from "yup";
-import type { Field, FieldValue } from "@/lib/universal-entity/types";
+import type { Field, FieldValue } from "@igorchugurov/public-api-sdk";
 
 /**
  * Create Yup validation schema for form fields

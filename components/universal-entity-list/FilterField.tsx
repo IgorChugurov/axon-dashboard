@@ -8,7 +8,7 @@
 import * as React from "react";
 import { DataTableFacetedFilter } from "./DataTableFacetedFilter";
 import { useEntityOptions } from "@/hooks/use-entity-options";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import type { FilterMode } from "./types/list-types";
 
 interface FilterFieldProps {

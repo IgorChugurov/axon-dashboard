@@ -40,7 +40,7 @@ import {
   CollapsibleTrigger,
 } from "./ui/collapsible";
 import { Icon_logo } from "./Logo";
-import type { EntityDefinition } from "@/lib/universal-entity/types";
+import type { EntityDefinition } from "@igorchugurov/public-api-sdk";
 import type { Project } from "@/lib/projects/types";
 
 // Menu items.

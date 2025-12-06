@@ -17,7 +17,7 @@ import { clearCurrentProjectCookie } from "@/lib/projects/cookies";
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { Project } from "@/lib/projects/types";
-import type { FieldValue } from "@/lib/universal-entity/types";
+import type { FieldValue } from "@igorchugurov/public-api-sdk";
 import { useRole } from "@/hooks/use-role";
 
 // Импортируем конфиг напрямую (статический импорт)
@@ -81,12 +81,19 @@ export function ProjectFormNew({
     : {};
 
   // Функция создания - адаптер для client-service
-  const handleCreate = async (data: Record<string, FieldValue>): Promise<Project> => {
+  const handleCreate = async (
+    data: Record<string, FieldValue>
+  ): Promise<Project> => {
     const createData = {
       name: typeof data.name === "string" ? data.name : String(data.name ?? ""),
-      description: typeof data.description === "string" || data.description === null ? data.description : null,
-      enableSignIn: typeof data.enableSignIn === "boolean" ? data.enableSignIn : true,
-      enableSignUp: typeof data.enableSignUp === "boolean" ? data.enableSignUp : true,
+      description:
+        typeof data.description === "string" || data.description === null
+          ? data.description
+          : null,
+      enableSignIn:
+        typeof data.enableSignIn === "boolean" ? data.enableSignIn : true,
+      enableSignUp:
+        typeof data.enableSignUp === "boolean" ? data.enableSignUp : true,
     };
 
     return createProjectFromClient(createData);
@@ -99,9 +106,14 @@ export function ProjectFormNew({
   ): Promise<Project> => {
     const updateData = {
       name: typeof data.name === "string" ? data.name : undefined,
-      description: typeof data.description === "string" || data.description === null ? data.description : undefined,
-      enableSignIn: typeof data.enableSignIn === "boolean" ? data.enableSignIn : undefined,
-      enableSignUp: typeof data.enableSignUp === "boolean" ? data.enableSignUp : undefined,
+      description:
+        typeof data.description === "string" || data.description === null
+          ? data.description
+          : undefined,
+      enableSignIn:
+        typeof data.enableSignIn === "boolean" ? data.enableSignIn : undefined,
+      enableSignUp:
+        typeof data.enableSignUp === "boolean" ? data.enableSignUp : undefined,
     };
 
     return updateProjectFromClient(id, updateData);

@@ -10,7 +10,7 @@ import { UniversalEntityListClient } from "./UniversalEntityListClient";
 import { createFieldListService } from "@/lib/universal-entity/list-service-factory";
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { RoutingConfig } from "./types/list-types";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import { useRole } from "@/hooks/use-role";
 
 interface FieldsListClientProps {
@@ -27,7 +27,7 @@ export function FieldsListClient({
   routing,
 }: FieldsListClientProps) {
   const { isReadOnly } = useRole(projectId);
-  
+
   // Создаем сервис через фабрику
   const listService = useMemo(
     () => createFieldListService(entityDefinitionId, projectId),

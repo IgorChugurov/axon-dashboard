@@ -10,7 +10,7 @@ import { Control } from "react-hook-form";
 import type {
   Field as FieldType,
   FieldOption,
-} from "@/lib/universal-entity/types";
+} from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../types";
 import { InputTextShadcn } from "./inputs-shadcn/InputTextShadcn";
 import { InputNumberShadcn } from "./inputs-shadcn/InputNumberShadcn";

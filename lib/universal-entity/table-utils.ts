@@ -4,7 +4,10 @@
  * Утилиты для конфигурации таблиц entity instances
  */
 
-import type { Field, EntityInstanceWithFields } from "./types";
+import type {
+  Field,
+  EntityInstanceWithFields,
+} from "@igorchugurov/public-api-sdk";
 
 /**
  * Конфигурация столбца таблицы

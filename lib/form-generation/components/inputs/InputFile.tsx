@@ -8,7 +8,7 @@
 import { Controller, Control } from "react-hook-form";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Label } from "@/components/ui/label";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputFileProps {
@@ -40,7 +40,8 @@ export function InputFile({
       render={({ field: formField, fieldState: { error } }) => {
         // Нормализуем значение к массиву строк (ID файлов)
         const fileIds =
-          Array.isArray(formField.value) && formField.value.every((v) => typeof v === "string")
+          Array.isArray(formField.value) &&
+          formField.value.every((v) => typeof v === "string")
             ? formField.value
             : [];
 
@@ -52,7 +53,9 @@ export function InputFile({
             </Label>
 
             {field.description && (
-              <p className="text-sm text-muted-foreground">{field.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {field.description}
+              </p>
             )}
 
             <FileUpload
@@ -83,4 +86,3 @@ export function InputFile({
     />
   );
 }
-

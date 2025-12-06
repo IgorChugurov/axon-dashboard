@@ -9,7 +9,7 @@
 import { Controller, Control } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { RelationSelect } from "@/app/projects/[projectId]/[entityDefId]/RelationSelect";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputRelationProps {
@@ -18,10 +18,14 @@ interface InputRelationProps {
   disabled?: boolean;
 }
 
-export function InputRelation({ field, control, disabled }: InputRelationProps) {
+export function InputRelation({
+  field,
+  control,
+  disabled,
+}: InputRelationProps) {
   // Extract and validate related entity ID
   const relatedEntityId = field.relatedEntityDefinitionId;
-  
+
   if (!relatedEntityId) {
     return (
       <div className="space-y-2 w-full">
@@ -29,7 +33,8 @@ export function InputRelation({ field, control, disabled }: InputRelationProps) 
           {field.label} - Missing Related Entity Configuration
         </Label>
         <p className="text-xs text-muted-foreground">
-          This relation field is not properly configured. Please set the related entity.
+          This relation field is not properly configured. Please set the related
+          entity.
         </p>
       </div>
     );
@@ -91,4 +96,3 @@ export function InputRelation({ field, control, disabled }: InputRelationProps) 
     />
   );
 }
-

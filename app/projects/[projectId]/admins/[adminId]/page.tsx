@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/auth/roles";
 import { AdminFormEdit } from "@/components/admins/AdminFormEdit";
 import { BreadcrumbsCacheUpdater } from "@/lib/breadcrumbs";
-import type { FieldOption } from "@/lib/universal-entity/types";
+import type { FieldOption } from "@igorchugurov/public-api-sdk";
 import type { Admin } from "@/lib/admins/types";
 
 interface AdminEditPageProps {

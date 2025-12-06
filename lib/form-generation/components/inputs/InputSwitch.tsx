@@ -7,7 +7,7 @@
 
 import { Controller, Control } from "react-hook-form";
 import { Label } from "@/components/ui/label";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface InputSwitchProps {
@@ -23,10 +23,9 @@ export function InputSwitch({ field, control, disabled }: InputSwitchProps) {
       control={control}
       render={({ field: formField, fieldState: { error } }) => {
         // Normalize value to boolean
-        const booleanValue = typeof formField.value === "boolean" 
-          ? formField.value 
-          : false;
-        
+        const booleanValue =
+          typeof formField.value === "boolean" ? formField.value : false;
+
         return (
           <div className="space-y-2 w-full">
             <div className="flex items-center space-x-3">
@@ -38,17 +37,20 @@ export function InputSwitch({ field, control, disabled }: InputSwitchProps) {
                 disabled={disabled}
                 className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
-            <Label htmlFor={field.name} className="text-sm font-medium cursor-pointer">
-              {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
-          </div>
+              <Label
+                htmlFor={field.name}
+                className="text-sm font-medium cursor-pointer"
+              >
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+            </div>
 
-          {field.description && (
-            <p className="text-xs text-muted-foreground pl-7">
-              {field.description}
-            </p>
-          )}
+            {field.description && (
+              <p className="text-xs text-muted-foreground pl-7">
+                {field.description}
+              </p>
+            )}
 
             {error && (
               <p className="text-xs text-red-500 font-medium pl-7">
@@ -61,4 +63,3 @@ export function InputSwitch({ field, control, disabled }: InputSwitchProps) {
     />
   );
 }
-

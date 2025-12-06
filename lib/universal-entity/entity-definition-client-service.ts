@@ -4,7 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/client";
-import type { EntityDefinition } from "./types";
+import type { EntityDefinition } from "@igorchugurov/public-api-sdk";
 
 /**
  * Преобразование данных из БД в типы TypeScript
@@ -15,6 +15,7 @@ function transformEntityDefinition(row: any): EntityDefinition {
   return {
     id: row.id,
     name: row.name,
+    slug: row.slug,
     description: row.description,
     tableName: row.table_name,
     type: row.type,
@@ -225,11 +226,30 @@ export async function createEntityDefinitionFromClient(
     );
   }
 
+  // Генерация уникального slug
+  const { generateUniqueSlugForEntityDefinition } = await import(
+    "@/lib/utils/slug"
+  );
+  const slug = await generateUniqueSlugForEntityDefinition(
+    data.name,
+    projectId,
+    async (slugToCheck, projectIdToCheck) => {
+      const { data: existing } = await supabase
+        .from("entity_definition")
+        .select("id")
+        .eq("project_id", projectIdToCheck)
+        .eq("slug", slugToCheck)
+        .single();
+      return !!existing;
+    }
+  );
+
   // Создание
   const { data: created, error } = await supabase
     .from("entity_definition")
     .insert({
       name: data.name,
+      slug: slug,
       description: data.description || null,
       table_name: data.tableName,
       type: data.type,

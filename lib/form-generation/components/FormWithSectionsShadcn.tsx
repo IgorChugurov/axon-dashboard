@@ -24,7 +24,7 @@ import {
   FieldGroup,
   FieldError,
 } from "@/components/ui/field";
-import type { Field as FieldType } from "@/lib/universal-entity/types";
+import type { Field as FieldType } from "@igorchugurov/public-api-sdk";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { FormData } from "../types";
 import { createSchema, createInitialFormData } from "../utils/createSchema";

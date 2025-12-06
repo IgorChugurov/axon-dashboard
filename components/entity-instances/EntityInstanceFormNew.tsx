@@ -15,7 +15,7 @@ import type {
   Field,
   EntityInstanceWithFields,
   FieldValue,
-} from "@/lib/universal-entity/types";
+} from "@igorchugurov/public-api-sdk";
 
 interface EntityInstanceFormNewProps {
   projectId: string;
@@ -62,7 +62,7 @@ export function EntityInstanceFormNew({
         if (relationFieldNames.includes(key)) {
           // Поле связи - преобразуем в массив ID
           if (Array.isArray(value)) {
-            relations[key] = value.map(v => String(v ?? "")).filter(Boolean);
+            relations[key] = value.map((v) => String(v ?? "")).filter(Boolean);
           } else if (value) {
             relations[key] = [String(value)];
           } else {

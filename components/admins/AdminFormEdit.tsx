@@ -11,7 +11,7 @@ import { createEntityDefinitionAndFieldsFromConfig } from "@/lib/universal-entit
 import { updateAdminFromClient } from "@/lib/admins/client-service";
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
-import type { FieldOption, FieldValue } from "@/lib/universal-entity/types";
+import type { FieldOption, FieldValue } from "@igorchugurov/public-api-sdk";
 import type { Admin } from "@/lib/admins/types";
 
 // Импортируем конфиг напрямую (статический импорт)
@@ -111,4 +111,3 @@ export function AdminFormEdit({
     />
   );
 }
-

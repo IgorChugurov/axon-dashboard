@@ -6,7 +6,7 @@
  */
 
 import type { EntityUIConfig } from "./ui-config-types";
-import type { Field, FieldType, DbType } from "./types";
+import type { Field, FieldType, DbType } from "@igorchugurov/public-api-sdk";
 
 /**
  * Поля EntityDefinition, которые могут быть в конфиге

@@ -21,6 +21,7 @@
 CREATE TABLE IF NOT EXISTS entity_definition (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
+  slug TEXT NOT NULL,
   url TEXT NOT NULL,
   description TEXT,
   table_name TEXT NOT NULL, -- для обратной совместимости
@@ -66,6 +67,8 @@ CREATE INDEX IF NOT EXISTS idx_entity_definition_ui_config
   ON entity_definition USING GIN (ui_config);
 CREATE INDEX IF NOT EXISTS idx_entity_definition_filter_ids 
   ON entity_definition USING GIN (filter_entity_definition_ids);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_entity_definition_project_slug 
+  ON entity_definition(project_id, slug);
 
 -- ============================================================================
 -- 2. ТАБЛИЦА FIELD (конфигурация полей)
@@ -156,6 +159,7 @@ CREATE TABLE IF NOT EXISTS entity_instance (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   entity_definition_id UUID NOT NULL REFERENCES entity_definition(id) ON DELETE CASCADE,
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  slug TEXT NOT NULL,
   
   -- Все поля хранятся в JSONB
   data JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -182,6 +186,8 @@ CREATE INDEX IF NOT EXISTS idx_entity_instance_created_by
 -- GIN индекс для JSONB поиска
 CREATE INDEX IF NOT EXISTS idx_entity_instance_data_gin 
   ON entity_instance USING GIN (data);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_entity_instance_definition_slug 
+  ON entity_instance(entity_definition_id, slug);
 
 -- ============================================================================
 -- 4. ТАБЛИЦА ENTITY_RELATION (связи между экземплярами)
@@ -231,7 +237,48 @@ CREATE INDEX IF NOT EXISTS idx_entity_relation_type
   ON entity_relation(relation_type);
 
 -- ============================================================================
--- 5. ТРИГГЕРЫ ДЛЯ ОБНОВЛЕНИЯ updated_at
+-- 5. ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ SLUG ИЗ NAME
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION generate_slug_from_name(name_text TEXT)
+RETURNS TEXT AS $$
+DECLARE
+  slug_result TEXT;
+BEGIN
+  -- Обрабатываем входную строку
+  slug_result := trim(name_text);
+  
+  -- Если пустая строка, возвращаем 'item'
+  IF slug_result = '' OR slug_result IS NULL THEN
+    RETURN 'item';
+  END IF;
+  
+  -- Преобразуем в lowercase
+  slug_result := lower(slug_result);
+  
+  -- Удаляем спецсимволы (оставляем только буквы, цифры, пробелы и дефисы)
+  slug_result := regexp_replace(slug_result, '[^a-z0-9\s-]', '', 'g');
+  
+  -- Заменяем пробелы на дефисы
+  slug_result := regexp_replace(slug_result, '\s+', '-', 'g');
+  
+  -- Удаляем дефисы в начале и конце
+  slug_result := regexp_replace(slug_result, '^-+|-+$', '', 'g');
+  
+  -- Если после обработки пустая строка, возвращаем 'item'
+  IF slug_result = '' OR slug_result IS NULL THEN
+    RETURN 'item';
+  END IF;
+  
+  -- Ограничиваем длину до 100 символов
+  slug_result := substring(slug_result, 1, 100);
+  
+  RETURN slug_result;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+-- ============================================================================
+-- 6. ТРИГГЕРЫ ДЛЯ ОБНОВЛЕНИЯ updated_at
 -- ============================================================================
 
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -261,7 +308,7 @@ CREATE TRIGGER update_entity_instance_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
--- 6. ТРИГГЕРЫ ВАЛИДАЦИИ
+-- 7. ТРИГГЕРЫ ВАЛИДАЦИИ
 -- ============================================================================
 
 -- Валидация типов связей
@@ -309,10 +356,11 @@ CREATE TRIGGER validate_relation_types_trigger
   EXECUTE FUNCTION validate_relation_types();
 
 -- ============================================================================
--- 7. КОММЕНТАРИИ ДЛЯ ДОКУМЕНТАЦИИ
+-- 8. КОММЕНТАРИИ ДЛЯ ДОКУМЕНТАЦИИ
 -- ============================================================================
 
 COMMENT ON TABLE entity_definition IS 'Конфигурация сущностей (Entity Definitions)';
+COMMENT ON COLUMN entity_definition.slug IS 'URL-friendly идентификатор для использования в клиентских приложениях. Уникален в рамках проекта. Генерируется автоматически из name при создании.';
 COMMENT ON COLUMN entity_definition.max_file_size_mb IS 'Максимальный размер одного файла в мегабайтах (по умолчанию 5MB)';
 COMMENT ON COLUMN entity_definition.max_files_count IS 'Максимальное количество файлов на один экземпляр (по умолчанию 10)';
 COMMENT ON COLUMN entity_definition.ui_config IS 'Partial UI configuration (JSONB) that overrides default values generated from entity name and fields. Structure: { list: {...}, form: {...}, messages: {...} }';
@@ -337,6 +385,7 @@ COMMENT ON COLUMN field.storage_bucket IS 'Имя bucket в Supabase Storage (п
 COMMENT ON COLUMN field.filterable_in_list IS 'When true, this field will be shown as a filter option in list views';
 
 COMMENT ON TABLE entity_instance IS 'Экземпляры сущностей (Entity Instances)';
+COMMENT ON COLUMN entity_instance.slug IS 'URL-friendly идентификатор для использования в клиентских приложениях. Уникален в рамках entity_definition. Генерируется автоматически из поля name в data при создании.';
 COMMENT ON COLUMN entity_instance.created_by IS 'ID пользователя, создавшего экземпляр (для политик "только свои записи")';
 
 COMMENT ON TABLE entity_relation IS 'Связи между экземплярами сущностей (Entity Relations)';

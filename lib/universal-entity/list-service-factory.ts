@@ -3,9 +3,7 @@
  * Каждая функция возвращает объект с методами onLoadData, onDelete и опционально onCreate, onUpdate
  */
 
-import type {
-  LoadDataFn,
-} from "@/components/universal-entity-list/types/list-types";
+import type { LoadDataFn } from "@/components/universal-entity-list/types/list-types";
 import {
   getEnvironmentsFromClient,
   deleteEnvironmentFromClient,
@@ -29,7 +27,7 @@ import {
   getFieldsFromClient,
   deleteFieldFromClient,
 } from "./field-client-service";
-import type { EntityDefinition, Field } from "./types";
+import type { EntityDefinition, Field } from "@igorchugurov/public-api-sdk";
 
 /**
  * Интерфейс для сервиса списка

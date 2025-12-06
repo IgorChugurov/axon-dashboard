@@ -10,7 +10,7 @@ import { UniversalEntityListClient } from "./UniversalEntityListClient";
 import { createEntityDefinitionListService } from "@/lib/universal-entity/list-service-factory";
 import type { EntityConfigFile } from "@/lib/universal-entity/config-file-types";
 import type { RoutingConfig } from "./types/list-types";
-import type { EntityDefinition } from "@/lib/universal-entity/types";
+import type { EntityDefinition } from "@igorchugurov/public-api-sdk";
 import { useRole } from "@/hooks/use-role";
 
 interface EntityDefinitionsListClientProps {
@@ -25,7 +25,7 @@ export function EntityDefinitionsListClient({
   routing,
 }: EntityDefinitionsListClientProps) {
   const { isReadOnly } = useRole(projectId);
-  
+
   // Создаем сервис через фабрику
   const listService = useMemo(
     () => createEntityDefinitionListService(projectId),

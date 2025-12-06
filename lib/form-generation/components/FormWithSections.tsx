@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button } from "@/components/ui/button";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { FormData } from "../types";
 import { createSchema, createInitialFormData } from "../utils/createSchema";

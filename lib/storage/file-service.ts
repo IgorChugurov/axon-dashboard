@@ -5,7 +5,7 @@
  */
 
 import { createClient } from "@/lib/supabase/client";
-import type { EntityFile } from "@/lib/universal-entity/types";
+import type { EntityFile } from "@igorchugurov/public-api-sdk";
 
 export interface FileUploadOptions {
   entityInstanceId: string;

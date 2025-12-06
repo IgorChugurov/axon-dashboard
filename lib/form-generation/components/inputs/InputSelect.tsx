@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Field } from "@/lib/universal-entity/types";
+import type { Field } from "@igorchugurov/public-api-sdk";
 import type { FormData } from "../../types";
 
 interface SelectOption {
@@ -45,10 +45,9 @@ export function InputSelect({
         control={control}
         render={({ field: formField, fieldState: { error } }) => {
           // Normalize value to string
-          const stringValue = typeof formField.value === "string" 
-            ? formField.value 
-            : "";
-          
+          const stringValue =
+            typeof formField.value === "string" ? formField.value : "";
+
           return (
             <div className="space-y-2 w-full">
               <Label htmlFor={field.name} className="text-sm font-medium">
@@ -61,28 +60,28 @@ export function InputSelect({
                 onValueChange={formField.onChange}
                 disabled={disabled}
               >
-              <SelectTrigger id={field.name}>
-                <SelectValue placeholder={field.placeholder || "Select..."} />
-              </SelectTrigger>
-              <SelectContent>
-                {!field.required && (
-                  <SelectItem value="none">
-                    <span className="text-muted-foreground">None</span>
-                  </SelectItem>
-                )}
-                {options.map((option) => (
-                  <SelectItem key={option.id} value={option.id}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                <SelectTrigger id={field.name}>
+                  <SelectValue placeholder={field.placeholder || "Select..."} />
+                </SelectTrigger>
+                <SelectContent>
+                  {!field.required && (
+                    <SelectItem value="none">
+                      <span className="text-muted-foreground">None</span>
+                    </SelectItem>
+                  )}
+                  {options.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {field.description && (
-              <p className="text-xs text-muted-foreground">
-                {field.description}
-              </p>
-            )}
+              {field.description && (
+                <p className="text-xs text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
 
               {error && (
                 <p className="text-xs text-red-500 font-medium">
@@ -128,10 +127,7 @@ export function InputSelect({
                 </p>
               ) : (
                 options.map((option) => (
-                  <div
-                    key={option.id}
-                    className="flex items-center space-x-2"
-                  >
+                  <div key={option.id} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       id={`${field.name}-${option.id}`}
@@ -168,4 +164,3 @@ export function InputSelect({
     />
   );
 }
-

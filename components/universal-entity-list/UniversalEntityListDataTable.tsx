@@ -42,7 +42,7 @@ import type {
   RoutingConfig,
 } from "./types/list-types";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
-import type { EntityDefinition, Field } from "@/lib/universal-entity/types";
+import type { EntityDefinition, Field } from "@igorchugurov/public-api-sdk";
 import { useRouter } from "next/navigation";
 
 interface UniversalEntityListDataTableProps<TData extends { id: string }> {
@@ -255,7 +255,6 @@ export function UniversalEntityListDataTable<TData extends { id: string }>({
     // Просто обновляем params чтобы триггернуть новый запрос
     setParams({});
   };
-
 
   const handleClearFilters = () => {
     setSearchInput("");

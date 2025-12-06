@@ -7,7 +7,7 @@ import type {
   EntityDefinition,
   FieldType,
   DbType,
-} from "@/lib/universal-entity/types";
+} from "@igorchugurov/public-api-sdk";
 
 // =====================================================
 // Form Structure Types

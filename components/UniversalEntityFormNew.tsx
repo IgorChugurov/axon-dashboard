@@ -19,7 +19,7 @@ import type {
   Field,
   EntityInstanceWithFields,
   FieldValue,
-} from "@/lib/universal-entity/types";
+} from "@igorchugurov/public-api-sdk";
 import type { EntityUIConfig } from "@/lib/universal-entity/ui-config-types";
 import type { FormData } from "@/lib/form-generation/types";
 import { FormWithSectionsShadcn } from "@/lib/form-generation";

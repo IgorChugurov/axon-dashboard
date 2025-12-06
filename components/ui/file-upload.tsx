@@ -10,7 +10,7 @@ import {
   deleteFiles,
   getFilesByIds,
 } from "@/lib/storage/file-service";
-import type { EntityFile } from "@/lib/universal-entity/types";
+import type { EntityFile } from "@igorchugurov/public-api-sdk";
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 
 export interface FileUploadProps {

@@ -2,8 +2,9 @@
  * Экспорты универсальной системы сущностей
  */
 
-// Типы
-export * from "./types";
+// Типы теперь экспортируются из @igorchugurov/public-api-sdk
+// Для обратной совместимости можно реэкспортировать:
+// export type * from "@igorchugurov/public-api-sdk";
 
 // Сервисы
 export * from "./config-service";

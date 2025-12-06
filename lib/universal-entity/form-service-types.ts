@@ -1,4 +1,4 @@
-import type { FieldValue } from "./types";
+import type { FieldValue } from "@igorchugurov/public-api-sdk";
 
 export interface FormServicePayload {
   data: Record<string, FieldValue>;
